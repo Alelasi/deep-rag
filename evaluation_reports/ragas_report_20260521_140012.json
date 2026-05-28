@@ -1,0 +1,63 @@
+{
+  "timestamp": "20260521_140012",
+  "test_info": {
+    "total_questions": 5,
+    "knowledge_base": "test_kb",
+    "indexed_chunks": 3
+  },
+  "average_metrics": {
+    "answer_relevancy": 0.0,
+    "context_precision": 0.4,
+    "context_recall": 0.9,
+    "faithfulness": 0.904,
+    "ragas_score": 0.551
+  },
+  "individual_results": [
+    {
+      "question": "INTJ的主导功能是什么？",
+      "answer_relevancy": 0.0,
+      "context_precision": 0.333,
+      "context_recall": 0.921,
+      "faithfulness": 0.92,
+      "ragas_score": 0.543
+    },
+    {
+      "question": "什么是恐贪指数？",
+      "answer_relevancy": 0.0,
+      "context_precision": 0.333,
+      "context_recall": 0.87,
+      "faithfulness": 0.867,
+      "ragas_score": 0.518
+    },
+    {
+      "question": "九型5号的核心恐惧是什么？",
+      "answer_relevancy": 0.0,
+      "context_precision": 0.667,
+      "context_recall": 0.894,
+      "faithfulness": 0.908,
+      "ragas_score": 0.617
+    },
+    {
+      "question": "INTJ和ENFP的关系如何？",
+      "answer_relevancy": 0.0,
+      "context_precision": 0.333,
+      "context_recall": 0.894,
+      "faithfulness": 0.904,
+      "ragas_score": 0.533
+    },
+    {
+      "question": "如何使用RSI指标判断市场情绪？",
+      "answer_relevancy": 0.0,
+      "context_precision": 0.333,
+      "context_recall": 0.921,
+      "faithfulness": 0.921,
+      "ragas_score": 0.544
+    }
+  ],
+  "summary": {
+    "best_score": 0.617,
+    "worst_score": 0.518,
+    "avg_retry_count": 0.0,
+    "avg_relevant_docs": 1.2
+  }
+}

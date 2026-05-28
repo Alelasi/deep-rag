@@ -1,0 +1,26 @@
+__pycache__/
+*.pyc
+.env
+.env.*
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+chroma_data/
+.coverage
+.pytest_cache/
+*.log
+
+# 🔒 隐私保护：禁止上传索引数据
+data/
+data/full_computer_rag/
+data/lancedb/
+*.lancedb
+metadata.json
+
+# 🔒 隐私保护：禁止上传敏感文件
+简历/
+投递清单*
+*credentials*
+*secrets*
