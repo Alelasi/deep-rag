@@ -49,6 +49,14 @@ import pandas as pd
 st.set_page_config(page_title="DeepRAG v2.9", page_icon="🔍", layout="wide")
 
 
+# === 缓存索引器（模块级定义，供多处调用）===
+@st.cache_resource
+def get_indexer_cached(_collection_name):
+    """缓存索引器实例（带集合名参数）"""
+    from src.graph import get_indexer
+    return get_indexer(_collection_name)
+
+
 # === 辅助函数 ===
 
 def render_answer(answer_text: str):
@@ -541,12 +549,6 @@ def get_rag_stream_query():
 def get_precision_query():
     from src.graph import precision_query
     return precision_query
-
-@st.cache_resource
-def get_indexer_cached(_collection_name):
-    """缓存索引器实例（带集合名参数）"""
-    from src.graph import get_indexer
-    return get_indexer(_collection_name)
 
 
 # === 主界面 ===
