@@ -54,13 +54,13 @@ def make_doc(doc_id, content="content"):
 
 
 def make_test_toolbox():
-    """创建包含4种工具的测试工具箱"""
+    """创建包含4种工具的测试工具箱（v2.4全部真实实现）"""
     toolbox = AgenticRAGToolbox()
     toolbox.register_tool("vector_search",
                           VectorSearchTool(MockRetriever([make_doc("v1")])))
-    toolbox.register_tool("exact_match", ExactMatchTool(MockDB()))
-    toolbox.register_tool("graph_search", GraphSearchTool(graph_db=None))
-    toolbox.register_tool("web_search", WebSearchTool())
+    toolbox.register_tool("exact_match", ExactMatchTool())   # v2.4: SQLite
+    toolbox.register_tool("graph_search", GraphSearchTool())  # v2.4: NetworkX
+    toolbox.register_tool("web_search", WebSearchTool())      # v2.4: DuckDuckGo
     return toolbox
 
 

@@ -1,9 +1,9 @@
 #!/bin/bash
-# 全电脑 RAG 快速启动脚本
+# 本地文档 RAG 快速启动脚本
 
 set -e
 
-echo "🚀 全电脑 RAG 系统"
+echo "🚀 本地文档 RAG 系统"
 echo "=================="
 echo ""
 
@@ -30,7 +30,7 @@ case $choice in
     1)
         echo ""
         echo "📁 索引 docs 目录..."
-        conda run -n gpu_env python src/full_computer_rag.py index \
+        conda run -n gpu_env python src/local_document_rag.py index \
             --dir "D:\文档\ai提问相关\工作\docs" \
             --chunk-size 500 \
             --hot-capacity 1000
@@ -38,7 +38,7 @@ case $choice in
     2)
         echo ""
         echo "📁 索引全量目录（预计 10-20 分钟）..."
-        conda run -n gpu_env python src/full_computer_rag.py index \
+        conda run -n gpu_env python src/local_document_rag.py index \
             --dir "D:\文档\ai提问相关" \
             --chunk-size 500 \
             --hot-capacity 10000
@@ -48,7 +48,7 @@ case $choice in
         read -p "请输入查询: " query
         echo ""
         echo "🔍 搜索中..."
-        conda run -n gpu_env python src/full_computer_rag.py search "$query" --top-k 10
+        conda run -n gpu_env python src/local_document_rag.py search "$query" --top-k 10
         ;;
     *)
         echo "无效选择"

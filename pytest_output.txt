@@ -1,0 +1,63 @@
+C:\Users\All A Wang\AppData\Roaming\Python\Python313\site-packages\pytest_asyncio\plugin.py:207: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.3.4, pluggy-1.5.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: D:\文档\ai提问相关\工作\deep-rag
+configfile: pyproject.toml
+plugins: langsmith-0.8.5, asyncio-0.25.0, benchmark-5.2.3, cov-7.1.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collected 113 items / 1 error
+
+=================================== ERRORS ====================================
+___________ ERROR collecting tests/test_model_router_integration.py ___________
+tests\test_model_router_integration.py:56: in <module>
+    assert hasattr(llm, '_generate'), "缺少 _generate 方法"
+E   NameError: name 'llm' is not defined
+------------------------------- Captured stdout -------------------------------
+============================================================
+测试 1：解析候选模型配置
+============================================================
+✅ 解析成功：2 个候选
+  - claude-sonnet-4 (anthropic) - 优先级 1
+  - gpt-4o-mini (openai) - 优先级 2
+
+============================================================
+测试 2：创建路由 LLM
+============================================================
+❌ 失败：MODEL_CANDIDATES is empty. Set it to: provider:model_id,provider:model_id,...
+
+============================================================
+测试 3：检查 LangChain 兼容性
+============================================================
+------------------------------- Captured stderr -------------------------------
+Traceback (most recent call last):
+  File "D:\文档\ai提问相关\工作\deep-rag\tests\test_model_router_integration.py", line 39, in <module>
+    llm = get_routed_llm(temperature=0.3)
+  File "D:\文档\ai提问相关\工作\deep-rag\src\llm\model_router_wrapper.py", line 150, in get_routed_llm
+    raise ValueError("MODEL_CANDIDATES is empty. Set it to: provider:model_id,provider:model_id,...")
+ValueError: MODEL_CANDIDATES is empty. Set it to: provider:model_id,provider:model_id,...
+============================== warnings summary ===============================
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+C:\Users\All A Wang\AppData\Roaming\Python\Python313\site-packages\jieba\_compat.py:18
+  C:\Users\All A Wang\AppData\Roaming\Python\Python313\site-packages\jieba\_compat.py:18: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+..\..\..\..\software\Anaconda3\Lib\site-packages\pkg_resources\__init__.py:3146
+  D:\software\Anaconda3\Lib\site-packages\pkg_resources\__init__.py:3146: DeprecationWarning: Deprecated call to `pkg_resources.declare_namespace('sphinxcontrib')`.
+  Implementing implicit namespace packages (as specified in PEP 420) is preferred to `pkg_resources.declare_namespace`. See https://setuptools.pypa.io/en/latest/references/keywords.html#keyword-namespace-packages
+    declare_namespace(pkg)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+ERROR tests/test_model_router_integration.py - NameError: name 'llm' is not d...
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+======================== 4 warnings, 1 error in 29.89s ========================
+<sys>:0: DeprecationWarning: builtin type swigvarlink has no __module__ attribute

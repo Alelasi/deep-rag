@@ -1,0 +1,402 @@
+[
+  {
+    "id": 1,
+    "query": "LangChain是什么？",
+    "category": "基础概念",
+    "difficulty": "easy",
+    "expected_contains": ["框架", "LLM", "应用"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 2,
+    "query": "如何安装LangChain？",
+    "category": "环境配置",
+    "difficulty": "easy",
+    "expected_contains": ["pip install", "langchain"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 3,
+    "query": "LangChain如何配置OpenAI API Key？",
+    "category": "环境配置",
+    "difficulty": "easy",
+    "expected_contains": ["OPENAI_API_KEY", "环境变量"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 4,
+    "query": "什么是Chain？",
+    "category": "基础概念",
+    "difficulty": "easy",
+    "expected_contains": ["链", "组件", "顺序"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 5,
+    "query": "LangChain支持哪些LLM？",
+    "category": "基础概念",
+    "difficulty": "easy",
+    "expected_contains": ["OpenAI", "Claude", "模型"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 6,
+    "query": "什么是Prompt Template？",
+    "category": "基础概念",
+    "difficulty": "easy",
+    "expected_contains": ["提示词", "模板", "变量"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 7,
+    "query": "LangChain的Memory是什么？",
+    "category": "基础概念",
+    "difficulty": "easy",
+    "expected_contains": ["记忆", "对话历史", "上下文"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 8,
+    "query": "什么是Vector Store？",
+    "category": "基础概念",
+    "difficulty": "easy",
+    "expected_contains": ["向量", "数据库", "检索"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 9,
+    "query": "如何创建一个简单的LLM Chain？",
+    "category": "代码实现",
+    "difficulty": "easy",
+    "expected_contains": ["LLMChain", "PromptTemplate", "llm"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 10,
+    "query": "LangChain支持哪些向量数据库？",
+    "category": "基础概念",
+    "difficulty": "easy",
+    "expected_contains": ["Chroma", "Pinecone", "FAISS"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 11,
+    "query": "LangGraph是什么？",
+    "category": "基础概念",
+    "difficulty": "medium",
+    "expected_contains": ["图", "状态机", "Agent"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 12,
+    "query": "LangGraph和LangChain有什么区别？",
+    "category": "概念对比",
+    "difficulty": "medium",
+    "expected_contains": ["循环", "分支", "图结构"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 13,
+    "query": "什么是Agent？",
+    "category": "基础概念",
+    "difficulty": "medium",
+    "expected_contains": ["工具", "决策", "ReAct"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 14,
+    "query": "ReAct模式是什么？",
+    "category": "基础概念",
+    "difficulty": "medium",
+    "expected_contains": ["推理", "行动", "Thought", "Action"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 15,
+    "query": "如何实现Tool Calling？",
+    "category": "代码实现",
+    "difficulty": "medium",
+    "expected_contains": ["工具", "函数", "调用"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 16,
+    "query": "LangChain的Retrieval是什么？",
+    "category": "基础概念",
+    "difficulty": "medium",
+    "expected_contains": ["检索", "文档", "RAG"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 17,
+    "query": "什么是RAG？",
+    "category": "基础概念",
+    "difficulty": "medium",
+    "expected_contains": ["检索增强", "生成", "Retrieval"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 18,
+    "query": "如何实现对话历史记忆？",
+    "category": "代码实现",
+    "difficulty": "medium",
+    "expected_contains": ["ConversationBufferMemory", "历史", "上下文"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 19,
+    "query": "LangChain如何处理长文本？",
+    "category": "技术问题",
+    "difficulty": "medium",
+    "expected_contains": ["分块", "Token", "上下文窗口"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 20,
+    "query": "什么是Embedding？",
+    "category": "基础概念",
+    "difficulty": "medium",
+    "expected_contains": ["向量", "嵌入", "文本表示"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 21,
+    "query": "LangGraph如何实现循环？",
+    "category": "代码实现",
+    "difficulty": "medium",
+    "expected_contains": ["add_edge", "循环", "条件"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 22,
+    "query": "如何实现条件分支？",
+    "category": "代码实现",
+    "difficulty": "medium",
+    "expected_contains": ["add_conditional_edges", "条件", "分支"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 23,
+    "query": "什么是StateGraph？",
+    "category": "基础概念",
+    "difficulty": "medium",
+    "expected_contains": ["状态", "图", "节点"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 24,
+    "query": "LangGraph的状态管理是怎么工作的？",
+    "category": "技术原理",
+    "difficulty": "medium",
+    "expected_contains": ["状态", "传递", "更新"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 25,
+    "query": "如何实现Multi-Agent协作？",
+    "category": "代码实现",
+    "difficulty": "hard",
+    "expected_contains": ["多个Agent", "协作", "通信"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 26,
+    "query": "LangChain 0.3和0.2有什么区别？",
+    "category": "版本对比",
+    "difficulty": "hard",
+    "expected_contains": ["版本", "变化", "升级"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 27,
+    "query": "LangGraph的Checkpoint是什么？",
+    "category": "基础概念",
+    "difficulty": "medium",
+    "expected_contains": ["检查点", "状态保存", "恢复"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 28,
+    "query": "如何实现Human-in-the-loop？",
+    "category": "代码实现",
+    "difficulty": "hard",
+    "expected_contains": ["人工", "确认", "interrupt"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 29,
+    "query": "什么是LCEL？",
+    "category": "基础概念",
+    "difficulty": "medium",
+    "expected_contains": ["表达式", "语言", "链"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 30,
+    "query": "如何优化RAG的检索效果？",
+    "category": "优化方法",
+    "difficulty": "hard",
+    "expected_contains": ["重排", "混合检索", "分块"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 31,
+    "query": "LangChain最新版本是多少？",
+    "category": "实时信息",
+    "difficulty": "medium",
+    "expected_contains": ["版本", "最新"],
+    "source_type": "github_api"
+  },
+  {
+    "id": 32,
+    "query": "LangChain有哪些已知的bug？",
+    "category": "实时信息",
+    "difficulty": "hard",
+    "expected_contains": ["issue", "bug", "问题"],
+    "source_type": "github_api"
+  },
+  {
+    "id": 33,
+    "query": "LangGraph最近有什么更新？",
+    "category": "实时信息",
+    "difficulty": "medium",
+    "expected_contains": ["更新", "版本", "新特性"],
+    "source_type": "github_api"
+  },
+  {
+    "id": 34,
+    "query": "LangChain的GitHub仓库有多少star？",
+    "category": "实时信息",
+    "difficulty": "easy",
+    "expected_contains": ["star", "数量"],
+    "source_type": "github_api"
+  },
+  {
+    "id": 35,
+    "query": "LangChain社区最活跃的讨论是什么？",
+    "category": "实时信息",
+    "difficulty": "hard",
+    "expected_contains": ["讨论", "社区", "话题"],
+    "source_type": "github_api"
+  },
+  {
+    "id": 36,
+    "query": "如何解决LangChain的内存泄漏问题？",
+    "category": "问题解决",
+    "difficulty": "hard",
+    "expected_contains": ["内存", "泄漏", "解决"],
+    "source_type": "web_search"
+  },
+  {
+    "id": 37,
+    "query": "LangChain和LlamaIndex哪个更好？",
+    "category": "工具对比",
+    "difficulty": "hard",
+    "expected_contains": ["对比", "区别", "选择"],
+    "source_type": "web_search"
+  },
+  {
+    "id": 38,
+    "query": "LangChain的最佳实践有哪些？",
+    "category": "最佳实践",
+    "difficulty": "hard",
+    "expected_contains": ["实践", "建议", "技巧"],
+    "source_type": "web_search"
+  },
+  {
+    "id": 39,
+    "query": "如何部署LangChain应用到生产环境？",
+    "category": "部署运维",
+    "difficulty": "hard",
+    "expected_contains": ["部署", "生产", "环境"],
+    "source_type": "web_search"
+  },
+  {
+    "id": 40,
+    "query": "LangChain的性能瓶颈在哪里？",
+    "category": "性能优化",
+    "difficulty": "hard",
+    "expected_contains": ["性能", "瓶颈", "优化"],
+    "source_type": "web_search"
+  },
+  {
+    "id": 41,
+    "query": "LangChain 0.3有什么新特性？同时有没有已知的bug？",
+    "category": "复合查询",
+    "difficulty": "hard",
+    "expected_contains": ["新特性", "bug", "版本"],
+    "source_type": "hybrid"
+  },
+  {
+    "id": 42,
+    "query": "LangGraph的状态管理和LangChain的Memory有什么区别？",
+    "category": "深度对比",
+    "difficulty": "hard",
+    "expected_contains": ["状态", "Memory", "区别"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 43,
+    "query": "如何使用LangGraph实现一个可以自我纠错的Agent？",
+    "category": "复杂实现",
+    "difficulty": "hard",
+    "expected_contains": ["自我纠错", "Agent", "LangGraph"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 44,
+    "query": "ReAct和Plan-and-Execute有什么区别？",
+    "category": "概念对比",
+    "difficulty": "hard",
+    "expected_contains": ["ReAct", "Plan", "Execute", "区别"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 45,
+    "query": "如何处理RAG中的幻觉问题？",
+    "category": "问题解决",
+    "difficulty": "hard",
+    "expected_contains": ["幻觉", "检测", "Self-RAG"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 46,
+    "query": "LangChain如何实现流式输出？",
+    "category": "代码实现",
+    "difficulty": "medium",
+    "expected_contains": ["流式", "stream", "输出"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 47,
+    "query": "什么是Corrective RAG？",
+    "category": "基础概念",
+    "difficulty": "hard",
+    "expected_contains": ["纠错", "查询改写", "重试"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 48,
+    "query": "如何选择合适的Embedding模型？",
+    "category": "技术选型",
+    "difficulty": "hard",
+    "expected_contains": ["Embedding", "模型", "选择"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 49,
+    "query": "LangChain的Token计算是怎么工作的？",
+    "category": "技术原理",
+    "difficulty": "medium",
+    "expected_contains": ["Token", "计算", "计数"],
+    "source_type": "local_docs"
+  },
+  {
+    "id": 50,
+    "query": "如何实现批量查询优化？",
+    "category": "性能优化",
+    "difficulty": "hard",
+    "expected_contains": ["批量", "优化", "并行"],
+    "source_type": "local_docs"
+  }
+]

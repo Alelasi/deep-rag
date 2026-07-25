@@ -1,0 +1,2965 @@
+[
+  {
+    "id": "psych_mbti",
+    "question": "什么是MBTI人格类型理论？",
+    "expected_keywords": [
+      "人格",
+      "类型",
+      "Jung"
+    ],
+    "collection": "proj_psychology",
+    "category": "psychology",
+    "discipline": "心理学",
+    "subdiscipline": "MBTI/类型学",
+    "difficulty": "easy",
+    "allow_refuse": false
+  },
+  {
+    "id": "psych_function",
+    "question": "INTJ的主导认知功能是什么？",
+    "expected_keywords": [
+      "Ni",
+      "直觉"
+    ],
+    "collection": "proj_psychology",
+    "category": "psychology",
+    "discipline": "心理学",
+    "subdiscipline": "荣格八维/认知功能",
+    "difficulty": "easy",
+    "allow_refuse": false
+  },
+  {
+    "id": "psych_enneagram",
+    "question": "九型人格中完美主义者对应哪一型？",
+    "expected_keywords": [
+      "1",
+      "型",
+      "完美"
+    ],
+    "collection": "proj_psychology",
+    "category": "psychology",
+    "discipline": "心理学",
+    "subdiscipline": "九型人格",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "psych_attachment",
+    "question": "成人依恋有哪些主要类型？",
+    "expected_keywords": [
+      "依恋",
+      "安全",
+      "焦虑",
+      "回避"
+    ],
+    "collection": "proj_psychology",
+    "category": "psychology",
+    "discipline": "心理学",
+    "subdiscipline": "依恋理论",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "psych_cbt",
+    "question": "认知行为疗法CBT的核心假设是什么？",
+    "expected_keywords": [
+      "认知",
+      "行为",
+      "情绪"
+    ],
+    "collection": "proj_psychology",
+    "category": "psychology",
+    "discipline": "心理学",
+    "subdiscipline": "临床/CBT",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "psych_dev",
+    "question": "皮亚杰认知发展有哪几个主要阶段？",
+    "expected_keywords": [
+      "感知运动",
+      "前运算",
+      "具体运算",
+      "形式运算"
+    ],
+    "collection": "proj_psychology",
+    "category": "psychology",
+    "discipline": "心理学",
+    "subdiscipline": "发展心理学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "psych_social",
+    "question": "什么是从众效应？",
+    "expected_keywords": [
+      "从众",
+      "群体",
+      "社会"
+    ],
+    "collection": "proj_psychology",
+    "category": "psychology",
+    "discipline": "心理学",
+    "subdiscipline": "社会心理学",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_rag",
+    "question": "什么是RAG检索增强生成？",
+    "expected_keywords": [
+      "检索",
+      "生成",
+      "知识库"
+    ],
+    "collection": "proj_work",
+    "category": "cs_ai",
+    "discipline": "计算机/AI",
+    "subdiscipline": "RAG",
+    "difficulty": "easy",
+    "allow_refuse": false
+  },
+  {
+    "id": "cs_hybrid",
+    "question": "混合检索一般如何结合稀疏与稠密方法？",
+    "expected_keywords": [
+      "BM25",
+      "向量",
+      "融合"
+    ],
+    "collection": "proj_work",
+    "category": "cs_ai",
+    "discipline": "计算机/AI",
+    "subdiscipline": "混合检索",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_vector",
+    "question": "向量检索依赖什么表示文本语义？",
+    "expected_keywords": [
+      "embedding",
+      "向量",
+      "相似"
+    ],
+    "collection": "proj_work",
+    "category": "cs_ai",
+    "discipline": "计算机/AI",
+    "subdiscipline": "向量检索",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_selfrag",
+    "question": "Self-RAG相对普通RAG多了什么机制？",
+    "expected_keywords": [
+      "自我",
+      "反思",
+      "检索"
+    ],
+    "collection": "proj_work",
+    "category": "cs_ai",
+    "discipline": "计算机/AI",
+    "subdiscipline": "Self-RAG",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_langgraph",
+    "question": "LangGraph适合用来构建什么？",
+    "expected_keywords": [
+      "图",
+      "工作流",
+      "Agent"
+    ],
+    "collection": "proj_work",
+    "category": "cs_ai",
+    "discipline": "计算机/AI",
+    "subdiscipline": "Agent/LangGraph",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_chunk",
+    "question": "文档分块chunking对RAG有什么影响？",
+    "expected_keywords": [
+      "分块",
+      "检索",
+      "上下文"
+    ],
+    "collection": "proj_work",
+    "category": "cs_ai",
+    "discipline": "计算机/AI",
+    "subdiscipline": "文档分块",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_hallucination",
+    "question": "RAG系统可用哪些手段降低幻觉？",
+    "expected_keywords": [
+      "引用",
+      "校验",
+      "拒答",
+      "事实"
+    ],
+    "collection": "proj_work",
+    "category": "cs_ai",
+    "discipline": "计算机/AI",
+    "subdiscipline": "幻觉治理",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_rerank",
+    "question": "什么是重排序reranker在检索中的作用？",
+    "expected_keywords": [
+      "重排",
+      "相关",
+      "检索"
+    ],
+    "collection": "proj_work",
+    "category": "cs_ai",
+    "discipline": "计算机/AI",
+    "subdiscipline": "重排序",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_eval",
+    "question": "如何评价一个RAG系统的回答质量？",
+    "expected_keywords": [
+      "准确",
+      "引用",
+      "相关性",
+      "忠实"
+    ],
+    "collection": "proj_work",
+    "category": "cs_ai",
+    "discipline": "计算机/AI",
+    "subdiscipline": "RAG评测",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "ml_imbalance",
+    "question": "类别不平衡有哪些常见处理办法？",
+    "expected_keywords": [
+      "过采样",
+      "欠采样",
+      "权重"
+    ],
+    "collection": "proj_thesis",
+    "category": "ml",
+    "discipline": "机器学习",
+    "subdiscipline": "类别不平衡",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "ml_cm",
+    "question": "混淆矩阵包含哪些基本单元？",
+    "expected_keywords": [
+      "TP",
+      "FP",
+      "TN",
+      "FN"
+    ],
+    "collection": "proj_thesis",
+    "category": "ml",
+    "discipline": "机器学习",
+    "subdiscipline": "混淆矩阵",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "ml_f1",
+    "question": "F1分数如何综合精确率与召回率？",
+    "expected_keywords": [
+      "精确",
+      "召回",
+      "调和"
+    ],
+    "collection": "proj_thesis",
+    "category": "ml",
+    "discipline": "机器学习",
+    "subdiscipline": "F1/指标",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "ml_overfit",
+    "question": "什么是过拟合，常见缓解手段有哪些？",
+    "expected_keywords": [
+      "过拟合",
+      "泛化",
+      "正则"
+    ],
+    "collection": "proj_thesis",
+    "category": "ml",
+    "discipline": "机器学习",
+    "subdiscipline": "过拟合",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "ml_cv",
+    "question": "交叉验证的作用是什么？",
+    "expected_keywords": [
+      "交叉",
+      "验证",
+      "泛化"
+    ],
+    "collection": "proj_thesis",
+    "category": "ml",
+    "discipline": "机器学习",
+    "subdiscipline": "交叉验证",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "ml_feature",
+    "question": "特征工程为什么重要？",
+    "expected_keywords": [
+      "特征",
+      "模型",
+      "性能"
+    ],
+    "collection": "proj_thesis",
+    "category": "ml",
+    "discipline": "机器学习",
+    "subdiscipline": "特征工程",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "ml_ensemble",
+    "question": "集成学习如随机森林的基本思想是什么？",
+    "expected_keywords": [
+      "集成",
+      "投票",
+      "多样"
+    ],
+    "collection": "proj_thesis",
+    "category": "ml",
+    "discipline": "机器学习",
+    "subdiscipline": "集成学习",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "ml_nn",
+    "question": "神经网络中激活函数的作用是什么？",
+    "expected_keywords": [
+      "非线性",
+      "激活",
+      "梯度"
+    ],
+    "collection": "proj_thesis",
+    "category": "ml",
+    "discipline": "机器学习",
+    "subdiscipline": "神经网络",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "econ_inst",
+    "question": "制度经济学主要研究什么？",
+    "expected_keywords": [
+      "制度",
+      "交易",
+      "产权"
+    ],
+    "collection": "proj_social",
+    "category": "economics",
+    "discipline": "经济学",
+    "subdiscipline": "制度经济学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "econ_tc",
+    "question": "什么是交易成本？",
+    "expected_keywords": [
+      "交易",
+      "成本",
+      "摩擦"
+    ],
+    "collection": "proj_social",
+    "category": "economics",
+    "discipline": "经济学",
+    "subdiscipline": "交易成本",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "econ_supply",
+    "question": "供需如何共同决定市场价格？",
+    "expected_keywords": [
+      "供给",
+      "需求",
+      "均衡"
+    ],
+    "collection": "proj_social",
+    "category": "economics",
+    "discipline": "经济学",
+    "subdiscipline": "微观/供需",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "econ_mu",
+    "question": "什么是边际效用递减？",
+    "expected_keywords": [
+      "边际",
+      "效用",
+      "递减"
+    ],
+    "collection": "proj_social",
+    "category": "economics",
+    "discipline": "经济学",
+    "subdiscipline": "效用理论",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "econ_macro",
+    "question": "GDP衡量的是什么？",
+    "expected_keywords": [
+      "国内",
+      "生产",
+      "总值"
+    ],
+    "collection": "proj_social",
+    "category": "economics",
+    "discipline": "经济学",
+    "subdiscipline": "宏观/GDP",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "econ_money",
+    "question": "什么是通货膨胀？",
+    "expected_keywords": [
+      "价格",
+      "货币",
+      "通胀"
+    ],
+    "collection": "proj_social",
+    "category": "economics",
+    "discipline": "经济学",
+    "subdiscipline": "货币/通胀",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "econ_game",
+    "question": "囚徒困境说明了什么？",
+    "expected_keywords": [
+      "合作",
+      "背叛",
+      "均衡"
+    ],
+    "collection": "proj_social",
+    "category": "economics",
+    "discipline": "经济学",
+    "subdiscipline": "博弈论",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "soc_structure",
+    "question": "社会学中的社会结构指什么？",
+    "expected_keywords": [
+      "结构",
+      "关系",
+      "位置"
+    ],
+    "collection": "proj_social",
+    "category": "sociology",
+    "discipline": "社会学",
+    "subdiscipline": "社会结构",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "soc_capital",
+    "question": "什么是社会资本？",
+    "expected_keywords": [
+      "网络",
+      "信任",
+      "资本"
+    ],
+    "collection": "proj_social",
+    "category": "sociology",
+    "discipline": "社会学",
+    "subdiscipline": "社会资本",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "soc_weber",
+    "question": "韦伯如何区分权力与权威？",
+    "expected_keywords": [
+      "权力",
+      "权威",
+      "合法性"
+    ],
+    "collection": "proj_social",
+    "category": "sociology",
+    "discipline": "社会学",
+    "subdiscipline": "韦伯/权威",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "soc_class",
+    "question": "马克思如何理解阶级？",
+    "expected_keywords": [
+      "阶级",
+      "生产",
+      "关系"
+    ],
+    "collection": "proj_social",
+    "category": "sociology",
+    "discipline": "社会学",
+    "subdiscipline": "阶级理论",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "soc_anomie",
+    "question": "涂尔干所说的失范anomie是什么？",
+    "expected_keywords": [
+      "失范",
+      "规范",
+      "社会"
+    ],
+    "collection": "proj_social",
+    "category": "sociology",
+    "discipline": "社会学",
+    "subdiscipline": "涂尔干/失范",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "pol_sep",
+    "question": "三权分立指哪三权？",
+    "expected_keywords": [
+      "立法",
+      "行政",
+      "司法"
+    ],
+    "collection": "proj_social",
+    "category": "politics",
+    "discipline": "政治学",
+    "subdiscipline": "分权制衡",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "pol_demo",
+    "question": "代议制民主的核心机制是什么？",
+    "expected_keywords": [
+      "选举",
+      "代表",
+      "人民"
+    ],
+    "collection": "proj_social",
+    "category": "politics",
+    "discipline": "政治学",
+    "subdiscipline": "民主理论",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "pol_ir",
+    "question": "现实主义国际关系理论强调什么？",
+    "expected_keywords": [
+      "权力",
+      "国家",
+      "利益"
+    ],
+    "collection": "proj_social",
+    "category": "politics",
+    "discipline": "政治学",
+    "subdiscipline": "国际关系",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "pol_public",
+    "question": "什么是公共政策的政策周期？",
+    "expected_keywords": [
+      "议程",
+      "制定",
+      "执行",
+      "评估"
+    ],
+    "collection": "proj_social",
+    "category": "politics",
+    "discipline": "政治学",
+    "subdiscipline": "公共政策",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "law_contract",
+    "question": "合同法的基本原则有哪些？",
+    "expected_keywords": [
+      "自愿",
+      "公平",
+      "诚信"
+    ],
+    "collection": "proj_social",
+    "category": "law",
+    "discipline": "法学",
+    "subdiscipline": "合同法",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "law_nullum",
+    "question": "什么是罪刑法定原则？",
+    "expected_keywords": [
+      "罪",
+      "法定",
+      "刑法"
+    ],
+    "collection": "proj_social",
+    "category": "law",
+    "discipline": "法学",
+    "subdiscipline": "刑法/罪刑法定",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "law_const",
+    "question": "宪法在法律体系中的地位是什么？",
+    "expected_keywords": [
+      "根本法",
+      "最高",
+      "效力"
+    ],
+    "collection": "proj_social",
+    "category": "law",
+    "discipline": "法学",
+    "subdiscipline": "宪法",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "law_tort",
+    "question": "侵权责任一般构成要件有哪些？",
+    "expected_keywords": [
+      "过错",
+      "损害",
+      "因果"
+    ],
+    "collection": "proj_social",
+    "category": "law",
+    "discipline": "法学",
+    "subdiscipline": "侵权法",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "hist_ir",
+    "question": "工业革命带来了哪些主要社会影响？",
+    "expected_keywords": [
+      "工业",
+      "城市化",
+      "生产"
+    ],
+    "collection": "proj_social",
+    "category": "history",
+    "discipline": "历史学",
+    "subdiscipline": "工业革命",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "hist_cold",
+    "question": "冷战的基本格局是什么？",
+    "expected_keywords": [
+      "美苏",
+      "对峙",
+      "阵营"
+    ],
+    "collection": "proj_social",
+    "category": "history",
+    "discipline": "历史学",
+    "subdiscipline": "冷战史",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "hist_china",
+    "question": "辛亥革命的历史意义是什么？",
+    "expected_keywords": [
+      "共和",
+      "帝制",
+      "革命"
+    ],
+    "collection": "proj_social",
+    "category": "history",
+    "discipline": "历史学",
+    "subdiscipline": "中国近现代史",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "hist_ww2",
+    "question": "第二次世界大战的主要交战方有哪些？",
+    "expected_keywords": [
+      "同盟",
+      "轴心",
+      "战争"
+    ],
+    "collection": "proj_social",
+    "category": "history",
+    "discipline": "历史学",
+    "subdiscipline": "二战史",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "phil_meta",
+    "question": "什么是形而上学？",
+    "expected_keywords": [
+      "存在",
+      "本体",
+      "哲学"
+    ],
+    "collection": "proj_social",
+    "category": "philosophy",
+    "discipline": "哲学",
+    "subdiscipline": "形而上学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "phil_hume",
+    "question": "休谟对因果关系的怀疑论要点是什么？",
+    "expected_keywords": [
+      "因果",
+      "习惯",
+      "经验"
+    ],
+    "collection": "proj_social",
+    "category": "philosophy",
+    "discipline": "哲学",
+    "subdiscipline": "认识论/休谟",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "phil_ethic",
+    "question": "功利主义如何判断行为对错？",
+    "expected_keywords": [
+      "幸福",
+      "后果",
+      "最大"
+    ],
+    "collection": "proj_social",
+    "category": "philosophy",
+    "discipline": "哲学",
+    "subdiscipline": "伦理学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "phil_logic",
+    "question": "什么是演绎推理？",
+    "expected_keywords": [
+      "前提",
+      "结论",
+      "必然"
+    ],
+    "collection": "proj_social",
+    "category": "philosophy",
+    "discipline": "哲学",
+    "subdiscipline": "逻辑学",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "edu_construct",
+    "question": "建构主义学习理论的核心主张是什么？",
+    "expected_keywords": [
+      "建构",
+      "经验",
+      "主动"
+    ],
+    "collection": "proj_social",
+    "category": "education",
+    "discipline": "教育学",
+    "subdiscipline": "建构主义",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "edu_formative",
+    "question": "形成性评价与总结性评价有何区别？",
+    "expected_keywords": [
+      "过程",
+      "结果",
+      "反馈"
+    ],
+    "collection": "proj_social",
+    "category": "education",
+    "discipline": "教育学",
+    "subdiscipline": "教育评价",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "edu_bloom",
+    "question": "布鲁姆认知目标分类大致分哪几层？",
+    "expected_keywords": [
+      "记忆",
+      "理解",
+      "应用",
+      "分析"
+    ],
+    "collection": "proj_social",
+    "category": "education",
+    "discipline": "教育学",
+    "subdiscipline": "教学目标",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "edu_zpd",
+    "question": "维果茨基的最近发展区指什么？",
+    "expected_keywords": [
+      "脚手架",
+      "潜在",
+      "帮助"
+    ],
+    "collection": "proj_social",
+    "category": "education",
+    "discipline": "教育学",
+    "subdiscipline": "发展教学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "ling_saussure",
+    "question": "索绪尔所说的能指与所指是什么关系？",
+    "expected_keywords": [
+      "能指",
+      "所指",
+      "任意"
+    ],
+    "collection": "proj_social",
+    "category": "linguistics",
+    "discipline": "语言学",
+    "subdiscipline": "结构主义/符号",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "ling_prag",
+    "question": "语用学研究什么？",
+    "expected_keywords": [
+      "语境",
+      "使用",
+      "含义"
+    ],
+    "collection": "proj_social",
+    "category": "linguistics",
+    "discipline": "语言学",
+    "subdiscipline": "语用学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "ling_phon",
+    "question": "音位和音素有什么区别？",
+    "expected_keywords": [
+      "音位",
+      "对立",
+      "语音"
+    ],
+    "collection": "proj_social",
+    "category": "linguistics",
+    "discipline": "语言学",
+    "subdiscipline": "语音学/音系",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "ling_syntax",
+    "question": "生成语法关注语言的什么能力？",
+    "expected_keywords": [
+      "生成",
+      "规则",
+      "句法"
+    ],
+    "collection": "proj_social",
+    "category": "linguistics",
+    "discipline": "语言学",
+    "subdiscipline": "句法学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "fin_fg",
+    "question": "恐惧贪婪指数大致衡量什么？",
+    "expected_keywords": [
+      "恐惧",
+      "贪婪",
+      "情绪"
+    ],
+    "collection": "proj_work",
+    "category": "finance",
+    "discipline": "金融",
+    "subdiscipline": "市场情绪",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "fin_pe",
+    "question": "市盈率PE怎么计算、含义是什么？",
+    "expected_keywords": [
+      "价格",
+      "盈利",
+      "估值"
+    ],
+    "collection": "proj_work",
+    "category": "finance",
+    "discipline": "金融",
+    "subdiscipline": "估值/PE",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "fin_div",
+    "question": "分散投资如何降低风险？",
+    "expected_keywords": [
+      "分散",
+      "相关",
+      "组合"
+    ],
+    "collection": "proj_work",
+    "category": "finance",
+    "discipline": "金融",
+    "subdiscipline": "资产配置",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "fin_capm",
+    "question": "CAPM模型的基本思想是什么？",
+    "expected_keywords": [
+      "beta",
+      "风险",
+      "收益"
+    ],
+    "collection": "proj_work",
+    "category": "finance",
+    "discipline": "金融",
+    "subdiscipline": "资产定价",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "fin_tech",
+    "question": "什么是技术分析中的支撑位与阻力位？",
+    "expected_keywords": [
+      "支撑",
+      "阻力",
+      "价格"
+    ],
+    "collection": "proj_work",
+    "category": "finance",
+    "discipline": "金融",
+    "subdiscipline": "技术分析",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "fin_risk",
+    "question": "什么是最大回撤？",
+    "expected_keywords": [
+      "回撤",
+      "峰值",
+      "风险"
+    ],
+    "collection": "proj_work",
+    "category": "finance",
+    "discipline": "金融",
+    "subdiscipline": "风险管理",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "math_bayes",
+    "question": "贝叶斯定理表达了先验与后验怎样的关系？",
+    "expected_keywords": [
+      "先验",
+      "后验",
+      "似然"
+    ],
+    "collection": "proj_thesis",
+    "category": "math",
+    "discipline": "数学",
+    "subdiscipline": "概率/贝叶斯",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "math_gd",
+    "question": "梯度下降如何优化损失函数？",
+    "expected_keywords": [
+      "梯度",
+      "下降",
+      "参数"
+    ],
+    "collection": "proj_thesis",
+    "category": "math",
+    "discipline": "数学",
+    "subdiscipline": "优化/梯度下降",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "math_linear",
+    "question": "线性方程组什么时候有唯一解？",
+    "expected_keywords": [
+      "秩",
+      "满秩",
+      "唯一"
+    ],
+    "collection": "proj_thesis",
+    "category": "math",
+    "discipline": "数学",
+    "subdiscipline": "线性代数",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "math_calc",
+    "question": "导数的几何意义是什么？",
+    "expected_keywords": [
+      "切线",
+      "斜率",
+      "变化率"
+    ],
+    "collection": "proj_thesis",
+    "category": "math",
+    "discipline": "数学",
+    "subdiscipline": "微积分",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "math_stat",
+    "question": "中心极限定理说了什么？",
+    "expected_keywords": [
+      "正态",
+      "样本",
+      "均值"
+    ],
+    "collection": "proj_thesis",
+    "category": "math",
+    "discipline": "数学",
+    "subdiscipline": "数理统计",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "phys_entropy",
+    "question": "热力学中的熵大致表示什么？",
+    "expected_keywords": [
+      "无序",
+      "熵",
+      "热力学"
+    ],
+    "collection": "proj_social",
+    "category": "physics",
+    "discipline": "物理学",
+    "subdiscipline": "热力学/熵",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "phys_newton",
+    "question": "牛顿第二定律的内容是什么？",
+    "expected_keywords": [
+      "力",
+      "质量",
+      "加速度"
+    ],
+    "collection": "proj_social",
+    "category": "physics",
+    "discipline": "物理学",
+    "subdiscipline": "经典力学",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "phys_quantum",
+    "question": "什么是量子叠加？",
+    "expected_keywords": [
+      "叠加",
+      "量子",
+      "态"
+    ],
+    "collection": "proj_social",
+    "category": "physics",
+    "discipline": "物理学",
+    "subdiscipline": "量子力学",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "phys_em",
+    "question": "麦克斯韦方程组统一了哪些现象？",
+    "expected_keywords": [
+      "电",
+      "磁",
+      "光"
+    ],
+    "collection": "proj_social",
+    "category": "physics",
+    "discipline": "物理学",
+    "subdiscipline": "电磁学",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "bio_dna",
+    "question": "DNA的基本功能是什么？",
+    "expected_keywords": [
+      "遗传",
+      "信息",
+      "基因"
+    ],
+    "collection": "proj_social",
+    "category": "biology",
+    "discipline": "生物学",
+    "subdiscipline": "分子生物学/DNA",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "bio_cell",
+    "question": "原核细胞和真核细胞的主要区别是什么？",
+    "expected_keywords": [
+      "细胞核",
+      "原核",
+      "真核"
+    ],
+    "collection": "proj_social",
+    "category": "biology",
+    "discipline": "生物学",
+    "subdiscipline": "细胞生物学",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "bio_evol",
+    "question": "自然选择的核心要点是什么？",
+    "expected_keywords": [
+      "变异",
+      "适应",
+      "选择"
+    ],
+    "collection": "proj_social",
+    "category": "biology",
+    "discipline": "生物学",
+    "subdiscipline": "进化论",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "bio_eco",
+    "question": "什么是生态系统中的食物链？",
+    "expected_keywords": [
+      "能量",
+      "营养",
+      "捕食"
+    ],
+    "collection": "proj_social",
+    "category": "biology",
+    "discipline": "生物学",
+    "subdiscipline": "生态学",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "chem_bond",
+    "question": "共价键和离子键的本质区别是什么？",
+    "expected_keywords": [
+      "共用",
+      "转移",
+      "电子"
+    ],
+    "collection": "proj_social",
+    "category": "chemistry",
+    "discipline": "化学",
+    "subdiscipline": "化学键",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "chem_eq",
+    "question": "什么是化学平衡？",
+    "expected_keywords": [
+      "正反应",
+      "逆反应",
+      "速率"
+    ],
+    "collection": "proj_social",
+    "category": "chemistry",
+    "discipline": "化学",
+    "subdiscipline": "化学平衡",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "chem_acid",
+    "question": "pH值表示什么？",
+    "expected_keywords": [
+      "氢离子",
+      "酸碱",
+      "浓度"
+    ],
+    "collection": "proj_social",
+    "category": "chemistry",
+    "discipline": "化学",
+    "subdiscipline": "酸碱",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "lit_pov",
+    "question": "什么是叙事视角？常见有哪些？",
+    "expected_keywords": [
+      "第一人称",
+      "第三人称",
+      "视角"
+    ],
+    "collection": "proj_social",
+    "category": "literature",
+    "discipline": "文学",
+    "subdiscipline": "叙事学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "lit_theme",
+    "question": "文学主题与题材有何区别？",
+    "expected_keywords": [
+      "主题",
+      "题材",
+      "意义"
+    ],
+    "collection": "proj_social",
+    "category": "literature",
+    "discipline": "文学",
+    "subdiscipline": "主题批评",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "lit_genre",
+    "question": "小说、诗歌、戏剧作为体裁有何基本差异？",
+    "expected_keywords": [
+      "叙事",
+      "抒情",
+      "表演"
+    ],
+    "collection": "proj_social",
+    "category": "literature",
+    "discipline": "文学",
+    "subdiscipline": "文体/体裁",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "mgmt_pdca",
+    "question": "PDCA循环四个环节是什么？",
+    "expected_keywords": [
+      "计划",
+      "执行",
+      "检查",
+      "处理"
+    ],
+    "collection": "proj_work",
+    "category": "management",
+    "discipline": "管理学",
+    "subdiscipline": "质量管理/PDCA",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "mgmt_swot",
+    "question": "SWOT分析包含哪四项？",
+    "expected_keywords": [
+      "优势",
+      "劣势",
+      "机会",
+      "威胁"
+    ],
+    "collection": "proj_work",
+    "category": "management",
+    "discipline": "管理学",
+    "subdiscipline": "战略/SWOT",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "mgmt_okrs",
+    "question": "OKR与KPI的主要区别是什么？",
+    "expected_keywords": [
+      "目标",
+      "关键结果",
+      "对齐"
+    ],
+    "collection": "proj_work",
+    "category": "management",
+    "discipline": "管理学",
+    "subdiscipline": "绩效/OKR",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "mgmt_org",
+    "question": "什么是扁平化组织？",
+    "expected_keywords": [
+      "层级",
+      "沟通",
+      "决策"
+    ],
+    "collection": "proj_work",
+    "category": "management",
+    "discipline": "管理学",
+    "subdiscipline": "组织理论",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "geo_plate",
+    "question": "板块构造理论的基本观点是什么？",
+    "expected_keywords": [
+      "板块",
+      "漂移",
+      "边界"
+    ],
+    "collection": "proj_social",
+    "category": "geography",
+    "discipline": "地理学",
+    "subdiscipline": "地质/板块",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "geo_climate",
+    "question": "什么是温室效应？",
+    "expected_keywords": [
+      "温室气体",
+      "辐射",
+      "升温"
+    ],
+    "collection": "proj_social",
+    "category": "geography",
+    "discipline": "地理学",
+    "subdiscipline": "气候",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "geo_urban",
+    "question": "城市化的主要表现有哪些？",
+    "expected_keywords": [
+      "人口",
+      "城市",
+      "产业"
+    ],
+    "collection": "proj_social",
+    "category": "geography",
+    "discipline": "地理学",
+    "subdiscipline": "人文地理/城市化",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "med_immune",
+    "question": "先天免疫和获得性免疫有何区别？",
+    "expected_keywords": [
+      "先天",
+      "抗体",
+      "特异"
+    ],
+    "collection": "proj_social",
+    "category": "medicine",
+    "discipline": "医学",
+    "subdiscipline": "免疫学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "med_bp",
+    "question": "什么是高血压的基本定义思路？",
+    "expected_keywords": [
+      "血压",
+      "收缩",
+      "舒张"
+    ],
+    "collection": "proj_social",
+    "category": "medicine",
+    "discipline": "医学",
+    "subdiscipline": "内科/心血管",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "med_ebm",
+    "question": "循证医学的核心是什么？",
+    "expected_keywords": [
+      "证据",
+      "临床",
+      "决策"
+    ],
+    "collection": "proj_social",
+    "category": "medicine",
+    "discipline": "医学",
+    "subdiscipline": "循证医学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "art_comp",
+    "question": "绘画构图中的三分法是什么？",
+    "expected_keywords": [
+      "构图",
+      "分割",
+      "视觉"
+    ],
+    "collection": "proj_social",
+    "category": "art",
+    "discipline": "艺术",
+    "subdiscipline": "构图",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "art_color",
+    "question": "什么是色彩的色相、明度、饱和度？",
+    "expected_keywords": [
+      "色相",
+      "明度",
+      "饱和"
+    ],
+    "collection": "proj_social",
+    "category": "art",
+    "discipline": "艺术",
+    "subdiscipline": "色彩学",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "music_harmony",
+    "question": "什么是音乐中的和声？",
+    "expected_keywords": [
+      "和弦",
+      "纵向",
+      "音程"
+    ],
+    "collection": "proj_social",
+    "category": "music",
+    "discipline": "音乐",
+    "subdiscipline": "和声学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "cross_selfrag",
+    "question": "DeepRAG里Self-RAG与幻觉检测大致怎么配合？",
+    "expected_keywords": [
+      "幻觉",
+      "校验",
+      "生成"
+    ],
+    "collection": "proj_work",
+    "category": "cross",
+    "discipline": "交叉/工程",
+    "subdiscipline": "工程化RAG",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "cross_metric",
+    "question": "机器学习离线指标与业务指标应如何对齐？",
+    "expected_keywords": [
+      "准确",
+      "召回",
+      "业务"
+    ],
+    "collection": "proj_thesis",
+    "category": "cross",
+    "discipline": "交叉/工程",
+    "subdiscipline": "指标对齐",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "cross_agent",
+    "question": "多Agent协作相比单Agent的优势与风险是什么？",
+    "expected_keywords": [
+      "分工",
+      "协作",
+      "成本"
+    ],
+    "collection": "proj_work",
+    "category": "cross",
+    "discipline": "交叉/工程",
+    "subdiscipline": "多Agent",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "refuse_01",
+    "question": "本知识库里有没有介绍量子纠缠实验设备具体型号清单？",
+    "expected_keywords": [],
+    "collection": "proj_psychology",
+    "category": "refuse",
+    "discipline": "拒识",
+    "subdiscipline": "拒识-虚构设备",
+    "difficulty": "easy",
+    "allow_refuse": true,
+    "expect_refuse": true,
+    "web_fallback": false
+  },
+  {
+    "id": "refuse_02",
+    "question": "请给出不存在的公司DeepRAG宇宙总部精确门牌号",
+    "expected_keywords": [],
+    "collection": "proj_work",
+    "category": "refuse",
+    "discipline": "拒识",
+    "subdiscipline": "拒识-假地址",
+    "difficulty": "easy",
+    "allow_refuse": true,
+    "expect_refuse": true,
+    "web_fallback": false
+  },
+  {
+    "id": "refuse_03",
+    "question": "INTJ昨天中午在火星食堂吃了什么？",
+    "expected_keywords": [],
+    "collection": "proj_psychology",
+    "category": "refuse",
+    "discipline": "拒识",
+    "subdiscipline": "拒识-荒诞事实",
+    "difficulty": "easy",
+    "allow_refuse": true,
+    "expect_refuse": true,
+    "web_fallback": false
+  },
+  {
+    "id": "refuse_04",
+    "question": "请引用知识库中并不存在的内部文档编号DR-99999全文",
+    "expected_keywords": [],
+    "collection": "proj_work",
+    "category": "refuse",
+    "discipline": "拒识",
+    "subdiscipline": "拒识-假文档",
+    "difficulty": "easy",
+    "allow_refuse": true,
+    "expect_refuse": true,
+    "web_fallback": false
+  },
+  {
+    "id": "psych_personality",
+    "question": "大五人格模型包含哪五个维度？",
+    "expected_keywords": [
+      "开放",
+      "尽责",
+      "外向",
+      "宜人",
+      "神经"
+    ],
+    "collection": "proj_psychology",
+    "category": "psychology",
+    "discipline": "心理学",
+    "subdiscipline": "人格/大五人格",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "psych_memory",
+    "question": "工作记忆与长时记忆有何区别？",
+    "expected_keywords": [
+      "工作记忆",
+      "长时",
+      "容量"
+    ],
+    "collection": "proj_psychology",
+    "category": "psychology",
+    "discipline": "心理学",
+    "subdiscipline": "认知/记忆",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "psych_emotion",
+    "question": "詹姆斯-朗格情绪理论的基本观点是什么？",
+    "expected_keywords": [
+      "生理",
+      "情绪",
+      "反馈"
+    ],
+    "collection": "proj_psychology",
+    "category": "psychology",
+    "discipline": "心理学",
+    "subdiscipline": "情绪心理学",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "psych_motivation",
+    "question": "马斯洛需求层次从低到高大致有哪些层？",
+    "expected_keywords": [
+      "生理",
+      "安全",
+      "归属",
+      "尊重",
+      "自我实现"
+    ],
+    "collection": "proj_psychology",
+    "category": "psychology",
+    "discipline": "心理学",
+    "subdiscipline": "动机理论",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "psych_psychometrics",
+    "question": "信度与效度分别衡量测验的什么？",
+    "expected_keywords": [
+      "信度",
+      "效度",
+      "可靠",
+      "有效"
+    ],
+    "collection": "proj_psychology",
+    "category": "psychology",
+    "discipline": "心理学",
+    "subdiscipline": "心理测量",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_prompt",
+    "question": "什么是提示工程prompt engineering？",
+    "expected_keywords": [
+      "提示",
+      "prompt",
+      "指令"
+    ],
+    "collection": "proj_work",
+    "category": "cs_ai",
+    "discipline": "计算机/AI",
+    "subdiscipline": "提示工程",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_embedding",
+    "question": "文本embedding向量通常用来做什么？",
+    "expected_keywords": [
+      "语义",
+      "向量",
+      "相似"
+    ],
+    "collection": "proj_work",
+    "category": "cs_ai",
+    "discipline": "计算机/AI",
+    "subdiscipline": "Embedding",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_vectordb",
+    "question": "向量数据库相对传统数据库适合什么场景？",
+    "expected_keywords": [
+      "相似",
+      "检索",
+      "向量"
+    ],
+    "collection": "proj_work",
+    "category": "cs_ai",
+    "discipline": "计算机/AI",
+    "subdiscipline": "向量数据库",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_crag",
+    "question": "Corrective RAG的主要思路是什么？",
+    "expected_keywords": [
+      "纠错",
+      "检索",
+      "相关"
+    ],
+    "collection": "proj_work",
+    "category": "cs_ai",
+    "discipline": "计算机/AI",
+    "subdiscipline": "Corrective RAG",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_tooluse",
+    "question": "大模型工具调用tool calling解决什么问题？",
+    "expected_keywords": [
+      "工具",
+      "函数",
+      "外部"
+    ],
+    "collection": "proj_work",
+    "category": "cs_ai",
+    "discipline": "计算机/AI",
+    "subdiscipline": "工具调用",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_context",
+    "question": "长上下文对RAG系统意味着什么取舍？",
+    "expected_keywords": [
+      "上下文",
+      "窗口",
+      "成本"
+    ],
+    "collection": "proj_work",
+    "category": "cs_ai",
+    "discipline": "计算机/AI",
+    "subdiscipline": "长上下文",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "ml_biasvar",
+    "question": "偏差-方差权衡描述了什么？",
+    "expected_keywords": [
+      "偏差",
+      "方差",
+      "过拟合"
+    ],
+    "collection": "proj_thesis",
+    "category": "ml",
+    "discipline": "机器学习",
+    "subdiscipline": "偏差方差",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "ml_reg",
+    "question": "正则化L1与L2的主要差别是什么？",
+    "expected_keywords": [
+      "稀疏",
+      "L1",
+      "L2"
+    ],
+    "collection": "proj_thesis",
+    "category": "ml",
+    "discipline": "机器学习",
+    "subdiscipline": "正则化",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "ml_svm",
+    "question": "支持向量机SVM的核心思想是什么？",
+    "expected_keywords": [
+      "间隔",
+      "超平面",
+      "支持向量"
+    ],
+    "collection": "proj_thesis",
+    "category": "ml",
+    "discipline": "机器学习",
+    "subdiscipline": "SVM",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "ml_cluster",
+    "question": "K-means聚类算法的基本步骤是什么？",
+    "expected_keywords": [
+      "聚类",
+      "中心",
+      "迭代"
+    ],
+    "collection": "proj_thesis",
+    "category": "ml",
+    "discipline": "机器学习",
+    "subdiscipline": "聚类",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "ml_dim",
+    "question": "主成分分析PCA用于什么目的？",
+    "expected_keywords": [
+      "降维",
+      "主成分",
+      "方差"
+    ],
+    "collection": "proj_thesis",
+    "category": "ml",
+    "discipline": "机器学习",
+    "subdiscipline": "降维/PCA",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "ml_dl_backprop",
+    "question": "反向传播算法解决什么问题？",
+    "expected_keywords": [
+      "梯度",
+      "反向",
+      "参数"
+    ],
+    "collection": "proj_thesis",
+    "category": "ml",
+    "discipline": "机器学习",
+    "subdiscipline": "反向传播",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "econ_elastic",
+    "question": "需求价格弹性如何定义？",
+    "expected_keywords": [
+      "弹性",
+      "价格",
+      "需求"
+    ],
+    "collection": "proj_social",
+    "category": "economics",
+    "discipline": "经济学",
+    "subdiscipline": "弹性理论",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "econ_market",
+    "question": "完全竞争市场的基本特征有哪些？",
+    "expected_keywords": [
+      "众多",
+      "同质",
+      "信息"
+    ],
+    "collection": "proj_social",
+    "category": "economics",
+    "discipline": "经济学",
+    "subdiscipline": "市场结构",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "econ_externality",
+    "question": "外部性是什么，举例说明？",
+    "expected_keywords": [
+      "外部",
+      "成本",
+      "社会"
+    ],
+    "collection": "proj_social",
+    "category": "economics",
+    "discipline": "经济学",
+    "subdiscipline": "外部性",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "econ_trade",
+    "question": "比较优势理论说明国际贸易的什么道理？",
+    "expected_keywords": [
+      "比较",
+      "优势",
+      "贸易"
+    ],
+    "collection": "proj_social",
+    "category": "economics",
+    "discipline": "经济学",
+    "subdiscipline": "国际贸易",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "econ_fiscal",
+    "question": "财政政策主要通过什么工具影响经济？",
+    "expected_keywords": [
+      "税收",
+      "支出",
+      "政府"
+    ],
+    "collection": "proj_social",
+    "category": "economics",
+    "discipline": "经济学",
+    "subdiscipline": "财政政策",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "soc_role",
+    "question": "社会角色与社会地位的关系是什么？",
+    "expected_keywords": [
+      "角色",
+      "地位",
+      "期望"
+    ],
+    "collection": "proj_social",
+    "category": "sociology",
+    "discipline": "社会学",
+    "subdiscipline": "角色理论",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "soc_culture",
+    "question": "文化相对主义主张什么？",
+    "expected_keywords": [
+      "文化",
+      "相对",
+      "评价"
+    ],
+    "collection": "proj_social",
+    "category": "sociology",
+    "discipline": "社会学",
+    "subdiscipline": "文化研究",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "soc_gender",
+    "question": "社会性别gender与生理性别sex的区别？",
+    "expected_keywords": [
+      "社会",
+      "性别",
+      "建构"
+    ],
+    "collection": "proj_social",
+    "category": "sociology",
+    "discipline": "社会学",
+    "subdiscipline": "性别研究",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "soc_urban",
+    "question": "城市化可能带来哪些社会问题？",
+    "expected_keywords": [
+      "城市",
+      "流动",
+      "空间"
+    ],
+    "collection": "proj_social",
+    "category": "sociology",
+    "discipline": "社会学",
+    "subdiscipline": "城市社会学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "pol_state",
+    "question": "韦伯如何定义国家？",
+    "expected_keywords": [
+      "暴力",
+      "垄断",
+      "合法性"
+    ],
+    "collection": "proj_social",
+    "category": "politics",
+    "discipline": "政治学",
+    "subdiscipline": "国家理论",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "pol_party",
+    "question": "政党在代议民主中的主要功能是什么？",
+    "expected_keywords": [
+      "政党",
+      "选举",
+      "利益"
+    ],
+    "collection": "proj_social",
+    "category": "politics",
+    "discipline": "政治学",
+    "subdiscipline": "政党政治",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "pol_ideology",
+    "question": "意识形态大致指什么？",
+    "expected_keywords": [
+      "观念",
+      "政治",
+      "体系"
+    ],
+    "collection": "proj_social",
+    "category": "politics",
+    "discipline": "政治学",
+    "subdiscipline": "意识形态",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "law_rights",
+    "question": "基本权利与人权有何联系？",
+    "expected_keywords": [
+      "权利",
+      "宪法",
+      "保障"
+    ],
+    "collection": "proj_social",
+    "category": "law",
+    "discipline": "法学",
+    "subdiscipline": "基本权利",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "law_admin",
+    "question": "行政法中的合法行政原则要求什么？",
+    "expected_keywords": [
+      "合法",
+      "行政",
+      "职权"
+    ],
+    "collection": "proj_social",
+    "category": "law",
+    "discipline": "法学",
+    "subdiscipline": "行政法",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "law_procedure",
+    "question": "程序正义为什么重要？",
+    "expected_keywords": [
+      "程序",
+      "公正",
+      "过程"
+    ],
+    "collection": "proj_social",
+    "category": "law",
+    "discipline": "法学",
+    "subdiscipline": "程序法",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "hist_ancient",
+    "question": "春秋战国时期社会变动的主要特征是什么？",
+    "expected_keywords": [
+      "诸侯",
+      "变法",
+      "礼崩"
+    ],
+    "collection": "proj_social",
+    "category": "history",
+    "discipline": "历史学",
+    "subdiscipline": "中国古代史",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "hist_reform",
+    "question": "改革开放的起点通常指哪一历史事件？",
+    "expected_keywords": [
+      "十一届三中全会",
+      "改革",
+      "开放"
+    ],
+    "collection": "proj_social",
+    "category": "history",
+    "discipline": "历史学",
+    "subdiscipline": "改革开放史",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "hist_global",
+    "question": "全球化历史进程中的关键动力有哪些？",
+    "expected_keywords": [
+      "贸易",
+      "技术",
+      "流动"
+    ],
+    "collection": "proj_social",
+    "category": "history",
+    "discipline": "历史学",
+    "subdiscipline": "全球史",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "phil_exist",
+    "question": "存在主义强调人的什么特征？",
+    "expected_keywords": [
+      "自由",
+      "存在",
+      "选择"
+    ],
+    "collection": "proj_social",
+    "category": "philosophy",
+    "discipline": "哲学",
+    "subdiscipline": "存在主义",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "phil_epistemology",
+    "question": "经验论与唯理论的主要分歧是什么？",
+    "expected_keywords": [
+      "经验",
+      "理性",
+      "知识"
+    ],
+    "collection": "proj_social",
+    "category": "philosophy",
+    "discipline": "哲学",
+    "subdiscipline": "知识论流派",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "phil_mind",
+    "question": "心身问题讨论的是什么？",
+    "expected_keywords": [
+      "心灵",
+      "身体",
+      "意识"
+    ],
+    "collection": "proj_social",
+    "category": "philosophy",
+    "discipline": "哲学",
+    "subdiscipline": "心灵哲学",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "edu_curriculum",
+    "question": "课程目标、内容与评价应如何对齐？",
+    "expected_keywords": [
+      "目标",
+      "内容",
+      "评价"
+    ],
+    "collection": "proj_social",
+    "category": "education",
+    "discipline": "教育学",
+    "subdiscipline": "课程论",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "edu_motivation",
+    "question": "内在动机与外在动机有何区别？",
+    "expected_keywords": [
+      "内在",
+      "外在",
+      "动机"
+    ],
+    "collection": "proj_social",
+    "category": "education",
+    "discipline": "教育学",
+    "subdiscipline": "学习动机",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "edu_inclusive",
+    "question": "全纳教育主张什么？",
+    "expected_keywords": [
+      "全纳",
+      "特殊",
+      "融合"
+    ],
+    "collection": "proj_social",
+    "category": "education",
+    "discipline": "教育学",
+    "subdiscipline": "全纳教育",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "ling_semantic",
+    "question": "语义学主要研究语言的什么层面？",
+    "expected_keywords": [
+      "意义",
+      "语义",
+      "指称"
+    ],
+    "collection": "proj_social",
+    "category": "linguistics",
+    "discipline": "语言学",
+    "subdiscipline": "语义学",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "ling_socioling",
+    "question": "社会语言学关注语言与什么因素的关系？",
+    "expected_keywords": [
+      "社会",
+      "阶层",
+      "变体"
+    ],
+    "collection": "proj_social",
+    "category": "linguistics",
+    "discipline": "语言学",
+    "subdiscipline": "社会语言学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "ling_acquisition",
+    "question": "第二语言习得中的关键期假说指什么？",
+    "expected_keywords": [
+      "关键期",
+      "习得",
+      "年龄"
+    ],
+    "collection": "proj_social",
+    "category": "linguistics",
+    "discipline": "语言学",
+    "subdiscipline": "二语习得",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "fin_bond",
+    "question": "债券价格与利率大致呈什么关系？",
+    "expected_keywords": [
+      "利率",
+      "价格",
+      "反向"
+    ],
+    "collection": "proj_work",
+    "category": "finance",
+    "discipline": "金融",
+    "subdiscipline": "债券/利率",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "fin_option",
+    "question": "看涨期权的买方最大损失是什么？",
+    "expected_keywords": [
+      "权利金",
+      "期权",
+      "损失"
+    ],
+    "collection": "proj_work",
+    "category": "finance",
+    "discipline": "金融",
+    "subdiscipline": "衍生品/期权",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "fin_factor",
+    "question": "多因子选股模型试图解释什么？",
+    "expected_keywords": [
+      "因子",
+      "收益",
+      "风险"
+    ],
+    "collection": "proj_work",
+    "category": "finance",
+    "discipline": "金融",
+    "subdiscipline": "多因子",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "fin_macro",
+    "question": "货币政策宽松通常如何影响资产价格？",
+    "expected_keywords": [
+      "利率",
+      "流动性",
+      "资产"
+    ],
+    "collection": "proj_work",
+    "category": "finance",
+    "discipline": "金融",
+    "subdiscipline": "宏观金融",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "math_prob",
+    "question": "条件概率与全概率公式解决什么问题？",
+    "expected_keywords": [
+      "条件",
+      "概率",
+      "划分"
+    ],
+    "collection": "proj_thesis",
+    "category": "math",
+    "discipline": "数学",
+    "subdiscipline": "条件概率",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "math_matrix",
+    "question": "矩阵特征值在应用中有什么意义？",
+    "expected_keywords": [
+      "特征",
+      "向量",
+      "变换"
+    ],
+    "collection": "proj_thesis",
+    "category": "math",
+    "discipline": "数学",
+    "subdiscipline": "特征值",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "math_info",
+    "question": "信息熵衡量的是什么？",
+    "expected_keywords": [
+      "熵",
+      "不确定",
+      "信息"
+    ],
+    "collection": "proj_thesis",
+    "category": "math",
+    "discipline": "数学",
+    "subdiscipline": "信息论",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "math_opt",
+    "question": "凸优化问题为何相对好解？",
+    "expected_keywords": [
+      "凸",
+      "局部",
+      "全局"
+    ],
+    "collection": "proj_thesis",
+    "category": "math",
+    "discipline": "数学",
+    "subdiscipline": "凸优化",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "phys_rel",
+    "question": "狭义相对论的两个基本假设是什么？",
+    "expected_keywords": [
+      "光速",
+      "相对性",
+      "惯性"
+    ],
+    "collection": "proj_social",
+    "category": "physics",
+    "discipline": "物理学",
+    "subdiscipline": "相对论",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "phys_wave",
+    "question": "波粒二象性指什么？",
+    "expected_keywords": [
+      "波",
+      "粒子",
+      "量子"
+    ],
+    "collection": "proj_social",
+    "category": "physics",
+    "discipline": "物理学",
+    "subdiscipline": "波动/量子",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "phys_thermo2",
+    "question": "热力学第二定律的常见表述是什么？",
+    "expected_keywords": [
+      "熵",
+      "自发",
+      "不可逆"
+    ],
+    "collection": "proj_social",
+    "category": "physics",
+    "discipline": "物理学",
+    "subdiscipline": "热力学第二定律",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "bio_gene",
+    "question": "基因表达的中心法则是什么？",
+    "expected_keywords": [
+      "DNA",
+      "RNA",
+      "蛋白质"
+    ],
+    "collection": "proj_social",
+    "category": "biology",
+    "discipline": "生物学",
+    "subdiscipline": "中心法则",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "bio_immune",
+    "question": "先天免疫与适应性免疫有何不同？",
+    "expected_keywords": [
+      "先天",
+      "适应",
+      "抗体"
+    ],
+    "collection": "proj_social",
+    "category": "biology",
+    "discipline": "生物学",
+    "subdiscipline": "免疫基础",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "bio_neuron",
+    "question": "神经元如何传递信号？",
+    "expected_keywords": [
+      "电位",
+      "突触",
+      "神经"
+    ],
+    "collection": "proj_social",
+    "category": "biology",
+    "discipline": "生物学",
+    "subdiscipline": "神经生物学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "chem_organic",
+    "question": "有机化学中官能团决定什么？",
+    "expected_keywords": [
+      "官能团",
+      "性质",
+      "反应"
+    ],
+    "collection": "proj_social",
+    "category": "chemistry",
+    "discipline": "化学",
+    "subdiscipline": "有机化学",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "chem_thermo",
+    "question": "化学热力学关注反应的什么问题？",
+    "expected_keywords": [
+      "能量",
+      "自发",
+      "焓"
+    ],
+    "collection": "proj_social",
+    "category": "chemistry",
+    "discipline": "化学",
+    "subdiscipline": "化学热力学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "chem_kinetics",
+    "question": "反应速率受哪些因素影响？",
+    "expected_keywords": [
+      "温度",
+      "浓度",
+      "催化剂"
+    ],
+    "collection": "proj_social",
+    "category": "chemistry",
+    "discipline": "化学",
+    "subdiscipline": "化学动力学",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "lit_realism",
+    "question": "现实主义文学的主要特征是什么？",
+    "expected_keywords": [
+      "真实",
+      "典型",
+      "社会"
+    ],
+    "collection": "proj_social",
+    "category": "literature",
+    "discipline": "文学",
+    "subdiscipline": "现实主义",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "lit_modern",
+    "question": "现代主义文学常见的形式实验有哪些？",
+    "expected_keywords": [
+      "意识流",
+      "碎片",
+      "现代"
+    ],
+    "collection": "proj_social",
+    "category": "literature",
+    "discipline": "文学",
+    "subdiscipline": "现代主义",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "lit_rhetoric",
+    "question": "比喻与象征有何区别？",
+    "expected_keywords": [
+      "比喻",
+      "象征",
+      "修辞"
+    ],
+    "collection": "proj_social",
+    "category": "literature",
+    "discipline": "文学",
+    "subdiscipline": "修辞学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "mgmt_lean",
+    "question": "精益管理的核心目标是什么？",
+    "expected_keywords": [
+      "浪费",
+      "价值",
+      "流程"
+    ],
+    "collection": "proj_work",
+    "category": "management",
+    "discipline": "管理学",
+    "subdiscipline": "精益管理",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "mgmt_leader",
+    "question": "变革型领导与交易型领导有何不同？",
+    "expected_keywords": [
+      "变革",
+      "交易",
+      "激励"
+    ],
+    "collection": "proj_work",
+    "category": "management",
+    "discipline": "管理学",
+    "subdiscipline": "领导力",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "mgmt_project",
+    "question": "项目管理中的铁三角通常指什么？",
+    "expected_keywords": [
+      "范围",
+      "时间",
+      "成本"
+    ],
+    "collection": "proj_work",
+    "category": "management",
+    "discipline": "管理学",
+    "subdiscipline": "项目管理",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "geo_gis",
+    "question": "GIS地理信息系统的基本功能是什么？",
+    "expected_keywords": [
+      "空间",
+      "数据",
+      "分析"
+    ],
+    "collection": "proj_social",
+    "category": "geography",
+    "discipline": "地理学",
+    "subdiscipline": "GIS",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "geo_resource",
+    "question": "可再生与不可再生资源如何划分？",
+    "expected_keywords": [
+      "可再生",
+      "资源",
+      "枯竭"
+    ],
+    "collection": "proj_social",
+    "category": "geography",
+    "discipline": "地理学",
+    "subdiscipline": "资源地理",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "geo_region",
+    "question": "区域地理综合分析通常考虑哪些要素？",
+    "expected_keywords": [
+      "自然",
+      "人文",
+      "区域"
+    ],
+    "collection": "proj_social",
+    "category": "geography",
+    "discipline": "地理学",
+    "subdiscipline": "区域地理",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "med_pharma",
+    "question": "药代动力学ADME指哪些过程？",
+    "expected_keywords": [
+      "吸收",
+      "分布",
+      "代谢",
+      "排泄"
+    ],
+    "collection": "proj_social",
+    "category": "medicine",
+    "discipline": "医学",
+    "subdiscipline": "药代动力学",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "med_epid",
+    "question": "流行病学中的发病率与患病率有何区别？",
+    "expected_keywords": [
+      "发病",
+      "患病",
+      "新病例"
+    ],
+    "collection": "proj_social",
+    "category": "medicine",
+    "discipline": "医学",
+    "subdiscipline": "流行病学",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "med_public",
+    "question": "公共卫生三级预防分别对应什么？",
+    "expected_keywords": [
+      "一级",
+      "二级",
+      "三级",
+      "预防"
+    ],
+    "collection": "proj_social",
+    "category": "medicine",
+    "discipline": "医学",
+    "subdiscipline": "公共卫生",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "art_persp",
+    "question": "透视法在绘画中的作用是什么？",
+    "expected_keywords": [
+      "透视",
+      "空间",
+      "深度"
+    ],
+    "collection": "proj_social",
+    "category": "art",
+    "discipline": "艺术",
+    "subdiscipline": "透视",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "art_style",
+    "question": "艺术风格史为什么要分期？",
+    "expected_keywords": [
+      "风格",
+      "时代",
+      "流派"
+    ],
+    "collection": "proj_social",
+    "category": "art",
+    "discipline": "艺术",
+    "subdiscipline": "艺术史分期",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "music_form",
+    "question": "奏鸣曲式的基本结构是什么？",
+    "expected_keywords": [
+      "呈示",
+      "展开",
+      "再现"
+    ],
+    "collection": "proj_social",
+    "category": "music",
+    "discipline": "音乐",
+    "subdiscipline": "曲式",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "music_rhythm",
+    "question": "节奏与节拍有何区别？",
+    "expected_keywords": [
+      "节奏",
+      "节拍",
+      "时值"
+    ],
+    "collection": "proj_social",
+    "category": "music",
+    "discipline": "音乐",
+    "subdiscipline": "节奏节拍",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "cross_observ",
+    "question": "AI系统可观测性通常包括哪些信号？",
+    "expected_keywords": [
+      "日志",
+      "指标",
+      "追踪"
+    ],
+    "collection": "proj_work",
+    "category": "cross",
+    "discipline": "交叉/工程",
+    "subdiscipline": "可观测性",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "cross_safety",
+    "question": "大模型应用中的安全护栏可以做什么？",
+    "expected_keywords": [
+      "安全",
+      "过滤",
+      "策略"
+    ],
+    "collection": "proj_work",
+    "category": "cross",
+    "discipline": "交叉/工程",
+    "subdiscipline": "AI安全",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "cross_data",
+    "question": "数据飞轮对AI产品意味着什么？",
+    "expected_keywords": [
+      "数据",
+      "反馈",
+      "迭代"
+    ],
+    "collection": "proj_work",
+    "category": "cross",
+    "discipline": "交叉/工程",
+    "subdiscipline": "数据飞轮",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "stat_hypothesis",
+    "question": "假设检验中的p值如何解释？",
+    "expected_keywords": [
+      "p值",
+      "原假设",
+      "显著"
+    ],
+    "collection": "proj_thesis",
+    "category": "stats",
+    "discipline": "统计学",
+    "subdiscipline": "假设检验",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "stat_ci",
+    "question": "置信区间表达的是什么不确定性？",
+    "expected_keywords": [
+      "置信",
+      "区间",
+      "参数"
+    ],
+    "collection": "proj_thesis",
+    "category": "stats",
+    "discipline": "统计学",
+    "subdiscipline": "置信区间",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "stat_sampling",
+    "question": "随机抽样为何重要？",
+    "expected_keywords": [
+      "随机",
+      "样本",
+      "偏差"
+    ],
+    "collection": "proj_thesis",
+    "category": "stats",
+    "discipline": "统计学",
+    "subdiscipline": "抽样",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "comm_media",
+    "question": "议程设置理论认为媒体如何影响公众？",
+    "expected_keywords": [
+      "议程",
+      "媒体",
+      "关注"
+    ],
+    "collection": "proj_social",
+    "category": "comms",
+    "discipline": "传播学",
+    "subdiscipline": "议程设置",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "comm_semiotics",
+    "question": "传播学中的编码与解码指什么？",
+    "expected_keywords": [
+      "编码",
+      "解码",
+      "意义"
+    ],
+    "collection": "proj_social",
+    "category": "comms",
+    "discipline": "传播学",
+    "subdiscipline": "编码解码",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "anthro_culture",
+    "question": "文化人类学如何理解文化？",
+    "expected_keywords": [
+      "文化",
+      "习得",
+      "共享"
+    ],
+    "collection": "proj_social",
+    "category": "anthro",
+    "discipline": "人类学",
+    "subdiscipline": "文化概念",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "anthro_field",
+    "question": "田野调查ethnography的核心方法是什么？",
+    "expected_keywords": [
+      "参与观察",
+      "田野",
+      "民族志"
+    ],
+    "collection": "proj_social",
+    "category": "anthro",
+    "discipline": "人类学",
+    "subdiscipline": "田野方法",
+    "difficulty": "hard",
+    "allow_refuse": true
+  },
+  {
+    "id": "env_sustain",
+    "question": "可持续发展的三重底线通常指什么？",
+    "expected_keywords": [
+      "经济",
+      "社会",
+      "环境"
+    ],
+    "collection": "proj_social",
+    "category": "env",
+    "discipline": "环境科学",
+    "subdiscipline": "可持续发展",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "env_carbon",
+    "question": "碳中和与碳达峰分别指什么？",
+    "expected_keywords": [
+      "碳",
+      "达峰",
+      "中和"
+    ],
+    "collection": "proj_social",
+    "category": "env",
+    "discipline": "环境科学",
+    "subdiscipline": "碳中和",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_os",
+    "question": "操作系统的进程与线程有何区别？",
+    "expected_keywords": [
+      "进程",
+      "线程",
+      "资源"
+    ],
+    "collection": "proj_work",
+    "category": "cs_sys",
+    "discipline": "计算机系统",
+    "subdiscipline": "进程线程",
+    "difficulty": "medium",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_net",
+    "question": "TCP与UDP的主要差别是什么？",
+    "expected_keywords": [
+      "可靠",
+      "连接",
+      "UDP"
+    ],
+    "collection": "proj_work",
+    "category": "cs_sys",
+    "discipline": "计算机系统",
+    "subdiscipline": "计算机网络",
+    "difficulty": "easy",
+    "allow_refuse": true
+  },
+  {
+    "id": "cs_db",
+    "question": "数据库事务ACID分别代表什么？",
+    "expected_keywords": [
+      "原子",
+      "一致",
+      "隔离",
+      "持久"
+    ],
+    "collection": "proj_work",
+    "category": "cs_sys",
+    "discipline": "计算机系统",
+    "subdiscipline": "数据库事务",
+    "difficulty": "medium",
+    "allow_refuse": true
+  }
+]

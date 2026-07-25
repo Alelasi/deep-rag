@@ -1,0 +1,16 @@
+[
+  {
+    "timestamp": "2026-07-14T16:51:59",
+    "query": "你数据量多少",
+    "answer_length": 50,
+    "rating": "down",
+    "mode": "enhanced"
+  },
+  {
+    "timestamp": "2026-07-14T16:52:02",
+    "query": "你数据量多少",
+    "answer_length": 50,
+    "rating": "down",
+    "mode": "enhanced"
+  }
+]

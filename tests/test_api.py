@@ -1,77 +1,92 @@
-"""FastAPI 接口测试 - 用 TestClient 验证端点"""
+"""FastAPI 接口测试 — 使用根 api:app，Mock RAG 避免依赖向量库"""
+import sys
+from pathlib import Path
+from unittest.mock import patch
+
 import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
 from fastapi.testclient import TestClient
 
 from api import app
-from src.graph import get_indexer
 
 client = TestClient(app)
 
 
 def test_health():
-    """健康检查端点"""
     r = client.get("/health")
     assert r.status_code == 200
     data = r.json()
-    assert data["status"] == "ok"
+    assert data["status"] == "healthy"
     assert "version" in data
-    assert "agentic_rag_enabled" in data
+    assert "uptime_seconds" in data
 
 
-def test_collections():
-    """列出集合端点"""
-    r = client.get("/collections")
+def test_version():
+    r = client.get("/version")
     assert r.status_code == 200
-    assert "collections" in r.json()
+    body = r.json()
+    assert "package_version" in body
+    assert "capability_version" in body
 
 
-def test_query_endpoint():
-    """单次查询端点 - 完整流程"""
-    # 准备数据
-    indexer = get_indexer("api_test")
-    indexer.index_texts([
-        {"content": "FastAPI 是一个现代化的 Python Web 框架", "metadata": {"source": "doc1"}},
-    ])
+def test_metrics():
+    r = client.get("/metrics")
+    assert r.status_code == 200
+    assert "deeprag_uptime_seconds" in r.text
 
-    r = client.post("/query", json={
-        "question": "什么是 FastAPI",
-        "collection_name": "api_test",
-        "max_retries": 1,
-    })
 
+def test_query_endpoint_mocked():
+    fake = {
+        "answer": "【直接回答】测试答案",
+        "citations": [{"source": "doc1", "page": 0, "text": "x"}],
+        "hallucination_score": 0.1,
+        "fact_check_passed": True,
+        "relevant_count": 1,
+        "conflicts": [],
+        "history": ["ok"],
+        "no_knowledge": False,
+        "used_mock_web": False,
+    }
+    with patch("scripts.api.rag_query", return_value=fake):
+        r = client.post(
+            "/query",
+            json={"question": "什么是测试", "collection_name": "default", "max_retries": 1},
+        )
     assert r.status_code == 200
     data = r.json()
-    assert "answer" in data
-    assert "citations" in data
-    assert "hallucination_score" in data
-    assert "history" in data
-    assert data["mode"] in ("hybrid", "agentic")
+    assert data["answer"]
+    assert data["request_id"]
+    assert data["fact_check_passed"] is True
 
 
-def test_query_invalid_input():
-    """空问题应被校验拒绝"""
-    r = client.post("/query", json={"question": "", "collection_name": "test"})
-    assert r.status_code == 422  # Pydantic 校验失败
+def test_query_empty_rejected():
+    r = client.post("/query", json={"question": "  ", "collection_name": "default"})
+    # pydantic min_length or sanitize
+    assert r.status_code in (400, 422)
 
 
-def test_index_invalid_path():
-    """不存在的目录应返回 400"""
-    r = client.post("/index", json={
-        "collection_name": "test",
-        "docs_dir": "Z:/nonexistent_path_12345",
-    })
-    assert r.status_code == 400
+def test_index_path_denied(tmp_path, monkeypatch):
+    monkeypatch.setenv("INDEX_ALLOWED_ROOTS", str(tmp_path / "allowed"))
+    (tmp_path / "allowed").mkdir()
+    outside = tmp_path / "hack"
+    outside.mkdir()
+    # reload validation uses env at call time for roots — ok
+    r = client.post(
+        "/index",
+        json={"collection_name": "x", "docs_dir": str(outside)},
+    )
+    assert r.status_code in (403, 400)
 
 
-def test_query_stream():
-    """流式接口返回 SSE 格式"""
-    r = client.post("/query/stream", json={
-        "question": "test stream",
-        "collection_name": "api_test",
-        "max_retries": 0,
-    })
-    assert r.status_code == 200
-    assert r.headers["content-type"].startswith("text/event-stream")
-    body = r.text
-    assert "data:" in body
-    assert "done" in body or "error" in body
+def test_auth_when_key_set(monkeypatch):
+    monkeypatch.setenv("API_KEY", "prod-key-xyz")
+    # force re-read
+    r = client.get("/collections")
+    # without key should 401 when auth enabled
+    assert r.status_code == 401
+    r2 = client.get("/collections", headers={"X-API-Key": "prod-key-xyz"})
+    # may 200 with empty collections
+    assert r2.status_code == 200

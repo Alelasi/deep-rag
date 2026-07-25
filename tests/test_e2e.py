@@ -196,7 +196,9 @@ def test_agentic_rag_mode():
         # 重新导入以应用环境变量
         import importlib
         import src.config
+        import src.graph
         importlib.reload(src.config)
+        importlib.reload(src.graph)  # 必须 reload graph 才能应用新的 config
 
         # 索引文档
         indexer = get_indexer("agentic_test")

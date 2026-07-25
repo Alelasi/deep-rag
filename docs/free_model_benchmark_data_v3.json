@@ -1,0 +1,75 @@
+{
+  "time": "2026-07-18T13:02:46.372858",
+  "results": [
+    {
+      "name": "Cerebras GPT-OSS-120B",
+      "provider": "Cerebras",
+      "model_id": "gpt-oss-120b",
+      "success": 6,
+      "total": 6,
+      "avg_latency_ms": 804.7,
+      "avg_speed": 610.5,
+      "avg_score": 8.82
+    },
+    {
+      "name": "Groq Llama3.1-8B",
+      "provider": "Groq",
+      "model_id": "llama-3.1-8b-instant",
+      "success": 6,
+      "total": 6,
+      "avg_latency_ms": 1071.1,
+      "avg_speed": 219.7,
+      "avg_score": 8.64
+    },
+    {
+      "name": "Zhipu GLM-4-Flash",
+      "provider": "Zhipu",
+      "model_id": "glm-4-flash",
+      "success": 6,
+      "total": 6,
+      "avg_latency_ms": 15273.7,
+      "avg_speed": 0,
+      "avg_score": 8.09
+    },
+    {
+      "name": "Silicon GLM-Z1-9B",
+      "provider": "SiliconFlow",
+      "model_id": "THUDM/GLM-Z1-9B-0414",
+      "success": 6,
+      "total": 6,
+      "avg_latency_ms": 15113.5,
+      "avg_speed": 0,
+      "avg_score": 7.95
+    },
+    {
+      "name": "Groq Qwen3.6-27B",
+      "provider": "Groq",
+      "model_id": "qwen/qwen3.6-27b",
+      "success": 6,
+      "total": 6,
+      "avg_latency_ms": 1941.7,
+      "avg_speed": 359.7,
+      "avg_score": 7.92
+    },
+    {
+      "name": "Silicon Qwen2.5-7B",
+      "provider": "SiliconFlow",
+      "model_id": "Qwen/Qwen2.5-7B-Instruct",
+      "success": 6,
+      "total": 6,
+      "avg_latency_ms": 2984.8,
+      "avg_speed": 0,
+      "avg_score": 7.15
+    },
+    {
+      "name": "Zhipu GLM-4.5-Flash",
+      "provider": "Zhipu",
+      "model_id": "glm-4.5-flash",
+      "success": 6,
+      "total": 6,
+      "avg_latency_ms": 18708.7,
+      "avg_speed": 0,
+      "avg_score": 5.36
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  # DeepRAG API Service
+  deep-rag:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deep-rag-api
+    ports:
+      - "8000:8000"
+    environment:
+      # LLM Configuration
+      - SILICONFLOW_API_KEY=${SILICONFLOW_API_KEY}
+      - LLM_BACKEND=${LLM_BACKEND:-siliconcloud}
+      - LLM_MODEL=${LLM_MODEL:-THUDM/GLM-Z1-9B-0414}
+
+      # Vector Database Configuration
+      - VECTOR_DB=${VECTOR_DB:-qdrant}
+
+      # Qdrant Configuration (if using Qdrant)
+      - QDRANT_HOST=${QDRANT_HOST:-qdrant}
+      - QDRANT_PORT=${QDRANT_PORT:-6333}
+
+      # pgvector Configuration (if using pgvector)
+      - PGVECTOR_HOST=${PGVECTOR_HOST:-postgres}
+      - PGVECTOR_PORT=${PGVECTOR_PORT:-5432}
+      - PGVECTOR_DATABASE=${PGVECTOR_DATABASE:-deeprag}
+      - PGVECTOR_USER=${PGVECTOR_USER:-postgres}
+      - PGVECTOR_PASSWORD=${PGVECTOR_PASSWORD:-postgres}
+
+      # Feature Flags
+      - ENABLE_AGENTIC_RAG=${ENABLE_AGENTIC_RAG:-false}
+      - ENABLE_RERANKER=${ENABLE_RERANKER:-false}
+      - ENABLE_SELF_RAG_LOOP=${ENABLE_SELF_RAG_LOOP:-false}
+
+      # Production security
+      - API_KEY=${API_KEY}
+      - RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE:-60}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8501}
+      - INDEX_ALLOWED_ROOTS=${INDEX_ALLOWED_ROOTS:-/app/data}
+
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/app/data
+      - ./evaluation_reports:/app/evaluation_reports
+    depends_on:
+      - qdrant
+      - postgres
+    restart: unless-stopped
+    networks:
+      - deep-rag-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:v1.12.0
+    container_name: deep-rag-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    restart: unless-stopped
+    networks:
+      - deep-rag-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL with pgvector
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: deep-rag-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=deeprag
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-pgvector.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    networks:
+      - deep-rag-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Streamlit UI (Optional)
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deep-rag-ui
+    command: streamlit run app.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      - SILICONFLOW_API_KEY=${SILICONFLOW_API_KEY}
+      - LLM_BACKEND=siliconcloud
+      - LLM_MODEL=THUDM/GLM-Z1-9B-0414
+      - VECTOR_DB=qdrant
+      - QDRANT_HOST=${QDRANT_HOST:-qdrant}
+      - QDRANT_PORT=${QDRANT_PORT:-6333}
+      - API_URL=http://deep-rag:8000
+    depends_on:
+      - deep-rag
+    restart: unless-stopped
+    networks:
+      - deep-rag-network
+
+volumes:
+  qdrant_storage:
+    driver: local
+  postgres_data:
+    driver: local
+
+networks:
+  deep-rag-network:
+    driver: bridge

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeepRAG - 企业级 Agentic RAG 技术文档问答系统</title>
+  <meta name="description" content="基于 LangGraph 的自纠错 RAG 系统：混合检索 + Corrective RAG + Self-RAG 闭环 + 离线启发式评测">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <!-- Mermaid.js -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <!-- D3.js v7 -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- 导航栏 -->
+<nav class="navbar">
+  <a href="#hero" class="logo">DeepRAG</a>
+  <div class="nav-links">
+    <a href="#background">背景</a>
+    <a href="#pipeline">Pipeline</a>
+    <a href="#routing">路由</a>
+    <a href="#tech">技术栈</a>
+    <a href="#metrics">数据</a>
+    <a href="https://github.com/Alelasi/deep-rag" target="_blank" class="cta-btn">GitHub</a>
+  </div>
+</nav>
+
+<!-- Hero 区块 -->
+<section id="hero" class="hero">
+  <div class="badge">v2.9.x · LangGraph · 7层自纠错 Pipeline</div>
+  <h1>DeepRAG<br><span class="highlight">Agentic RAG</span> 问答系统</h1>
+  <p class="tagline">企业级技术文档智能助手 — 混合检索 + Corrective RAG + 可选 Self-RAG 闭环</p>
+  <div class="typewriter"></div>
+  <div class="cta-group">
+    <a href="https://github.com/Alelasi/deep-rag" target="_blank" class="cta-primary">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      源码仓库
+    </a>
+    <a href="#pipeline" class="cta-secondary">查看架构</a>
+  </div>
+</section>
+
+<!-- 项目背景 -->
+<section id="background" class="section fade-in">
+  <div class="section-header">
+    <div class="section-label">Problem</div>
+    <h2>真实场景痛点</h2>
+    <p>学习 LangChain/LangGraph 时，官方文档分散在 4-5 个站点，版本更新快，查一个问题平均花费 10-30 分钟</p>
+  </div>
+
+  <div class="pain-cards">
+    <div class="pain-card">
+      <div class="icon">📚</div>
+      <h3>查找困难</h3>
+      <p>同一概念在 Python 文档、JS 文档、API Reference、GitHub 多页面分散，需人工整合</p>
+    </div>
+    <div class="pain-card">
+      <div class="icon">⏰</div>
+      <h3>耗时严重</h3>
+      <p>查一个问题平均 10-30 分钟，打开多个标签页、比对版本差异</p>
+    </div>
+    <div class="pain-card">
+      <div class="icon">🔄</div>
+      <h3>重复劳动</h3>
+      <p>同一类问题反复查（API Key 配置、LCEL 语法），缺乏积累复用</p>
+    </div>
+    <div class="pain-card">
+      <div class="icon">📉</div>
+      <h3>效率低下</h3>
+      <p>花大量时间查文档，真正写代码时间不到 50%</p>
+    </div>
+  </div>
+
+  <div class="comparison-box">
+    <div class="col bad">
+      <h4>❌ 传统 RAG</h4>
+      <pre>问题："LangChain 0.3 有什么新特性？有没有已知 bug？"
+
+→ 只能查本地文档库
+→ 无法回答实时信息
+→ 版本差异需人工比对
+→ 答案可能包含幻觉</pre>
+    </div>
+    <div class="col good">
+      <h4>✅ Agentic RAG</h4>
+      <pre>问题："LangChain 0.3 有什么新特性？有没有已知 bug？"
+
+→ 识别查询意图：新特性（文档）+ bug（实时）
+→ 并行调用工具：Vector Search + GitHub Issues API
+→ 综合答案：完整回答两个子问题
+→ Self-RAG 事实校验：降低幻觉率</pre>
+    </div>
+  </div>
+</section>
+
+<!-- 7层 Pipeline -->
+<section id="pipeline" class="section fade-in">
+  <div class="section-header">
+    <div class="section-label">Architecture</div>
+    <h2>7层自纠错 Pipeline</h2>
+    <p>基于 LangGraph 状态机，含 Corrective RAG 纠错循环和 Self-RAG 自我反思循环</p>
+  </div>
+
+  <div class="pipeline-container">
+    <div id="mermaid-pipeline"></div>
+    <div class="pipeline-legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background: #6366f1;"></div>
+        <span>核心节点</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background: #8b5cf6;"></div>
+        <span>决策分支</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background: #ec4899;"></div>
+        <span>事实校验</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background: #10b981;"></div>
+        <span>输出</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background: #666680;"></div>
+        <span>纠错路径</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Agentic 路由 -->
+<section id="routing" class="section fade-in">
+  <div class="section-header">
+    <div class="section-label">Agentic RAG</div>
+    <h2>动态工具路由</h2>
+    <p>Agent 根据查询类型自动选择最佳检索策略，点击下方按钮查看不同场景的路由路径</p>
+  </div>
+
+  <div class="routing-container">
+    <div class="routing-controls">
+      <button class="routing-btn active" data-scenario="concept">概念查询</button>
+      <button class="routing-btn" data-scenario="version">版本+实时</button>
+      <button class="routing-btn" data-scenario="compare">对比查询</button>
+      <button class="routing-btn" data-scenario="complex">复杂多跳</button>
+    </div>
+    <div id="routing-graph"></div>
+  </div>
+</section>
+
+<!-- 技术栈 -->
+<section id="tech" class="section fade-in">
+  <div class="section-header">
+    <div class="section-label">Tech Stack</div>
+    <h2>技术架构</h2>
+    <p>核心组件与技术选型</p>
+  </div>
+
+  <div class="tech-grid">
+    <div class="tech-card">
+      <div class="tech-name">LangGraph</div>
+      <div class="tech-role">状态机编排引擎</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">Qdrant</div>
+      <div class="tech-role">生产级向量数据库</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">BM25</div>
+      <div class="tech-role">关键词检索</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">RRF</div>
+      <div class="tech-role">混合排序融合</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">Cross-Encoder</div>
+      <div class="tech-role">精排 Reranker</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">Streamlit</div>
+      <div class="tech-role">Web 交互界面</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">FastAPI</div>
+      <div class="tech-role">REST API 服务</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">SiliconCloud</div>
+      <div class="tech-role">LLM 后端 (GLM-Z1-9B)</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">bge-base-zh</div>
+      <div class="tech-role">中文 Embedding</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">jieba</div>
+      <div class="tech-role">中文分词</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">Docker</div>
+      <div class="tech-role">容器化部署</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">MCP Protocol</div>
+      <div class="tech-role">工具调用协议</div>
+    </div>
+  </div>
+</section>
+
+<!-- 性能数据 -->
+<section id="metrics" class="section fade-in">
+  <div class="section-header">
+    <div class="section-label">Metrics</div>
+    <h2>性能与评测数据</h2>
+    <p>所有数据来自项目真实评测，可追溯至源文件，遵循审计真相表口径</p>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3>检索准确率提升</h3>
+      <div class="chart-source">来源: README.md - 两阶段检索效果对比</div>
+      <canvas id="chart-retrieval"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>向量数据库写入速度对比</h3>
+      <div class="chart-source">来源: docs/向量数据库性能对比报告.md (对数坐标)</div>
+      <canvas id="chart-vectordb"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>版本演进与准确率</h3>
+      <div class="chart-source">来源: README.md - 7个月持续迭代</div>
+      <canvas id="chart-version"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>RAGAS 评测雷达图</h3>
+      <div class="chart-source">来源: evaluation_reports/ragas_report_20260521_140012.md (5题样例)</div>
+      <canvas id="chart-ragas"></canvas>
+    </div>
+  </div>
+
+  <!-- 评测资产 -->
+  <div style="margin-top: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem;">
+    <h3 style="font-size: 1rem; margin-bottom: 0.25rem;">评测资产</h3>
+    <div class="chart-source" style="margin-bottom: 1rem;">来源: docs/审计真相表_P0.md — 代码/文档/评测三方说同一种真话</div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+      <div style="text-align: center; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+        <div style="font-size: 2rem; font-weight: 800; color: var(--accent-blue);">60</div>
+        <div style="font-size: 0.85rem; color: var(--text-secondary);">Golden 主测试集</div>
+      </div>
+      <div style="text-align: center; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+        <div style="font-size: 2rem; font-weight: 800; color: var(--accent-purple);">150</div>
+        <div style="font-size: 0.85rem; color: var(--text-secondary);">意图专项评测 (L1≈72%)</div>
+      </div>
+      <div style="text-align: center; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+        <div style="font-size: 2rem; font-weight: 800; color: var(--accent-cyan);">20</div>
+        <div style="font-size: 0.85rem; color: var(--text-secondary);">E2E 回归测试</div>
+      </div>
+      <div style="text-align: center; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+        <div style="font-size: 2rem; font-weight: 800; color: var(--accent-green);">92%</div>
+        <div style="font-size: 0.85rem; color: var(--text-secondary);">幻觉检测准确率</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 版本演进时间线 -->
+  <div style="margin-top: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem;">
+    <h3 style="font-size: 1rem; margin-bottom: 0.25rem;">版本演进</h3>
+    <div class="chart-source" style="margin-bottom: 1.5rem;">来源: README.md - 7个月持续迭代</div>
+    <div class="version-timeline" id="version-timeline"></div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-links">
+    <a href="https://github.com/Alelasi/deep-rag" target="_blank">GitHub 仓库</a>
+    <a href="https://github.com/Alelasi/deep-rag/blob/main/docs/审计真相表_P0.md" target="_blank">审计真相表</a>
+    <a href="https://github.com/Alelasi/deep-rag/blob/main/README.md" target="_blank">项目文档</a>
+    <a href="https://github.com/Alelasi/deep-rag/issues" target="_blank">问题反馈</a>
+  </div>
+  <p class="footer-text">DeepRAG v2.9.x · 包版本 0.2.9 · MIT License · 本科毕业设计 / 求职展示项目</p>
+</footer>
+
+<!-- 脚本 -->
+<script src="assets/js/main.js"></script>
+<script src="assets/js/pipeline.js"></script>
+<script src="assets/js/routing.js"></script>
+<script src="assets/js/charts.js"></script>
+<script>
+  // 动态渲染版本时间线
+  document.addEventListener('DOMContentLoaded', () => {
+    fetch('assets/data/metrics.json')
+      .then(r => r.json())
+      .then(data => {
+        const container = document.getElementById('version-timeline');
+        if (!container) return;
+        container.innerHTML = data.version_evolution.data.map(v => `
+          <div class="version-item">
+            <div class="version-header">
+              <span class="version-tag">${v.version}</span>
+              <span class="version-date">${v.date}</span>
+            </div>
+            <div class="version-desc">${v.description}</div>
+            <span class="version-accuracy">${v.accuracy}% 准确率</span>
+          </div>
+        `).join('');
+      })
+      .catch(err => console.error('版本数据加载失败:', err));
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,231 @@
+{
+  "generated_at": "2026-07-22T18:43:20",
+  "total": 20,
+  "hit": 19,
+  "accuracy": 0.95,
+  "no_knowledge_rate": 0.05,
+  "mock_web_rate": 0.0,
+  "note": "启发式关键词命中，非官方 RAGAS；勿直接写成简历 95%",
+  "cases": [
+    {
+      "id": "e2e_01",
+      "question": "什么是MBTI？",
+      "ok": true,
+      "latency_ms": 86383,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.183,
+      "answer_preview": "**【直接回答】**  \nMBTI是一种将人划分为16种人格类型的系统，其中包括INFJ、INTJ、ENFP、INTP、ENTP、INFP等[1][2]。  \n\n**【详细解释】**  \nMBTI（Myers‑Briggs Type Indicator）通过四组二元维度组合，形成共计16种不同的性格类型，用以描述人们在信息获取、决策和行为上的偏好[2]。在提供的材料中，文档1直接列举了几种常见的类",
+      "error": null
+    },
+    {
+      "id": "e2e_02",
+      "question": "INTJ的主导功能是什么？",
+      "ok": true,
+      "latency_ms": 1189,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.277,
+      "answer_preview": "**【直接回答】**  \nINTJ的主导功能是内倾直觉（Ni）[2]，其完整功能堆栈为 Ni‑Te‑Fi‑Se[2]。  \n\n**【详细解释】**  \n在 MBTI 体系中，INTJ 的首要认知功能被标记为 Ni（内倾直觉），它负责收集潜在的意义、模式和未来可能性，是其对全局目标的导向核心[2]。NI 作为内倾的感知功能，使 INTJ 能够在内部形成对事物深层结构的洞察，并在此基础上进行长远规划。",
+      "error": null
+    },
+    {
+      "id": "e2e_03",
+      "question": "八个认知功能有哪些？",
+      "ok": true,
+      "latency_ms": 64805,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.108,
+      "answer_preview": "**【直接回答】**  \n八个认知功能分别是：内向直觉（Ni）、外向直觉（Ne）、内向感觉（Si）、外向感觉（Se）、内向思考（Ti）、外向思考（Te）、内向情感（Fi）和外向情感（Fe）[1][2]。  \n\n**【详细解释】**  \n这八个功能来源于荣格的心理类型理论，构成了 MBTI 的功能堆栈。每个功能既可以在意识层面（如主导或辅助），也可以在无意识层面（如劣势或欺骗者）出现，形成不同的功能",
+      "error": null
+    },
+    {
+      "id": "e2e_04",
+      "question": "MBTI判型信息量阈值是多少？",
+      "ok": true,
+      "latency_ms": 2161,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.269,
+      "answer_preview": "**【直接回答】**  \nMBTI判型的信息量阈值为：  \n- 标准文本（散文、日记、聊天记录）要求总有效信息量 ≥ 10 bits；  \n- 降低阈值的文本（歌词、诗歌）要求总有效信息量 ≥ 8 bits[1]。  \n\n**【详细解释】**  \n判型时需要先将文本的得分转换为信息量（bits），再与阈值比较，以判断证据是否充分。对于常规的书面或口语记录（如散文、日记、聊天记录），设定的**标准阈",
+      "error": null
+    },
+    {
+      "id": "e2e_05",
+      "question": "Te和Ti有什么区别？",
+      "ok": true,
+      "latency_ms": 61672,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.281,
+      "answer_preview": "**【直接回答】**  \nTe（外倾思维）和 Ti（内倾思维）都是理性判断功能，但 Ti关注“为什么”（原理）并解构内部逻辑，Te关注“怎么做”（方法）并解构外部系统[1]。\n\n**【详细解释】**  \n- **功能取向**：Ti 是内倾的思维功能，倾向于深入分析事物的内部结构和原理，追问背后的原因；而 Te 是外倾的思维功能，侧重于将想法付诸实践，寻找实现目标的具体方法[1]。  \n- **解构",
+      "error": null
+    },
+    {
+      "id": "e2e_06",
+      "question": "九型人格有哪九型？",
+      "ok": true,
+      "latency_ms": 61416,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.331,
+      "answer_preview": "**【直接回答】**  \n提供的文档中仅涉及第九型（9w1）的描述，并未列出完整的九型人格的全部九种类型。\n\n**【详细解释】**  \n在文档1和文档2中，重点讨论了第九型人格的特征，例如第九型的核心矛盾、强迫倾向、对规则的关注以及在公共场合的行为表现等[1][2]。然而，这些材料并未提供关于其他八种类型（如1型、2型、3型等）的信息或完整的九型列表。因此，依据当前提供的文档，无法给出九型人格的全",
+      "error": null
+    },
+    {
+      "id": "e2e_07",
+      "question": "什么是恐惧贪婪指数？",
+      "ok": true,
+      "latency_ms": 1115,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.202,
+      "answer_preview": "**【直接回答】**  \n恐贪指数（Fear & Greed Index）是衡量市场恐惧与贪婪情绪的指标，取值范围为0‑100分；当指数低于20时表示极度恐惧，通常被视为买入信号；当指数高于80时表示极度贪婪，通常被视为卖出信号[1][2]。  \n\n**【详细解释】**  \n该指数通过综合多项市场数据（如波动率、成交量、市场动向等）来反映投资者情绪的冷热程度，数值越高说明市场情绪越贪婪，数值越低则",
+      "error": null
+    },
+    {
+      "id": "e2e_08",
+      "question": "恐贪指数算法大致怎么计算？",
+      "ok": false,
+      "latency_ms": 60600,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.211,
+      "answer_preview": "**【直接回答】**  \n恐贪指数的核心计算步骤是先以14日相对强弱指数（RSI(14)）作为基础值，然后根据动态情绪因子进行调整，并在出现快速暴跌时加入速度因子（如5日跌幅>10%或10日跌幅>15%时扣除20分）[1]。\n\n**【详细解释】**  \n1. **基础恐贪指数**：直接取RSI(14)的数值作为恐贪指数的起点[1]。  \n2. **动态情绪因子**：文档提到“加入动态情绪因子”，虽",
+      "error": null
+    },
+    {
+      "id": "e2e_09",
+      "question": "INTJ功能堆栈顺序是什么？",
+      "ok": true,
+      "latency_ms": 1010,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.212,
+      "answer_preview": "**【直接回答】**  \nINTJ 的功能堆栈顺序是：**Ni → Te → Fi → Se**[1][2]。  \n\n**【详细解释】**  \n在 MBTI 体系中，INTJ 的主导功能是内向直觉（Ni），它负责捕捉潜在的模式和未来可能性。辅助功能是外向思考（Te），帮助将这些洞察转化为实际的计划和行动。第三功能是内向情感（Fi），提供个人价值观的评估，但在 INTJ 中相对次要。最后的劣势功能是",
+      "error": null
+    },
+    {
+      "id": "e2e_10",
+      "question": "Si是什么认知功能？",
+      "ok": true,
+      "latency_ms": 1120,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.235,
+      "answer_preview": "**【直接回答】**  \nSi是**内倾感知（Introverted Sensing）**的心理功能，属于感受功能，负责把当前的主观感受与过去的感受进行对比，而不是记忆信息本身[1][2]。  \n\n**【详细解释】**  \n- Si并非记忆功能，它是一种**感受功能**，专注于“这个感觉和之前的感觉有什么不同”[1]。  \n- 它通过**被动触发的主观感受对比**来运作，而不是像记忆数据库那样存取",
+      "error": null
+    },
+    {
+      "id": "e2e_11",
+      "question": "Fe和Fi有什么不同？",
+      "ok": true,
+      "latency_ms": 1116,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.246,
+      "answer_preview": "**【直接回答】**  \nFe（外倾情感）侧重外部群体的价值和和谐，追求“群体认为对”；Fi（内倾情感）侧重个人内在的价值和一致性，追求“我认为对”[1]。  \n\n**【详细解释】**  \n- 两者都是情感判断功能，都关注人际关系，但它们的判断标准来源不同：Fe依据外部社会或群体的共识来决定何为“对”，而Fi依据个人内在的价值体系来判断[1]。  \n- 在动机上，Fi的妥协往往是为了维护自己的内在",
+      "error": null
+    },
+    {
+      "id": "e2e_12",
+      "question": "Ne外倾直觉的特点是什么？",
+      "ok": true,
+      "latency_ms": 122034,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.205,
+      "answer_preview": "**【直接回答】**  \nNe（外倾直觉）以构思和发散性思维为核心，能够快速产生大量想法、关联和可能性，并在艺术、设计、营销、发明和创业等领域表现出敏锐、前卫的直觉[1]。它的运作方式基于逻辑推演而非直觉确信[2]。  \n\n**【详细解释】**  \nNe是所有NP类型的主导功能，专门用于“构思”——即在头脑中不断生成新颖的概念、联系和潜在的选择，这种特性使其在需要大量创意的情境（如艺术创作、产品设",
+      "error": null
+    },
+    {
+      "id": "e2e_13",
+      "question": "Se外倾感觉关注什么？",
+      "ok": true,
+      "latency_ms": 1231,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.215,
+      "answer_preview": "**【直接回答】**  \nSe（外倾感觉）关注当下的感官体验和具体的现实层面，倾向即时行动、冒险，并把握客体的直接感受[1][2]。  \n\n**【详细解释】**  \nSe是一种具体信息接收功能，专注于当下的感官数据——它会“感知客体、拥有感觉，如果可能的话，还要享受感觉”，因此其永恒的目的就是直接体验外部世界[2]。这种关注使Se使用者能够敏锐捕捉环境细节，如ESTP对周围刺激的即时感知[1]，并",
+      "error": null
+    },
+    {
+      "id": "e2e_14",
+      "question": "九型中完美主义者是哪一型？",
+      "ok": true,
+      "latency_ms": 960,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.16,
+      "answer_preview": "**【直接回答】**  \n九型人格中完美主义者对应的是**1号（第一型）**[1]。  \n\n**【详细解释】**  \n在九型系统里，第一型被称为“完美主义者”，其核心恐惧是“犯错/不道德”，核心渴望是“正直/正确”，并且常常压抑愤怒，用高标准要求自己和他人[1]。文档2进一步指出，这类人确实在某些领域表现出强烈的完美主义倾向，但可能会忽视生活中更重要的方面[2]。  \n\n**【引用来源】**  \n",
+      "error": null
+    },
+    {
+      "id": "e2e_15",
+      "question": "市场极度恐惧时恐贪指数大概在什么区间？",
+      "ok": true,
+      "latency_ms": 966,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.253,
+      "answer_preview": "**【直接回答】**  \n市场极度恐惧时，恐贪指数通常低于20，约在0‑20之间[1][2]。  \n\n**【详细解释】**  \n恐贪指数（Fear & Greed Index）用 0‑100 分衡量市场情绪。当指数跌至 20 以下时，表示投资者情绪极度恐惧，抛售情绪蔓延，资产价格往往被低估，此时被视为买入信号[1][2]。因此，极度恐惧的区间可概括为 0‑20。  \n\n**【引用来源】**  \n[",
+      "error": null
+    },
+    {
+      "id": "e2e_16",
+      "question": "INTP的主导功能通常是什么？",
+      "ok": true,
+      "latency_ms": 61569,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.215,
+      "answer_preview": "**【直接回答】**  \nINTP的主导功能通常是内向思维（Ti）[1][1]。  \n\n**【详细解释】**  \n文档中多次提到INTP“Ti能力强”，尤其在计算机专业中表现出强大的逻辑分析能力，这表明Ti是其核心认知功能[1][1]。此外，文档指出“INTP用Ne为Ti的逻辑体系提供新假设”，说明Ne是辅助或补充功能，而Ti才是支撑其主要思考方式的主导功能[2][1]。  \n\n**【引用来源】*",
+      "error": null
+    },
+    {
+      "id": "e2e_17",
+      "question": "本知识库里有没有介绍量子纠缠实验设备型号？",
+      "ok": true,
+      "latency_ms": 0,
+      "no_knowledge": true,
+      "used_mock_web": false,
+      "hallucination_score": 0.0,
+      "answer_preview": "【直接回答】知识库中未找到可靠依据，无法基于证据回答该问题。\n\n【详细解释】不可答:不可答模式:量子纠缠.*设备。请换一个可由文档支撑的问题，或补充知识库后再问。\n\n【引用来源】（无）",
+      "error": null
+    },
+    {
+      "id": "e2e_18",
+      "question": "请用知识库内容说明MBTI与九型如何结合使用",
+      "ok": true,
+      "latency_ms": 1251,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.248,
+      "answer_preview": "**【直接回答】**  \nMBTI 与九型的结合方式是先利用完整的 MBTI‑九型相关度矩阵进行统计分析，然后结合九型的核心恐惧与渴望进行补充解释；但因两者的组合相关度极低，使用时需谨慎并可能需要重新审视判型结果[1][2]。  \n\n**【详细解释】**  \n1. **相关度矩阵**：文档中提供了 MBTI 16 型与九型 9 型的完整相关度矩阵，可作为量化两者关系的基础数据[1]。  \n2. *",
+      "error": null
+    },
+    {
+      "id": "e2e_19",
+      "question": "什么是内倾直觉Ni？",
+      "ok": true,
+      "latency_ms": 1120,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.155,
+      "answer_preview": "**【直接回答】**  \n内倾直觉（Ni）是一种内向的知觉功能，提供洞察力，使使用者拥有“知道”事物的感觉，并在所有 NJ 类型中常作为主导或辅助功能[1]。  \n\n**【详细解释】**  \nNi（Introverted Intuition）属于内倾知觉功能，强调对内部模式、潜在意义和未来趋势的深度感知。它让人产生一种直觉的“知道”，能够在信息中捕捉到隐藏的联系和可能性，从而形成对事物本质的洞察[",
+      "error": null
+    },
+    {
+      "id": "e2e_20",
+      "question": "判型时每个认知功能至少需要多少bit证据？",
+      "ok": true,
+      "latency_ms": 1718,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": 0.34,
+      "answer_preview": "**【直接回答】**  \n判型时每个认知功能累计的证据总量必须达到 **10 bits 以上**，才能满足阈值要求[1]。  \n\n**【详细解释】**  \n在判型评估中，系统会统计所有认知功能提供的证据位数（bits）。文档中明确指出“总信息量不足10 bits → 需要更多证据”，并给出实际案例“55 bits (需要 ≥10)”[1]。这表明只有当整体证据量不低于10 bits 时，判型才被视",
+      "error": null
+    }
+  ]
+}

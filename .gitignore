@@ -1,26 +1,54 @@
 __pycache__/
 *.pyc
-.env
-.env.*
 *.egg-info/
 dist/
 build/
 .venv/
 venv/
-chroma_data/
 .coverage
 .pytest_cache/
 *.log
 
-# 🔒 隐私保护：禁止上传索引数据
+# 环境变量（白名单 .env.example）
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# 数据与索引（隐私 + 体积）
 data/
-data/full_computer_rag/
+data/local_document_rag/
 data/lancedb/
 *.lancedb
 metadata.json
+benchmark_chroma/
+chroma_db_backup_*/
+qdrant_storage/
+lancedb_core/
+faiss_hotcache.*
+*.db
+*.sqlite3
+test_database.db
+test_results*.json
+benchmark_results*.txt
+index_log.txt
+.rag_metadata*.json
 
-# 🔒 隐私保护：禁止上传敏感文件
+# 临时与异常文件
+temp/
+nul
+=2.0
+*.tmp
+
+# 隐私保护
 简历/
 投递清单*
 *credentials*
 *secrets*
+
+# 根目录过程文档（保留 README/CONTRIBUTING/SECURITY/LICENSE/CHANGELOG）
+/*.md
+!README.md
+!CONTRIBUTING.md
+!SECURITY.md
+!CHANGELOG.md

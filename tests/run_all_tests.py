@@ -10,9 +10,10 @@ PROJECT_ROOT = Path(__file__).parent.parent
 TEST_SUITES = [
     # (test_file, description, level)
     ("tests/test_agentic_tools.py",  "Agentic RAG工具箱", "L1"),
+    ("tests/test_agent_router.py",   "Agent决策路由器",  "L1"),
+    ("tests/test_v2_4_react.py",     "v2.4 ReAct循环+免费LLM", "L1"),
     ("tests/test_qdrant_retriever.py", "Qdrant检索器",     "L1"),
     ("tests/test_reranker.py",       "Reranker重排序",   "L1"),
-    ("tests/test_agent_router.py",   "Agent决策路由器",  "L1"),
     ("tests/test_mcp_server.py",     "MCP Server",       "L1"),
     ("tests/test_e2e.py",            "端到端Pipeline",   "L2"),
     ("tests/test_agentic_integration.py", "Agentic集成",  "L2"),

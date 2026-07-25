@@ -1,0 +1,46 @@
+[
+  {"id": "mbti_01", "question": "什么是MBTI？", "expected_keywords": ["人格", "类型"], "collection": "proj_psychology", "category": "MBTI", "difficulty": "easy", "allow_refuse": false},
+  {"id": "mbti_02", "question": "INTJ的主导功能是什么？", "expected_keywords": ["Ni", "直觉"], "collection": "proj_psychology", "category": "MBTI", "difficulty": "easy", "allow_refuse": false},
+  {"id": "mbti_03", "question": "INTJ功能堆栈顺序是什么？", "expected_keywords": ["Ni", "Te"], "collection": "proj_psychology", "category": "MBTI", "difficulty": "easy", "allow_refuse": false},
+  {"id": "mbti_04", "question": "八个认知功能有哪些？", "expected_keywords": ["Ni", "Ne", "Te"], "collection": "proj_psychology", "category": "MBTI", "difficulty": "medium", "allow_refuse": false},
+  {"id": "mbti_05", "question": "Te和Ti有什么区别？", "expected_keywords": ["思考", "逻辑"], "collection": "proj_psychology", "category": "MBTI", "difficulty": "medium", "allow_refuse": false},
+  {"id": "mbti_06", "question": "Fe和Fi有什么不同？", "expected_keywords": ["情感"], "collection": "proj_psychology", "category": "MBTI", "difficulty": "medium", "allow_refuse": false},
+  {"id": "mbti_07", "question": "Si是什么认知功能？", "expected_keywords": ["Si", "感觉"], "collection": "proj_psychology", "category": "MBTI", "difficulty": "easy", "allow_refuse": false},
+  {"id": "mbti_08", "question": "Ne外倾直觉的特点是什么？", "expected_keywords": ["可能", "发散"], "collection": "proj_psychology", "category": "MBTI", "difficulty": "medium", "allow_refuse": false},
+  {"id": "mbti_09", "question": "Se外倾感觉关注什么？", "expected_keywords": ["感官", "当下"], "collection": "proj_psychology", "category": "MBTI", "difficulty": "medium", "allow_refuse": false},
+  {"id": "mbti_10", "question": "INTP的主导功能通常是什么？", "expected_keywords": ["Ti"], "collection": "proj_psychology", "category": "MBTI", "difficulty": "easy", "allow_refuse": false},
+  {"id": "mbti_11", "question": "什么是内倾直觉Ni？", "expected_keywords": ["Ni", "直觉"], "collection": "proj_psychology", "category": "MBTI", "difficulty": "easy", "allow_refuse": false},
+  {"id": "mbti_12", "question": "ENFP的主导功能是什么？", "expected_keywords": ["Ne"], "collection": "proj_psychology", "category": "MBTI", "difficulty": "easy", "allow_refuse": false},
+  {"id": "mbti_13", "question": "MBTI的四个维度分别是什么？", "expected_keywords": ["E", "I", "S", "N"], "collection": "proj_psychology", "category": "MBTI", "difficulty": "easy", "allow_refuse": false},
+  {"id": "mbti_14", "question": "什么是阴影功能？", "expected_keywords": ["阴影", "功能"], "collection": "proj_psychology", "category": "MBTI", "difficulty": "hard", "allow_refuse": true},
+  {"id": "mbti_15", "question": "九型人格有哪九型？", "expected_keywords": ["型", "九"], "collection": "proj_psychology", "category": "enneagram", "difficulty": "medium", "allow_refuse": false},
+  {"id": "mbti_16", "question": "九型中完美主义者是哪一型？", "expected_keywords": ["1", "型"], "collection": "proj_psychology", "category": "enneagram", "difficulty": "easy", "allow_refuse": true},
+
+  {"id": "work_01", "question": "什么是RAG？", "expected_keywords": ["检索", "生成"], "collection": "proj_work", "category": "RAG", "difficulty": "easy", "allow_refuse": false},
+  {"id": "work_02", "question": "什么是混合检索？", "expected_keywords": ["BM25", "向量"], "collection": "proj_work", "category": "RAG", "difficulty": "medium", "allow_refuse": false},
+  {"id": "work_03", "question": "什么是Self-RAG？", "expected_keywords": ["自我", "检索"], "collection": "proj_work", "category": "RAG", "difficulty": "medium", "allow_refuse": false},
+  {"id": "work_04", "question": "什么是Corrective RAG？", "expected_keywords": ["纠错", "检索"], "collection": "proj_work", "category": "RAG", "difficulty": "medium", "allow_refuse": true},
+  {"id": "work_05", "question": "DeepRAG项目用了什么向量数据库？", "expected_keywords": ["Qdrant", "Chroma"], "collection": "proj_work", "category": "RAG", "difficulty": "medium", "allow_refuse": true},
+  {"id": "work_06", "question": "什么是Reranker精排？", "expected_keywords": ["重排", "相关"], "collection": "proj_work", "category": "RAG", "difficulty": "medium", "allow_refuse": false},
+  {"id": "work_07", "question": "什么是Agentic RAG？", "expected_keywords": ["Agent", "检索"], "collection": "proj_work", "category": "Agent", "difficulty": "medium", "allow_refuse": true},
+  {"id": "work_08", "question": "什么是LangGraph？", "expected_keywords": ["图", "工作流"], "collection": "proj_work", "category": "Agent", "difficulty": "easy", "allow_refuse": true},
+  {"id": "work_09", "question": "RAG系统如何降低幻觉？", "expected_keywords": ["引用", "事实"], "collection": "proj_work", "category": "RAG", "difficulty": "hard", "allow_refuse": true},
+  {"id": "work_10", "question": "chunk_size一般怎么选？", "expected_keywords": ["分块", "800"], "collection": "proj_work", "category": "RAG", "difficulty": "medium", "allow_refuse": true},
+  {"id": "work_11", "question": "什么是BM25算法？", "expected_keywords": ["词频", "检索"], "collection": "proj_work", "category": "RAG", "difficulty": "medium", "allow_refuse": true},
+  {"id": "work_12", "question": "什么是向量检索？", "expected_keywords": ["embedding", "相似度"], "collection": "proj_work", "category": "RAG", "difficulty": "easy", "allow_refuse": false},
+
+  {"id": "fg_01", "question": "什么是恐惧贪婪指数？", "expected_keywords": ["恐惧", "贪婪"], "collection": "proj_work", "category": "finance", "difficulty": "easy", "allow_refuse": true},
+  {"id": "fg_02", "question": "恐贪指数算法大致怎么计算？", "expected_keywords": ["指标", "权重"], "collection": "proj_work", "category": "finance", "difficulty": "hard", "allow_refuse": true},
+
+  {"id": "refuse_01", "question": "本知识库里有没有介绍量子纠缠实验设备型号？", "expected_keywords": [], "collection": "proj_psychology", "category": "refuse", "difficulty": "easy", "allow_refuse": true, "expect_refuse": true},
+  {"id": "refuse_02", "question": "请给出不存在的公司DeepRAG宇宙总部地址门牌号", "expected_keywords": [], "collection": "proj_work", "category": "refuse", "difficulty": "easy", "allow_refuse": true, "expect_refuse": true},
+  {"id": "refuse_03", "question": "INTJ昨天中午在火星吃了什么？", "expected_keywords": [], "collection": "proj_psychology", "category": "refuse", "difficulty": "easy", "allow_refuse": true, "expect_refuse": true},
+
+  {"id": "cross_01", "question": "请用知识库内容说明MBTI与九型如何结合使用", "expected_keywords": ["MBTI", "九型"], "collection": "proj_psychology", "category": "cross", "difficulty": "hard", "allow_refuse": true},
+  {"id": "cross_02", "question": "DeepRAG里的Self-RAG和幻觉检测大概怎么做？", "expected_keywords": ["幻觉", "生成"], "collection": "proj_work", "category": "cross", "difficulty": "hard", "allow_refuse": true},
+
+  {"id": "social_01", "question": "什么是制度经济学？", "expected_keywords": ["制度", "经济"], "collection": "proj_social", "category": "social", "difficulty": "medium", "allow_refuse": true},
+  {"id": "thesis_01", "question": "类别不平衡常见处理方法有哪些？", "expected_keywords": ["采样", "权重"], "collection": "proj_thesis", "category": "thesis", "difficulty": "medium", "allow_refuse": true},
+  {"id": "thesis_02", "question": "混淆矩阵是什么？", "expected_keywords": ["TP", "FP", "分类", "预测", "真正例", "假"], "collection": "proj_thesis", "category": "thesis", "difficulty": "easy", "allow_refuse": true},
+  {"id": "thesis_03", "question": "什么是F1分数？", "expected_keywords": ["精确", "召回"], "collection": "proj_thesis", "category": "thesis", "difficulty": "easy", "allow_refuse": true}
+]

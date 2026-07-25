@@ -1,0 +1,107 @@
+{
+  "model": "deepseek-r1-distill-qwen-14b",
+  "test_cases": 10,
+  "success_count": 3,
+  "avg_scores": {
+    "accuracy": 0.0,
+    "completeness": 10.0,
+    "relevance": 2.5,
+    "professionalism": 3.3333333333333335,
+    "readability": 8.0,
+    "total": 3.8000000000000003
+  },
+  "grade": "D  不及格",
+  "results": [
+    {
+      "query": "什么是RAG？",
+      "response": null,
+      "scores": null,
+      "latency": 30.001665353775024,
+      "success": false
+    },
+    {
+      "query": "Corrective RAG和Self-RAG有什么区别？",
+      "response": "\n\nRAG（Retrieval-Augmented Generation）是一种结合了检索和生成技术的模型，用于回答问题。在实际应用中，可能会出现一些偏差或错误，因此需要进行校正。\n\n1. **Corrective RAG**：这种校正是指对RAG模型本身进行调整，以纠正其输出中的错误或偏差。例如，如果模型在回答时出现了事实性错误，可以通过重新训练模型、微调参数或引入外部验证数据来修正这些错误。\n\n2. **Self-RAG**：这是一种自我校正的机制，通常指的是模型在生成回答后，能够自动检查和纠正自己的输出。这种机制可能依赖于内部反馈循环或其他自我监督的方法，使模型能够在不依赖外部干预的情况下进行自我改进。\n\n简而言之，Corrective RAG 更注重对模型本身的调整和修正，而 Self-RAG 则强调模型自身的自我校正能力。两者都旨在提高RAG模型的准确性和可靠性，但实现方式有所不同。",
+      "scores": {
+        "accuracy": 0.0,
+        "completeness": 10,
+        "relevance": 7.5,
+        "professionalism": 8,
+        "readability": 8,
+        "total": 5.5
+      },
+      "latency": 10.587037324905396,
+      "success": true
+    },
+    {
+      "query": "如何优化RAG检索准确率？",
+      "response": null,
+      "scores": null,
+      "latency": 10.989928960800171,
+      "success": false
+    },
+    {
+      "query": "什么是幻觉？如何规避？",
+      "response": "\n\n幻觉是指在没有外部刺激的情况下感知到并不存在的物体、声音或感觉的现象。这种现象可能由多种因素引起，包括精神疾病、药物",
+      "scores": {
+        "accuracy": 0.0,
+        "completeness": 10,
+        "relevance": 0.0,
+        "professionalism": 0,
+        "readability": 8,
+        "total": 2.8
+      },
+      "latency": 11.395087242126465,
+      "success": true
+    },
+    {
+      "query": "向量数据库有哪些？",
+      "response": null,
+      "scores": null,
+      "latency": 21.182947397232056,
+      "success": false
+    },
+    {
+      "query": "混合检索的原理是什么？",
+      "response": null,
+      "scores": null,
+      "latency": 17.08005380630493,
+      "success": false
+    },
+    {
+      "query": "如何实现查询改写？",
+      "response": null,
+      "scores": null,
+      "latency": 11.07251763343811,
+      "success": false
+    },
+    {
+      "query": "Agent的工作原理是什么？",
+      "response": "\n\n您好！我是由中国的深度求索（DeepSeek）公司开发的智能助手DeepSeek-R1。有关模型和产品的详细内容请参考官方文档。",
+      "scores": {
+        "accuracy": 0.0,
+        "completeness": 10,
+        "relevance": 0.0,
+        "professionalism": 2,
+        "readability": 8,
+        "total": 3.1
+      },
+      "latency": 1.7868351936340332,
+      "success": true
+    },
+    {
+      "query": "如何配置LangChain的API Key？",
+      "response": null,
+      "scores": null,
+      "latency": 12.336061477661133,
+      "success": false
+    },
+    {
+      "query": "LangGraph和LangChain有什么区别？",
+      "response": null,
+      "scores": null,
+      "latency": 26.130080938339233,
+      "success": false
+    }
+  ]
+}

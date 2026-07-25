@@ -1,7 +1,7 @@
 [project]
 name = "deep-rag"
-version = "0.2.0"
-description = "DeepRAG - 自纠错多源知识Agent（Corrective RAG + Self-RAG + 冲突解决 + RAGAS评测）"
+version = "0.2.9"
+description = "DeepRAG - 自纠错多源知识Agent（Corrective RAG + Self-RAG + 冲突解决 + 离线启发式评测）"
 requires-python = ">=3.11"
 dependencies = [
     "langgraph>=0.2.0",
@@ -15,6 +15,8 @@ dependencies = [
 llm = [
     "langchain>=0.3.0",
     "langchain-anthropic>=0.3.0",
+    "langchain-openai>=0.2.0",
+    "langchain-ollama>=0.2.0",
     "langchain-community>=0.3.0",
     "langchain-text-splitters>=0.3.0",
 ]
@@ -31,6 +33,11 @@ api = [
 qdrant = [
     # Qdrant 向量数据库（可选，生产推荐）
     "qdrant-client>=1.12.0",
+]
+pgvector = [
+    # pgvector 向量数据库（可选，PostgreSQL扩展）
+    "psycopg2-binary>=2.9.0",
+    "pgvector>=0.2.0",
 ]
 reranker = [
     # CrossEncoder 精排（可选）

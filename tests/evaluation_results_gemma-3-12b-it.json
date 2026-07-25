@@ -1,0 +1,156 @@
+{
+  "model": "gemma-3-12b-it",
+  "test_cases": 10,
+  "success_count": 10,
+  "avg_scores": {
+    "accuracy": 3.25,
+    "completeness": 8.91,
+    "relevance": 2.5,
+    "professionalism": 6.6,
+    "readability": 8.0,
+    "total": 5.2
+  },
+  "grade": "C  及格",
+  "results": [
+    {
+      "query": "什么是RAG？",
+      "response": "RAG 是 Retrieval-Augmented Generation 的缩写，意思是“检索增强生成”。它是一种结合了信息检索和文本生成的强大技术。简单来说，RAG 允许大型语言模型 (LLM) 在生成文本时利用外部知识库来提高准确性和相关性。\n\n以下是 RAG 的工作原理：\n\n1. **检索（Retrieval）：** 当用户提出问题或请求时，RAG 系统首先会从一个知识库中检索相关的文档或信息片段。这个知识库可以是任何形式的存储数据，例如数据库、搜索引擎索引、或者一组文本文件。\n2. **增强（Augmentation）：** 检索到的内容会被添加到原始输入中，形成一个新的上下文。\n3. **生成（Generation）：** LLM 使用新的上下文来生成最终的回复或完成任务。\n\n**RAG 的优势：**\n\n* **提高准确性：** 通过利用外部知识库，RAG 可以减少 LLM 产生幻觉 (hallucination) 或不准确信息的可能性。\n* **增强相关性：** RAG 能够根据用户的具体问题或请求来选择最相关的知识，从而生成更具针对性的回复。\n* **可解释性：** 由于 RAG 使用了外部知识库作为参考，因此可以更容易地追踪和验证 LLM 生成的文本，提高透明度和可信度。\n* **易于更新：** 知识库可以随时更新",
+      "scores": {
+        "accuracy": 10,
+        "completeness": 9.3,
+        "relevance": 0.0,
+        "professionalism": 10,
+        "readability": 8,
+        "total": 7.7
+      },
+      "latency": 26.152674198150635,
+      "success": true
+    },
+    {
+      "query": "Corrective RAG和Self-RAG有什么区别？",
+      "response": "Corrective RAG 和 Self-RAG 都是为了提高检索增强生成 (Retrieval Augmented Generation, RAG) 系统性能而提出的技术，但它们在实现方式上有所不同。下面是它们的区别：\n\n**1. Corrective RAG (CRAG):**\n\n*   **核心思想:** CRAG 的主要目标是通过引入一个“纠正器”来识别和纠正原始检索结果中的错误或不相关信息。\n*   **工作流程:**\n    *   首先，RAG 系统像往常一样进行检索并生成文本。\n    *   然后，CRAG 模块会评估生成的文本，判断其是否准确、完整且与用户查询相关。\n    *   如果 CRAG 发现问题，它会利用额外的知识来源（例如，另一个 LLM 或外部数据库）来纠正或补充信息，并重新生成文本。\n*   **优势:** 可以有效地识别和纠正检索结果中的错误，提高 RAG 系统的准确性和可靠性。\n*   **劣势:** 需要训练一个独立的 CRAG 模型，这增加了复杂度和计算成本。\n\n**2. Self-RAG:**\n\n*   **核心思想:** Self-RAG 利用 LLM 本身来评估和改进检索结果的质量。\n*   **工作流程:**\n    *   LLM 在生成文本之前，会先对检索到的文档进行评估，判断其是否与",
+      "scores": {
+        "accuracy": 2.5,
+        "completeness": 9.2,
+        "relevance": 7.5,
+        "professionalism": 10,
+        "readability": 8,
+        "total": 6.5
+      },
+      "latency": 11.791498184204102,
+      "success": true
+    },
+    {
+      "query": "如何优化RAG检索准确率？",
+      "response": "优化 RAG (Retrieval-Augmented Generation) 检索准确率是一个复杂的问题，涉及到多个方面。以下是一些关键策略和技术，可以帮助你提高 RAG 系统的性能：\n\n**1. 数据准备与预处理:**\n\n* **高质量数据源:** 选择可靠、权威且内容丰富的知识库作为你的数据源。\n* **清洗和标准化数据:** 清理数据中的噪声、错误和不一致性。使用标准化的格式，例如 Markdown 或 HTML，以便于后续的处理。\n* **分块策略 (Chunking Strategy):**  这是至关重要的一步。选择合适的分块大小和方法，以平衡检索效率和上下文保留：\n    * **固定大小分块:** 将文档分成固定大小的块，例如 512 个 token 或 1024 个 token。简单易行，但可能导致信息丢失或冗余。\n    * **语义分块 (Semantic Chunking):** 使用自然语言处理技术（如句子边界检测、主题提取）将文档分割成有意义的片段。更准确地捕捉上下文，提高检索精度。\n    * **递归分块:** 结合固定大小和语义分块，先进行粗粒度的分割，然后对每个大块再进行细粒度分割，直到满足特定条件（例如最小或最大长度）。\n\n**2. 嵌入模型 (Embedding Model) 选择与优化:**\n\n* **",
+      "scores": {
+        "accuracy": 0.0,
+        "completeness": 9.2,
+        "relevance": 0.0,
+        "professionalism": 6,
+        "readability": 8,
+        "total": 3.5
+      },
+      "latency": 11.975464582443237,
+      "success": true
+    },
+    {
+      "query": "什么是幻觉？如何规避？",
+      "response": "## 幻觉：定义、类型及规避方法\n\n**1. 什么是幻觉？**\n\n幻觉是指在没有外部刺激的情况下，个体感受到真实存在的感官体验。换句话说，就是你“看到”、“听到”、“闻到”、“尝到”或“感觉到”了一些东西，但实际上这些东西并不存在于现实中。\n\n**2. 幻觉的类型：**\n\n* **听幻觉 (Auditory Hallucinations):** 最常见的幻觉类型，表现为听到不存在的声音，例如说话声、音乐、动物叫声等。\n* **视幻觉 (Visual Hallucinations):** 看到不存在的物体或图像，例如人影、怪物、光线等。\n* **嗅幻觉 (Olfactory Hallucinations):** 闻到不存在的气味，例如烟味、腐烂的味道等。\n* **味幻觉 (Gustatory Hallucinations):** 尝到不存在的味道，例如金属味、苦涩味等。\n* **触幻觉 (Tactile Hallucinations):** 感觉到不存在的触摸或接触，例如虫子爬在皮肤上、被针扎的感觉等。\n\n**3. 导致幻觉的原因：**\n\n幻觉可能由多种因素引起，包括：\n\n* **精神疾病:** 例如精神分裂症、躁郁症、双相情感障碍等。\n* **药物滥用:** ",
+      "scores": {
+        "accuracy": 0.0,
+        "completeness": 9.6,
+        "relevance": 0.0,
+        "professionalism": 0,
+        "readability": 8,
+        "total": 2.7
+      },
+      "latency": 11.854033946990967,
+      "success": true
+    },
+    {
+      "query": "向量数据库有哪些？",
+      "response": "向量数据库是一种专门用于存储和检索高维向量数据的数据库。它们通常使用近似最近邻搜索 (ANN) 技术来加速查询过程，因为精确的最近邻搜索在高维空间中计算成本很高。以下是一些流行的向量数据库：\n\n**开源向量数据库:**\n\n*   **Pinecone:** 这是一个云托管的向量数据库服务，提供高性能和可扩展性。它支持各种 ANN 算法，如 HNSW 和 IVF。\n*   **Milvus:** 一个开源的向量数据库，设计用于处理大规模向量数据。它提供了多种索引类型和查询选项，并支持分布式部署。\n*   **Weaviate:**  一个开源的向量数据库，专注于语义搜索和知识图谱应用。它使用 GraphQL API 进行交互，并提供强大的过滤和排序功能。\n*   **Qdrant:** 一个快速、可扩展且易于使用的向量数据库，特别适合处理大规模数据集。它支持多种 ANN 算法，如 HNSW 和 PQ。\n*   **Faiss (Facebook AI Similarity Search):**  一个由 Facebook 开发的库，用于高效地搜索相似向量。虽然它不是一个完整的数据库系统，但它可以与其他数据库集成以实现向量搜索功能。\n\n**商业向量数据库:**\n\n*   **Elasticsearch with dense vector field:** Elasticsearch 是一个流行的搜索引擎，可以扩展到支持向量搜索。通过添加密集的向量字段并使用 ANN 算法，你可以利用 Elasticsearch 的强大功能",
+      "scores": {
+        "accuracy": 5.0,
+        "completeness": 8.3,
+        "relevance": 0.0,
+        "professionalism": 8,
+        "readability": 8,
+        "total": 5.4
+      },
+      "latency": 11.908989191055298,
+      "success": true
+    },
+    {
+      "query": "混合检索的原理是什么？",
+      "response": "混合检索是一种结合了传统信息检索技术（如布尔检索、向量空间模型）和现代机器学习技术的检索方法。它的核心思想是利用不同类型的检索策略，并根据实际情况将它们组合起来，以提高检索效果。\n\n以下是混合检索的一些关键原理：\n\n**1. 多种检索方法的融合:**\n\n*   **传统检索方法 (如布尔检索、向量空间模型):** 这些方法通常依赖于关键词匹配或相似度计算来找到相关文档。\n*   **机器学习技术 (如深度学习、自然语言处理):**  这些技术可以利用大量的训练数据，学习并理解文本的语义信息，从而更准确地识别和提取相关内容。\n\n混合检索会将这些不同的检索方法结合起来，例如：\n\n*   **布尔检索 + 向量空间模型:** 使用布尔检索快速过滤掉不相关的文档，然后使用向量空间模型对剩余文档进行排序，以找到最相关的结果。\n*   **深度学习模型 (如 BERT) + 布尔检索:**  利用预训练的语言模型（例如 BERT）来理解查询和文档之间的语义关系，并结合布尔检索进行快速筛选。\n\n**2. 加权组合:**\n\n混合检索通常会为不同的检索方法分配权重，以平衡它们的贡献。这些权重可以根据实际情况进行调整，例如：\n\n*   在某些情况下，传统检索方法的效率更高，因此可以赋予其更高的",
+      "scores": {
+        "accuracy": 2.5,
+        "completeness": 9.6,
+        "relevance": 0.0,
+        "professionalism": 6,
+        "readability": 8,
+        "total": 4.5
+      },
+      "latency": 11.888688802719116,
+      "success": true
+    },
+    {
+      "query": "如何实现查询改写？",
+      "response": "查询改写是指将一个原始查询转换为等价或近似的另一个查询，以提高检索效率、改善搜索结果质量或适应不同的系统环境。它在信息检索和数据库领域中扮演着重要的角色。以下是一些实现查询改写的常见方法：\n\n**1. 基于规则的方法 (Rule-Based Approach):**\n\n*   **词汇替换:** 使用同义词、近义词或相关词来替换原始查询中的词语，例如将“汽车”替换为“车辆”。\n*   **语法转换:** 改变查询的语法结构，例如将“找到所有红色汽车”转换为“查找所有红色的汽车”。\n*   **布尔逻辑操作:** 使用AND、OR和NOT等布尔运算符来组合或排除查询中的条件。\n\n**2. 基于统计的方法 (Statistical Approach):**\n\n*   **查询扩展:** 利用已有的数据，例如词向量模型（Word2Vec, GloVe）或知识图谱（Knowledge Graph），找到与原始查询相关的其他词语并将其添加到查询中。\n*   **Query Expansion with Relevance Feedback:**  根据用户对初始检索结果的反馈（如点击、评分等），识别出更合适的关键词，并将它们加入到后续查询中。\n*   **Probabilistic Query Rewriting (PQR):** 利用概率模型来评估不同改写方案的效果，并选择最优的方案。\n\n**3. 基于机器学习的方法 (",
+      "scores": {
+        "accuracy": 5.0,
+        "completeness": 8.8,
+        "relevance": 10,
+        "professionalism": 8,
+        "readability": 8,
+        "total": 7.5
+      },
+      "latency": 11.70415735244751,
+      "success": true
+    },
+    {
+      "query": "Agent的工作原理是什么？",
+      "response": "Agent 的工作原理取决于其类型和设计，但通常涉及以下几个关键步骤：\n\n**1. 环境感知 (Environment Perception):** Agent 首先需要了解它所处的环境。这可以通过各种传感器（例如摄像头、麦克风、GPS 等）收集数据来实现。这些传感器将原始数据转换成有意义的信息，例如图像、声音或位置坐标。\n\n**2. 目标设定 (Goal Setting):** Agent 需要知道要实现的目标是什么。这个目标可以是预先设定的，也可以是根据环境感知的结果动态生成的。目标可以是一个简单的任务（例如“移动到房间的另一边”）或者一个复杂的任务（例如“完成一项工作报告”）。\n\n**3. 决策制定 (Decision Making):** Agent 根据其目标和对环境的理解，需要做出决策来选择下一步行动。这通常涉及使用算法或模型来评估不同的行动方案并选择最佳方案。常见的决策制定方法包括：\n    * **规则引擎:** 基于预定义的规则进行决策。例如，“如果温度高于 30 度，则打开空调”。\n    * **机器学习 (Machine Learning):** 使用训练数据学习模式和规律，然后根据这些模式做出预测或决策。例如，使用神经网络来识别图像中的物体并采取相应的行动。\n    * **强化学习 (Reinforcement Learning):** 通过与环境交互并获得奖励或惩罚来学习最佳策略。例如，训练一个机器人手臂在抓取",
+      "scores": {
+        "accuracy": 0.0,
+        "completeness": 8.7,
+        "relevance": 0.0,
+        "professionalism": 6,
+        "readability": 8,
+        "total": 3.4
+      },
+      "latency": 11.777629852294922,
+      "success": true
+    },
+    {
+      "query": "如何配置LangChain的API Key？",
+      "response": "配置 LangChain 的 API Key 取决于你使用的具体模型和平台。以下是一些常见模型的配置方法：\n\n**1. OpenAI:**\n\n*   **设置环境变量:** 这是最常用的方法，将你的 OpenAI API Key 设置为环境变量 `OPENAI_API_KEY`。你可以通过命令行或在代码中进行设置。\n    *   **命令行 (Linux/macOS):**  `export OPENAI_API_KEY=\"YOUR_API_KEY\"`\n    *   **命令行 (Windows):**  `set OPENAI_API_KEY=YOUR_API_KEY`\n    *   **Python 代码:** `import os; os.environ[\"OPENAI_API_KEY\"] = \"YOUR_API_KEY\"`\n\n*   **直接在代码中设置:** 也可以将 API Key 直接嵌入到你的 LangChain 代码中，但这不太推荐，因为这样会使代码更难维护和共享。\n    ```python\n    from langchain.llms import OpenAI\n    import os\n\n    # 使用环境变量获取API Key (推荐)\n    openai_api_key = os.environ[\"OPENAI_API_KEY\"]\n\n    # 或者直接设置 API Key (不推荐)\n    # openai_api_key = \"YOUR_API_KEY\"\n\n    llm = OpenAI(model_name=\"gpt-3.5-turbo\", api_key=openai_api_key, temperature=",
+      "scores": {
+        "accuracy": 7.5,
+        "completeness": 7.6,
+        "relevance": 7.5,
+        "professionalism": 4,
+        "readability": 8,
+        "total": 7.0
+      },
+      "latency": 11.974673986434937,
+      "success": true
+    },
+    {
+      "query": "LangGraph和LangChain有什么区别？",
+      "response": "LangGraph 和 LangChain 都是用于构建基于语言模型的应用程序的工具，但它们在功能、设计理念和目标上有所不同。以下是它们的区别：\n\n**1. LangChain:**\n\n*   **核心概念：** LangChain 是一个框架，它提供了一系列模块化的组件（例如模型、提示模板、链条、代理）以及连接这些组件的工具，以便构建复杂的语言模型应用程序。\n*   **设计理念：** LangChain 的目标是简化 LLM 应用程序的开发过程，通过提供可重用的组件和抽象层来降低复杂性。它强调灵活性和模块化，允许开发者根据自己的需求定制解决方案。\n*   **主要功能：**\n    *   **模型集成：** 支持各种语言模型（例如 OpenAI 的 GPT 模型、Hugging Face 的 Transformer 模型）\n    *   **提示模板：** 提供创建动态提示的方法，以便更好地控制 LLM 的输出\n    *   **链条：** 允许将多个组件组合成一个流程，以执行更复杂的任务\n    *   **代理：** 提供使用 LLM 作为推理引擎来解决问题的能力，例如在知识库中搜索信息或执行特定操作。\n\n**2. LangGraph:**\n\n*   **核心概念：** LangGraph 是一个图形数据库和可视化工具，用于表示和分析语言模型应用程序的结构和行为。\n*   **设计理念：** Lang",
+      "scores": {
+        "accuracy": 0.0,
+        "completeness": 8.8,
+        "relevance": 0.0,
+        "professionalism": 8,
+        "readability": 8,
+        "total": 3.8
+      },
+      "latency": 12.001984357833862,
+      "success": true
+    }
+  ]
+}

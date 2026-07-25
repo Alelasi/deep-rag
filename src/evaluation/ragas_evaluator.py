@@ -1,19 +1,50 @@
-"""RAGAS评测框架 — 专业RAG系统评估
+"""离线启发式 RAG 指标（RAGAS 风格四指标，非官方 ragas 包）
 
-使用RAGAS框架评估RAG系统的4个核心指标：
+指标名与官方 RAGAS 对齐，便于对照：
 1. Answer Relevancy（答案相关性）
 2. Context Precision（上下文精确度）
 3. Context Recall（上下文召回率）
 4. Faithfulness（忠实度）
+
+说明：
+- 本实现为无 API Key 的启发式打分，**不是** `pip install ragas` 的官方实现
+- 中文场景使用 jieba / 字符 bigram，避免英文 split() 导致 Relevancy 恒为 0
 """
 
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Set
 import json
+import re
 from pathlib import Path
 
 
+def _tokenize_zh(text: str) -> Set[str]:
+    """中英混合分词：优先 jieba，失败则字符 bigram + 英文词"""
+    if not text:
+        return set()
+    text = text.lower().strip()
+    tokens: Set[str] = set()
+    try:
+        import jieba
+        tokens.update(t.strip() for t in jieba.cut(text) if t and t.strip() and t.strip() not in "，。！？、；：""''（）【】《》 \t\n")
+    except Exception:
+        pass
+    # 英文词
+    tokens.update(re.findall(r"[a-z0-9_]+", text))
+    # 中文 bigram 兜底（提升短问句重叠）
+    hans = re.findall(r"[一-鿿]+", text)
+    for chunk in hans:
+        if len(chunk) == 1:
+            tokens.add(chunk)
+        else:
+            for i in range(len(chunk) - 1):
+                tokens.add(chunk[i : i + 2])
+            tokens.add(chunk)
+    # 过滤单字符噪音（保留中文单字）
+    return {t for t in tokens if t and (len(t) > 1 or "一" <= t <= "鿿")}
+
+
 class RAGASEvaluator:
-    """RAGAS评测器 - 无需API Key的离线评估"""
+    """离线启发式评测器（RAGAS 风格，非官方 ragas 包）"""
 
     def __init__(self):
         """初始化评测器"""
@@ -26,9 +57,7 @@ class RAGASEvaluator:
         context: List[str]
     ) -> float:
         """
-        答案相关性评估
-
-        评估答案是否直接回答了问题，而不是偏题或包含无关信息
+        答案相关性评估（中英启发式）
 
         评分标准：
         - 1.0: 完全回答问题，无冗余信息
@@ -39,26 +68,36 @@ class RAGASEvaluator:
         if not answer or not question:
             return 0.0
 
-        # 简化评估：基于关键词重叠和答案长度
-        question_words = set(question.lower().split())
-        answer_words = set(answer.lower().split())
-
-        # 关键词重叠度
-        overlap = len(question_words & answer_words) / max(len(question_words), 1)
-
-        # 答案长度惩罚（太长可能有冗余）
-        length_penalty = 1.0
-        if len(answer) > 500:
-            length_penalty = 0.9
-        elif len(answer) > 1000:
-            length_penalty = 0.8
-
-        # 是否包含"不知道"、"无法回答"等拒答词
-        refuse_words = ["不知道", "无法回答", "没有相关", "无法确定"]
+        # 明确拒答：低相关但非 0（允许 no_knowledge 场景）
+        refuse_words = [
+            "不知道", "无法回答", "没有相关", "无法确定",
+            "未找到可靠依据", "无法基于证据", "知识库与外部检索均未找到",
+        ]
         if any(word in answer for word in refuse_words):
-            return 0.2
+            return 0.25
 
-        score = overlap * length_penalty
+        q_tokens = _tokenize_zh(question)
+        a_tokens = _tokenize_zh(answer)
+        if not q_tokens:
+            return 0.0
+
+        overlap = len(q_tokens & a_tokens) / max(len(q_tokens), 1)
+
+        # 答案过短且几乎无重叠
+        if len(answer.strip()) < 8 and overlap < 0.1:
+            return 0.0
+
+        length_penalty = 1.0
+        if len(answer) > 1000:
+            length_penalty = 0.8
+        elif len(answer) > 500:
+            length_penalty = 0.9
+
+        # 中文问题 token 少时，轻度抬升可解释重叠（避免永远 <0.1）
+        if overlap > 0:
+            score = min(1.0, overlap * 1.2) * length_penalty
+        else:
+            score = 0.0
         return round(min(1.0, score), 3)
 
     def evaluate_context_precision(
@@ -112,20 +151,17 @@ class RAGASEvaluator:
 
         # 如果有ground_truth，检查contexts是否包含
         if ground_truth:
-            gt_words = set(ground_truth.lower().split())
+            gt_words = _tokenize_zh(ground_truth)
             context_text = " ".join(ctx.get("content", "") for ctx in contexts)
-            context_words = set(context_text.lower().split())
-
+            context_words = _tokenize_zh(context_text)
             overlap = len(gt_words & context_words) / max(len(gt_words), 1)
             return round(overlap, 3)
 
-        # 如果有answer，检查answer中的信息是否都能在contexts中找到
+        # 如果有 answer，检查答案 token 有多少能在上下文中找到
         if answer:
-            answer_words = set(answer.lower().split())
+            answer_words = _tokenize_zh(answer)
             context_text = " ".join(ctx.get("content", "") for ctx in contexts)
-            context_words = set(context_text.lower().split())
-
-            # 答案中的词有多少能在上下文中找到
+            context_words = _tokenize_zh(context_text)
             supported = len(answer_words & context_words) / max(len(answer_words), 1)
             return round(supported, 3)
 

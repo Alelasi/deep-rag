@@ -1,0 +1,231 @@
+{
+  "generated_at": "2026-07-22T18:23:44",
+  "total": 20,
+  "hit": 1,
+  "accuracy": 0.05,
+  "no_knowledge_rate": 0.05,
+  "mock_web_rate": 0.0,
+  "note": "启发式关键词命中，非官方 RAGAS；勿直接写成简历 95%",
+  "cases": [
+    {
+      "id": "e2e_01",
+      "question": "什么是MBTI？",
+      "ok": false,
+      "latency_ms": 2116,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_02",
+      "question": "INTJ的主导功能是什么？",
+      "ok": false,
+      "latency_ms": 2037,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_03",
+      "question": "八个认知功能有哪些？",
+      "ok": false,
+      "latency_ms": 2028,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_04",
+      "question": "MBTI判型信息量阈值是多少？",
+      "ok": false,
+      "latency_ms": 2042,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_05",
+      "question": "Te和Ti有什么区别？",
+      "ok": false,
+      "latency_ms": 2035,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_06",
+      "question": "九型人格有哪九型？",
+      "ok": false,
+      "latency_ms": 2035,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_07",
+      "question": "什么是恐惧贪婪指数？",
+      "ok": false,
+      "latency_ms": 2035,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_08",
+      "question": "恐贪指数算法大致怎么计算？",
+      "ok": false,
+      "latency_ms": 2051,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_09",
+      "question": "INTJ功能堆栈顺序是什么？",
+      "ok": false,
+      "latency_ms": 2030,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_10",
+      "question": "Si是什么认知功能？",
+      "ok": false,
+      "latency_ms": 2027,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_11",
+      "question": "Fe和Fi有什么不同？",
+      "ok": false,
+      "latency_ms": 2033,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_12",
+      "question": "Ne外倾直觉的特点是什么？",
+      "ok": false,
+      "latency_ms": 2029,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_13",
+      "question": "Se外倾感觉关注什么？",
+      "ok": false,
+      "latency_ms": 2039,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_14",
+      "question": "九型中完美主义者是哪一型？",
+      "ok": false,
+      "latency_ms": 2036,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_15",
+      "question": "市场极度恐惧时恐贪指数大概在什么区间？",
+      "ok": false,
+      "latency_ms": 2030,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_16",
+      "question": "INTP的主导功能通常是什么？",
+      "ok": false,
+      "latency_ms": 2041,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_17",
+      "question": "本知识库里有没有介绍量子纠缠实验设备型号？",
+      "ok": true,
+      "latency_ms": 0,
+      "no_knowledge": true,
+      "used_mock_web": false,
+      "hallucination_score": 0.0,
+      "answer_preview": "【直接回答】知识库中未找到可靠依据，无法基于证据回答该问题。\n\n【详细解释】不可答:不可答模式:量子纠缠.*设备。请换一个可由文档支撑的问题，或补充知识库后再问。\n\n【引用来源】（无）",
+      "error": null
+    },
+    {
+      "id": "e2e_18",
+      "question": "请用知识库内容说明MBTI与九型如何结合使用",
+      "ok": false,
+      "latency_ms": 2040,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_19",
+      "question": "什么是内倾直觉Ni？",
+      "ok": false,
+      "latency_ms": 2030,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    },
+    {
+      "id": "e2e_20",
+      "question": "判型时每个认知功能至少需要多少bit证据？",
+      "ok": false,
+      "latency_ms": 2044,
+      "no_knowledge": false,
+      "used_mock_web": false,
+      "hallucination_score": null,
+      "answer_preview": "",
+      "error": "[WinError 10061] 由于目标计算机积极拒绝，无法连接。"
+    }
+  ]
+}

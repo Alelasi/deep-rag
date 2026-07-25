@@ -95,23 +95,21 @@ def test_vector_search_tool_description():
 # ===== 测试：ExactMatchTool =====
 
 def test_exact_match_tool_calls_db():
-    """ExactMatchTool: 接受过滤条件"""
-    print("=== 测试4: ExactMatchTool过滤查询 ===")
-    db = MockDatabase()
-    tool = ExactMatchTool(db)
+    """ExactMatchTool: SQLite精确查询"""
+    print("=== 测试4: ExactMatchTool精确查询 ===")
+    tool = ExactMatchTool()  # v2.4: 无需传database，自动建SQLite
 
-    results = tool.search("查用户12345", filters={"user_id": "12345"})
+    results = tool.search("查用户ID 12345")
 
     assert isinstance(results, list)
-    print(f"  Tool accepts filters: {{'user_id': '12345'}}")
-    print(f"  Returns list: {type(results).__name__}")
+    print(f"  SQLite tool created, returns list: {type(results).__name__}")
     print("  PASS\n")
 
 
 def test_exact_match_tool_description():
     """ExactMatchTool: 描述包含场景关键词"""
     print("=== 测试5: ExactMatchTool描述 ===")
-    tool = ExactMatchTool(MockDatabase())
+    tool = ExactMatchTool()
     desc = tool.get_description()
 
     assert "精确" in desc or "ID" in desc
@@ -122,32 +120,32 @@ def test_exact_match_tool_description():
 # ===== 测试：GraphSearchTool =====
 
 def test_graph_search_tool_basic():
-    """GraphSearchTool: 实体关系查询"""
+    """GraphSearchTool: NetworkX实体关系查询"""
     print("=== 测试6: GraphSearchTool基础查询 ===")
-    tool = GraphSearchTool(graph_db=None)
+    tool = GraphSearchTool()  # v2.4: 无需传graph_db，自动建NetworkX
 
-    results = tool.search(entity="Spring Security", relation="依赖")
+    results = tool.search("Spring Security和WebFlux的关系")
 
     assert isinstance(results, list)
     desc = tool.get_description()
     assert "图" in desc or "关系" in desc
-    print(f"  Tool returns list (graph_db=None means empty)")
+    print(f"  NetworkX tool created, returns list")
     print("  PASS\n")
 
 
 # ===== 测试：WebSearchTool =====
 
 def test_web_search_tool_basic():
-    """WebSearchTool: 网络搜索接口"""
+    """WebSearchTool: DuckDuckGo网络搜索"""
     print("=== 测试7: WebSearchTool基础查询 ===")
-    tool = WebSearchTool(search_api="tavily")
+    tool = WebSearchTool()  # v2.4: 默认duckduckgo，无需API Key
 
     results = tool.search("2026 AI最新趋势", max_results=3)
 
     assert isinstance(results, list)
     desc = tool.get_description()
     assert "网络" in desc or "互联网" in desc or "搜索" in desc
-    print(f"  Web search tool created with api=tavily")
+    print(f"  DuckDuckGo tool created (free, no API key needed)")
     print("  PASS\n")
 
 
@@ -177,7 +175,7 @@ def test_toolbox_list_tools():
     print("=== 测试9: 工具箱列出工具 ===")
     toolbox = AgenticRAGToolbox()
     toolbox.register_tool("vector", VectorSearchTool(MockRetriever()))
-    toolbox.register_tool("exact", ExactMatchTool(MockDatabase()))
+    toolbox.register_tool("exact", ExactMatchTool())
     toolbox.register_tool("web", WebSearchTool())
 
     tools = toolbox.list_tools()
@@ -228,16 +226,23 @@ def test_toolbox_execute_unknown_raises():
 # ===== 测试：create_toolbox工厂 =====
 
 def test_create_toolbox_factory():
-    """create_toolbox: 工厂函数注册默认工具"""
+    """create_toolbox: 工厂函数注册全部4个工具"""
     print("=== 测试12: create_toolbox工厂 ===")
     retriever = MockRetriever()
     toolbox = create_toolbox(retriever)
 
-    # 至少应注册vector_search
+    # v2.4: 应注册全部4个工具
+    tools = toolbox.list_tools()
+    tool_names = [t["name"] for t in tools]
+    assert len(tools) == 4, f"Expected 4 tools, got {len(tools)}: {tool_names}"
+    assert "vector_search" in tool_names
+    assert "exact_match" in tool_names
+    assert "graph_search" in tool_names
+    assert "web_search" in tool_names
+
     vector_tool = toolbox.get_tool("vector_search")
-    assert vector_tool is not None
     assert isinstance(vector_tool, VectorSearchTool)
-    print(f"  Factory registered: vector_search (and possibly more)")
+    print(f"  Factory registered 4 tools: {tool_names}")
     print("  PASS\n")
 
 
@@ -246,13 +251,14 @@ def test_create_toolbox_factory():
 def test_agent_decision_flow():
     """模拟Agent根据问题选择工具的完整流程"""
     print("=== 测试13: Agent决策流程模拟 ===")
-    # 准备3种工具
+    # 准备4种工具（v2.4全部可用）
     toolbox = AgenticRAGToolbox()
 
     semantic_docs = [Document(doc_id="s1", content="语义结果",
                               source="a.md", page=1, metadata={})]
     toolbox.register_tool("vector", VectorSearchTool(MockRetriever(semantic_docs)))
-    toolbox.register_tool("exact", ExactMatchTool(MockDatabase()))
+    toolbox.register_tool("exact", ExactMatchTool())
+    toolbox.register_tool("graph", GraphSearchTool())
     toolbox.register_tool("web", WebSearchTool())
 
     # 模拟问题路由（简化的关键词路由，真实场景由LLM决策）
@@ -261,6 +267,8 @@ def test_agent_decision_flow():
             return "exact"
         elif "最新" in question or "2026" in question:
             return "web"
+        elif "关系" in question or "依赖" in question:
+            return "graph"
         else:
             return "vector"
 
@@ -268,6 +276,7 @@ def test_agent_decision_flow():
         ("INTJ的主导功能是什么", "vector"),
         ("查询用户ID 12345", "exact"),
         ("2026年最新AI趋势", "web"),
+        ("A和B之间的关系", "graph"),
     ]
     for question, expected in test_cases:
         chosen = route(question)

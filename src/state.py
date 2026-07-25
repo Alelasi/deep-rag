@@ -1,5 +1,4 @@
 """LangGraph 状态定义 — 7层Pipeline的数据流"""
-from __future__ import annotations
 from typing import TypedDict, Optional, Literal
 
 
@@ -43,6 +42,7 @@ class RAGState(TypedDict):
     # --- 输入 ---
     question: str                          # 用户提问
     collection_name: str                   # 知识库名称
+    prior_context: str                     # 相关前轮摘要 + 一致性硬约束（可空）
 
     # --- 1.Query分析 ---
     question_type: Literal["factual", "reasoning", "comparison", "open_ended"]
@@ -68,16 +68,27 @@ class RAGState(TypedDict):
     hallucination_score: float             # 幻觉评分 0-1 (0=无幻觉)
     fact_check_passed: bool
     unsupported_claims: list[str]          # 未被文档支持的断言
+    regenerate_count: int                  # Self-RAG 重新生成次数（与 Corrective retry_count 分离）
 
     # --- 7.冲突解决 ---
     conflicts: list[ConflictInfo]
 
     # --- Web Fallback ---
     web_results: list[Document]
+    used_mock_web: bool                    # Web 结果是否为 mock 占位
+    no_knowledge: bool                     # 知识库+真实 Web 均无可用证据
+    used_web_fallback: bool
 
     # --- 流程控制 ---
     current_step: str
     retry_count: int
     max_retries: int
+    need_human_review: bool                 # 是否需要人工审核（Human-in-the-Loop）
     errors: list[str]
     history: list[str]
+
+    # --- ReAct Agent 循环（v2.4新增）---
+    next_action: str                        # Agent决策的下一步操作
+    agent_reason: str                       # Agent决策理由
+    retrieval_round: int                    # 当前检索轮次
+    used_tools: list[str]                   # 已使用的工具列表

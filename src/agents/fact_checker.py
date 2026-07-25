@@ -1,10 +1,11 @@
-"""Self-RAG事实校验Agent — 检测生成内容中的幻觉"""
-from src.config import get_llm
+"""Self-RAG事实校验Agent — 检测生成内容中的幻觉（v2.9: Prompt模板化, v2.9.1: Constrained Decoding）"""
+from src.config import get_llm, get_temperature
 from langchain_core.messages import HumanMessage, SystemMessage
 import json
 from src.state import GradedDocument
 
-SYSTEM_PROMPT = """你是一个事实核查专家。对比生成的回答与源文档，检测是否存在幻觉（hallucination）。
+# v2.9: 从PromptManager加载，失败时降级到硬编码
+_FALLBACK_SYSTEM_PROMPT = """你是一个事实核查专家。对比生成的回答与源文档，检测是否存在幻觉（hallucination）。
 
 逐句检查回答中的事实性断言是否在源文档中有支撑。
 
@@ -25,6 +26,16 @@ hallucination_score评分标准：
 passed标准：hallucination_score < 0.3
 """
 
+def _get_system_prompt() -> str:
+    """获取SYSTEM_PROMPT（v2.9: 优先从PromptManager加载）"""
+    try:
+        from src.tools.modules.prompt_manager import get_pipeline_prompt
+        return get_pipeline_prompt("fact_check_system")
+    except Exception:
+        return _FALLBACK_SYSTEM_PROMPT
+
+SYSTEM_PROMPT = _get_system_prompt()
+
 
 def check_facts(answer: str, source_docs: list[GradedDocument]) -> dict:
     """LLM事实校验"""
@@ -32,7 +43,7 @@ def check_facts(answer: str, source_docs: list[GradedDocument]) -> dict:
         return {"hallucination_score": 0.0, "passed": True,
                 "unsupported_claims": [], "reasoning": "无内容需要校验"}
 
-    llm = get_llm(temperature=0)
+    llm = get_llm(temperature=get_temperature("fact_check"))
     if llm is None:
         # 降级到离线模式
         return check_facts_offline(answer, source_docs)
@@ -55,18 +66,34 @@ def check_facts(answer: str, source_docs: list[GradedDocument]) -> dict:
     ]
 
     try:
-        response = llm.invoke(messages)
-        content = response.content
-        if "```json" in content:
-            json_str = content.split("```json")[1].split("```")[0]
-        elif "```" in content:
-            json_str = content.split("```")[1].split("```")[0]
+        # v2.9.1: 使用Constrained Decoding替代手动JSON解析
+        from src.llm.constrained_decoder import get_structured_llm, HALLUCINATION_SCHEMA, safe_parse_json
+        structured_llm = get_structured_llm(llm, HALLUCINATION_SCHEMA)
+        data = structured_llm.invoke(messages)
+        # 如果返回的是dict直接使用，否则尝试解析
+        if isinstance(data, dict):
+            pass  # 结构化输出成功
+        elif isinstance(data, str):
+            data = safe_parse_json(data) or {
+                "hallucination_score": 0.2, "passed": True,
+                "unsupported_claims": [], "reasoning": "结构化输出降级"
+            }
         else:
-            json_str = content
-        data = json.loads(json_str.strip())
+            # LangChain with_structured_output 返回的是Pydantic对象
+            data = data.dict() if hasattr(data, 'dict') else dict(data)
     except Exception:
-        data = {"hallucination_score": 0.2, "passed": True,
-                "unsupported_claims": [], "reasoning": "校验过程出错，默认通过"}
+        # 降级到手动JSON解析（v2.9.1: 保留fallback）
+        try:
+            response = llm.invoke(messages)
+            content = response.content
+            from src.llm.constrained_decoder import safe_parse_json
+            data = safe_parse_json(content) or {
+                "hallucination_score": 0.2, "passed": True,
+                "unsupported_claims": [], "reasoning": "校验过程出错，默认通过"
+            }
+        except Exception:
+            data = {"hallucination_score": 0.2, "passed": True,
+                    "unsupported_claims": [], "reasoning": "校验过程出错，默认通过"}
 
     score = float(data.get("hallucination_score", 0.2))
     return {

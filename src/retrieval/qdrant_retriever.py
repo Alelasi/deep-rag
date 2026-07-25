@@ -1,283 +1,150 @@
-"""Qdrant向量数据库检索器
-基于理论文档中的Qdrant最佳实践实现
-- 支持稠密向量（Dense Vector）检索
-- 支持稀疏向量（Sparse Vector）用于BM25
-- 支持混合检索（Hybrid Search）
-- 支持元数据过滤（Metadata Filtering）
+"""Qdrant 向量检索器 — 多 collection + local/server
 
-依赖：pip install qdrant-client
+替代 Chroma 作为主向量后端（重启不烂 HNSW）。
+集合名请用 ``project_collections.resolve_collection``。
 """
-from typing import List, Optional, Dict, Any
-from collections import Counter
-from src.state import Document
+from __future__ import annotations
 
-# 延迟导入：未安装qdrant-client时仍可import本模块（跳过）
-try:
-    from qdrant_client import QdrantClient
-    from qdrant_client.models import (
-        Distance, VectorParams, PointStruct,
-        Filter, FieldCondition, MatchValue,
-        SparseVector, SparseVectorParams
-    )
-    QDRANT_AVAILABLE = True
-except ImportError:
-    QDRANT_AVAILABLE = False
-    QdrantClient = None  # type: ignore
+import hashlib
+import logging
+from typing import Dict, List, Optional
 
-import jieba
+from qdrant_client.models import Distance, PointStruct, VectorParams
+
+from src.retrieval.project_collections import DEFAULT_COLLECTION, resolve_collection
+from src.retrieval.qdrant_client_factory import get_qdrant_client
+
+log = logging.getLogger(__name__)
+
+# 与 bge-base-zh-v1.5 一致
+VECTOR_SIZE = 768
 
 
 class QdrantRetriever:
-    """Qdrant向量检索器 - 支持混合检索"""
+    """单 collection 检索器；客户端由工厂共享。"""
 
-    def __init__(self, host: str = "localhost", port: int = 6333,
-                 collection_name: str = "deep_rag_docs", client=None):
-        """初始化Qdrant客户端
+    def __init__(self, collection_name: str = DEFAULT_COLLECTION):
+        # 支持 work / proj_work / default 等别名
+        self.collection_name = resolve_collection(collection_name)
+        self.name = self.collection_name  # 兼容旧 Chroma 接口字段
+        self.client = get_qdrant_client()
+        self._ensure_collection()
 
-        Args:
-            host: Qdrant服务地址
-            port: Qdrant服务端口
-            collection_name: 集合名称
-            client: 可选，注入已有客户端（便于测试时注入mock）
-        """
-        if not QDRANT_AVAILABLE and client is None:
-            raise ImportError(
-                "qdrant-client not installed. Run: pip install qdrant-client"
-            )
-        self.client = client if client is not None else QdrantClient(host=host, port=port)
-        self.collection_name = collection_name
-        self.embedding_dim = 768  # 默认使用768维向量
-
-    def create_collection(self, embedding_dim: int = 768):
-        """创建集合（支持稠密+稀疏向量）"""
-        self.embedding_dim = embedding_dim
-
-        # 检查集合是否存在
-        collections = self.client.get_collections().collections
-        if any(c.name == self.collection_name for c in collections):
-            print(f"Collection {self.collection_name} already exists")
-            return
-
-        if QDRANT_AVAILABLE:
-            # 创建集合：稠密向量 + 稀疏向量（用于BM25）
+    def _ensure_collection(self) -> None:
+        """集合不存在则创建（768 维 cosine）。"""
+        names = [c.name for c in self.client.get_collections().collections]
+        if self.collection_name not in names:
             self.client.create_collection(
                 collection_name=self.collection_name,
-                vectors_config={
-                    "dense": VectorParams(
-                        size=embedding_dim,
-                        distance=Distance.COSINE
-                    )
-                },
-                sparse_vectors_config={
-                    "sparse": SparseVectorParams()
-                }
+                vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
             )
-        else:
-            # 测试场景：用dict代替
-            self.client.create_collection(
-                collection_name=self.collection_name,
-                vectors_config={"dense": {"size": embedding_dim, "distance": "cosine"}},
-                sparse_vectors_config={"sparse": {}},
-            )
-        print(f"Created collection: {self.collection_name}")
+            log.info("[Qdrant] Created collection: %s", self.collection_name)
 
-    def add_documents(self, documents: List[Document], embeddings: List[List[float]]):
-        """添加文档到Qdrant
-
-        Args:
-            documents: 文档列表（TypedDict）
-            embeddings: 对应的稠密向量列表
-        """
+    def add_documents(
+        self,
+        documents: List[str],
+        embeddings: List[List[float]],
+        metadatas: List[Dict],
+        ids: List[str],
+    ) -> None:
+        """批量 upsert 文档。"""
         points = []
-        for i, (doc, embedding) in enumerate(zip(documents, embeddings)):
-            # 生成稀疏向量（BM25风格）
-            sparse_vector = self._generate_sparse_vector(doc["content"])
-
-            payload = {
-                "doc_id": doc["doc_id"],
-                "content": doc["content"],
-                "source": doc["source"],
-                "page": doc["page"],
-                "metadata": doc.get("metadata") or {},
-            }
-
-            if QDRANT_AVAILABLE:
-                point = PointStruct(
-                    id=i,
-                    vector={
-                        "dense": embedding,
-                        "sparse": sparse_vector,
+        for doc, emb, meta, doc_id in zip(documents, embeddings, metadatas, ids):
+            # 稳定 int id，避免字符串 id 兼容问题
+            point_id = int(hashlib.md5(doc_id.encode()).hexdigest()[:15], 16)
+            points.append(
+                PointStruct(
+                    id=point_id,
+                    vector=emb,
+                    payload={
+                        "content": doc,
+                        "source": meta.get("source", ""),
+                        "page": meta.get("page", 0),
+                        "doc_id": doc_id,
+                        **{k: v for k, v in meta.items() if k not in ("source", "page")},
                     },
-                    payload=payload,
                 )
-            else:
-                # 测试场景：用普通dict代替PointStruct
-                point = {
-                    "id": i,
-                    "vector": {"dense": embedding, "sparse": sparse_vector},
-                    "payload": payload,
-                }
-            points.append(point)
+            )
+        batch_size = 100
+        for i in range(0, len(points), batch_size):
+            self.client.upsert(
+                collection_name=self.collection_name,
+                points=points[i : i + batch_size],
+            )
+        log.info("[Qdrant] Added %s docs → %s", len(points), self.collection_name)
 
-        # 批量插入
-        self.client.upsert(
+    def search(self, query_embedding: List[float], top_k: int = 5) -> List[Dict]:
+        """向量检索，返回统一文档字典列表。"""
+        results = self.client.query_points(
             collection_name=self.collection_name,
-            points=points
+            query=query_embedding,
+            limit=top_k,
+            with_payload=True,
+            with_vectors=False,
         )
-        print(f"Added {len(points)} documents to Qdrant")
-
-    def _generate_sparse_vector(self, text: str):
-        """生成稀疏向量（基于词频的BM25风格）
-
-        Returns:
-            SparseVector对象，或在qdrant未安装时返回dict（便于测试）
-        """
-        # 分词
-        tokens = list(jieba.cut(text))
-        # 词频统计
-        word_counts = Counter(tokens)
-
-        # 转换为稀疏向量格式
-        indices = []
-        values = []
-        for word, count in word_counts.items():
-            # 使用词的hash作为索引（简化版）
-            idx = hash(word) % 10000  # 限制在10000维内
-            indices.append(idx)
-            values.append(float(count))
-
-        if QDRANT_AVAILABLE:
-            return SparseVector(indices=indices, values=values)
-        return {"indices": indices, "values": values}
-
-    def search(self, query: str, query_embedding: List[float],
-               top_k: int = 5, filters: Optional[Dict[str, Any]] = None) -> List[Document]:
-        """向量检索（仅稠密向量）
-
-        使用 Qdrant Query API (v1.10+) 替代已废弃的 search() 方法。
-
-        Args:
-            query: 查询文本
-            query_embedding: 查询向量
-            top_k: 返回结果数量
-            filters: 元数据过滤条件，如 {"source": "mbti_theory.md"}
-        """
-        # 构建过滤器
-        query_filter = None
-        if filters:
-            if QDRANT_AVAILABLE:
-                conditions = [
-                    FieldCondition(key=key, match=MatchValue(value=value))
-                    for key, value in filters.items()
-                ]
-                query_filter = Filter(must=conditions)
-            else:
-                # 测试场景：直接传dict，由mock client自行处理
-                query_filter = filters
-
-        # 搜索：优先使用 Query API，降级到 search()（兼容 mock）
-        if QDRANT_AVAILABLE:
-            response = self.client.query_points(
-                collection_name=self.collection_name,
-                query=query_embedding,
-                using="dense",
-                query_filter=query_filter,
-                limit=top_k,
-            )
-            results = response.points
-        else:
-            # 测试场景：mock client 仍用旧的 search() 接口
-            results = self.client.search(
-                collection_name=self.collection_name,
-                query_vector=("dense", query_embedding),
-                query_filter=query_filter,
-                limit=top_k,
-            )
-
-        # 转换为Document对象
-        documents = []
-        for result in results:
-            doc = Document(
-                doc_id=result.payload["doc_id"],
-                content=result.payload["content"],
-                source=result.payload["source"],
-                page=result.payload["page"],
-                metadata={
-                    **result.payload.get("metadata", {}),
-                    "score": result.score
+        docs = []
+        for r in results.points:
+            payload = r.payload or {}
+            score = r.score if r.score is not None else 0.0
+            docs.append(
+                {
+                    "doc_id": payload.get("doc_id", str(r.id)),
+                    "content": payload.get("content", ""),
+                    "source": payload.get("source", ""),
+                    "page": payload.get("page", 0),
+                    "metadata": payload,
+                    "_vector_distance": 1.0 - score,
+                    "_score": score,
                 }
             )
-            documents.append(doc)
+        try:
+            from src.retrieval.source_filter import filter_docs
+            docs = filter_docs(docs)
+        except Exception:
+            pass
+        return docs
 
-        return documents
+    def count(self) -> int:
+        """集合内点数。"""
+        info = self.client.get_collection(self.collection_name)
+        return int(info.points_count or 0)
 
-    def hybrid_search(self, query: str, query_embedding: List[float],
-                      top_k: int = 5, dense_weight: float = 0.6,
-                      sparse_weight: float = 0.4) -> List[Document]:
-        """混合检索（稠密向量 + 稀疏向量 + RRF融合）
+    def is_ready(self) -> bool:
+        """是否已有数据可检索。"""
+        try:
+            return self.count() > 0
+        except Exception:
+            return False
 
-        使用 Qdrant Query API (v1.10+) 实现真正的混合检索：
-        1. Prefetch 阶段：并行检索 dense 和 sparse 向量
-        2. Fusion 阶段：RRF (Reciprocal Rank Fusion) 融合结果
+    def clear(self) -> None:
+        """删除并重建空集合。"""
+        try:
+            self.client.delete_collection(self.collection_name)
+        except Exception:
+            pass
+        self._ensure_collection()
 
-        Args:
-            query: 查询文本
-            query_embedding: 查询的稠密向量
-            top_k: 返回结果数量
-            dense_weight: 稠密向量权重（保留参数，RRF 自动平衡）
-            sparse_weight: 稀疏向量权重（保留参数，RRF 自动平衡）
 
-        Returns:
-            融合后的文档列表（按 RRF 分数排序）
-        """
-        # 生成查询的稀疏向量
-        query_sparse = self._generate_sparse_vector(query)
+# collection_name → 实例（修复旧版「忽略后续 collection」单例 bug）
+_retrievers: Dict[str, QdrantRetriever] = {}
 
-        if QDRANT_AVAILABLE:
-            from qdrant_client.models import Prefetch, FusionQuery, Fusion
 
-            # Query API: Prefetch + RRF 融合
-            results = self.client.query_points(
-                collection_name=self.collection_name,
-                prefetch=[
-                    # 阶段1：稠密向量检索（语义相似）
-                    Prefetch(query=query_embedding, using="dense", limit=top_k * 2),
-                    # 阶段2：稀疏向量检索（关键词匹配）
-                    Prefetch(query=query_sparse, using="sparse", limit=top_k * 2),
-                ],
-                # 阶段3：RRF 融合（自动平衡两种检索结果）
-                query=FusionQuery(fusion=Fusion.RRF),
-                limit=top_k,
-            )
-            search_results = results.points
-        else:
-            # 测试模式：降级为单一 dense 检索（mock client 不支持 query_points）
-            results = self.client.search(
-                collection_name=self.collection_name,
-                query_vector=("dense", query_embedding),
-                query_filter=None,
-                limit=top_k,
-            )
-            search_results = results
+def get_qdrant_retriever(collection_name: str = DEFAULT_COLLECTION) -> QdrantRetriever:
+    """按 collection 缓存检索器。"""
+    name = resolve_collection(collection_name)
+    if name not in _retrievers:
+        _retrievers[name] = QdrantRetriever(name)
+    return _retrievers[name]
 
-        # 转换为Document对象
-        documents = []
-        for result in search_results:
-            doc = Document(
-                doc_id=result.payload["doc_id"],
-                content=result.payload["content"],
-                source=result.payload["source"],
-                page=result.payload["page"],
-                metadata={
-                    **result.payload.get("metadata", {}),
-                    "score": result.score
-                }
-            )
-            documents.append(doc)
 
-        return documents
-
-    def delete_collection(self):
-        """删除集合"""
-        self.client.delete_collection(collection_name=self.collection_name)
-        print(f"Deleted collection: {self.collection_name}")
+def list_collection_stats() -> List[Dict]:
+    """列出中心库全部 collection 及点数（验收用）。"""
+    client = get_qdrant_client()
+    out = []
+    for c in client.get_collections().collections:
+        try:
+            n = client.get_collection(c.name).points_count or 0
+        except Exception:
+            n = -1
+        out.append({"name": c.name, "points": int(n)})
+    return out
