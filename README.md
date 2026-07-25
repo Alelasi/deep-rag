@@ -1,4 +1,4 @@
-> **Agent工程实践四部曲** | [intent-eval-agent](../intent-eval-agent)（百度实习延伸） · [deep-rag](../deep-rag)（自纠错RAG） · [job-agent](../job-agent)（求职匹配） · [self-healing-pipeline](../self-healing-pipeline)（CI/CD自愈）
+> **Agent工程实践四部曲** | intent-eval-agent（百度实习延伸） · deep-rag（自纠错RAG，本项目） · job-agent（求职匹配） · self-healing-pipeline（CI/CD自愈）
 
 # DeepRAG - 企业级 Agentic RAG 技术文档问答系统
 
