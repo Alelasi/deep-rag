@@ -89,7 +89,7 @@ def _build_system_prompt_with_templates() -> str:
 
         return builder.render()
     except Exception as e:
-        log.warning(f"[Generator] 五要素模板构建失败: {e}")
+        print(f"[Generator] 五要素模板构建失败: {e}")
         return _FALLBACK_SYSTEM_PROMPT
 
 

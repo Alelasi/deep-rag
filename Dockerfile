@@ -17,7 +17,7 @@ COPY api.py app.py ./
 
 # Install dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -e ".[llm,api,ui,qdrant,reranker]" && \
+    pip install --no-cache-dir -e ".[llm,api,ui,qdrant]" && \
     pip install --no-cache-dir langchain-openai langchain-ollama psutil
 
 # Final stage
