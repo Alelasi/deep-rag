@@ -1,5 +1,5 @@
 # Multi-stage build for smaller image size
-FROM python:3.11-slim as builder
+FROM python:3.14-slim as builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir langchain-openai langchain-ollama psutil
 
 # Final stage
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
