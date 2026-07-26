@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - 页面未找到 | DeepRAG</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0f;
+      color: #a0a0b8;
+      font-family: 'Inter', -apple-system, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+    .code {
+      font-size: 8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 1rem;
+    }
+    .message {
+      font-size: 1.25rem;
+      color: #a0a0b8;
+      margin-bottom: 0.5rem;
+    }
+    .hint {
+      font-size: 0.9rem;
+      color: #666680;
+      margin-bottom: 2rem;
+    }
+    .cta {
+      display: inline-block;
+      padding: 0.75rem 2rem;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+    }
+    .auto-redirect {
+      font-size: 0.8rem;
+      color: #555570;
+      margin-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="code">404</div>
+    <p class="message">页面未找到</p>
+    <p class="hint">您访问的页面可能已被移动或删除</p>
+    <a href="https://alelasi.github.io/deep-rag/" class="cta">返回 DeepRAG 首页</a>
+    <p class="auto-redirect">5 秒后自动跳转...</p>
+  </div>
+  <script>
+    setTimeout(function() {
+      window.location.href = 'https://alelasi.github.io/deep-rag/';
+    }, 5000);
+  </script>
+</body>
+</html>

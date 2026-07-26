@@ -2,7 +2,7 @@
 
 All notable changes to DeepRAG will be documented in this file.
 
-## [0.2.9] - 2026-07-25
+## [0.2.9] - 2026-07-26
 
 ### Added
 - Showcase website with interactive architecture visualizations (Mermaid.js, D3.js, Chart.js)
@@ -12,6 +12,8 @@ All notable changes to DeepRAG will be documented in this file.
 - GitHub Pages auto-deployment for showcase
 - Comprehensive README with audit truth table
 - CONTRIBUTING.md, SECURITY.md, LICENSE
+- Showcase SEO: favicon, Open Graph tags, Twitter Card
+- Custom 404.html with dark theme and auto-redirect
 
 ### Fixed
 - CI pipeline: resolved lint (F821), security (dependency install), test (collection errors), docker (reranker timeout)
@@ -19,12 +21,18 @@ All notable changes to DeepRAG will be documented in this file.
 - `app.py`: F821 undefined name 'get_indexer_cached' → moved definition to module level
 - Dockerfile: removed `reranker` dependency to avoid 19min build timeout
 - README: fixed broken relative path links
+- README: updated version references from v2.3 to v2.9.x
+- CI concurrency control to cancel stale runs
 
 ### Changed
 - Dependabot open-pull-requests-limit reduced from 10 to 3
 - CI lint restricted to `src/` only (tests/ has legacy syntax issues)
 - CI security tools installed separately with `|| true` fallback
 - Docker build timeout set to 25 minutes
+- Dockerfile.streamlit: multi-stage build with non-root user
+- Reorganized tests/ directory: 16 non-test files moved to scripts/ and evaluation/
+- Removed tracked pollutants: README_优化版.md, pytest output files, xlsx template
+- Merged 5 Dependabot PRs (GitHub Actions updates), closed 2 high-risk PRs (psutil major bump, Python 3.14)
 
 ## [0.2.8] - 2026-07-20
 

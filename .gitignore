@@ -39,6 +39,8 @@ temp/
 nul
 =2.0
 *.tmp
+pytest_*output.txt
+rag_evaluation_template.xlsx
 
 # 隐私保护
 简历/
