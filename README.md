@@ -6,6 +6,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Package](https://img.shields.io/badge/package-0.2.9-blue.svg)](pyproject.toml)
 [![Capability](https://img.shields.io/badge/capability-v2.9.x-lightgrey.svg)](docs/审计真相表_P0.md)
+[![CI](https://github.com/Alelasi/deep-rag/actions/workflows/ci.yml/badge.svg)](https://github.com/Alelasi/deep-rag/actions/workflows/ci.yml)
+[![Pages](https://github.com/Alelasi/deep-rag/actions/workflows/pages.yml/badge.svg)](https://alelasi.github.io/deep-rag/)
 
 > 基于 LangGraph 的 Agentic RAG 系统：混合检索 + Corrective RAG + **可选** Self-RAG 闭环 + 离线启发式评测。
 

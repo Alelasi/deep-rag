@@ -6,9 +6,14 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       matrix:
         python-version: ['3.11', '3.12', '3.13']
@@ -41,11 +46,12 @@ jobs:
 
     - name: Run tests
       run: |
-        # --continue-on-collection-errors: 部分测试依赖外部服务(Qdrant/FAISS/pgvector)，
-        # collection 失败不阻止其他测试运行
-        pytest tests/ -v --cov=src --cov-report=xml --cov-report=term \
-          --continue-on-collection-errors || true
+        # 只收集 test_*.py，排除 benchmark/evaluate/demo 脚本
+        # conftest.py 自动跳过依赖外部服务的测试
+        pytest tests/test_*.py -v --cov=src --cov-report=xml --cov-report=term \
+          --continue-on-collection-errors -p no:cacheprovider || true
       env:
+        GITHUB_ACTIONS: "true"
         SILICONFLOW_API_KEY: mock-key-for-testing
         GROQ_API_KEY: mock-key-for-testing
         CEREBRAS_API_KEY: mock-key-for-testing
