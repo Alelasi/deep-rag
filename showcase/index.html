@@ -310,7 +310,7 @@
 <script>
   // 动态渲染版本时间线
   document.addEventListener('DOMContentLoaded', () => {
-    fetch('assets/data/metrics.json')
+    fetch('assets/data/metrics.json', {cache: 'no-cache'})
       .then(r => r.json())
       .then(data => {
         const container = document.getElementById('version-timeline');

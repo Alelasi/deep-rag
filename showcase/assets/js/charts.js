@@ -8,10 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
   Chart.defaults.borderColor = '#2a2a3a';
   Chart.defaults.font.family = 'Inter, sans-serif';
 
-  // 加载数据并渲染图表
+  // 加载数据并渲染图表（cache: 'no-cache' 防止 CDN 缓存 404）
   Promise.all([
-    fetch('assets/data/metrics.json').then(r => r.json()),
-    fetch('assets/data/vector-db.json').then(r => r.json())
+    fetch('assets/data/metrics.json', {cache: 'no-cache'}).then(r => r.json()),
+    fetch('assets/data/vector-db.json', {cache: 'no-cache'}).then(r => r.json())
   ]).then(([metrics, vectorDb]) => {
     renderRetrievalChart(metrics);
     renderVectorDbChart(vectorDb);
