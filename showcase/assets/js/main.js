@@ -64,10 +64,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // === 平滑滚动到锚点 ===
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', (e) => {
-      const target = document.querySelector(anchor.getAttribute('href'));
-      if (target) {
-        e.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const href = anchor.getAttribute('href');
+      // 跳过 href="#" 等无效锚点（如 Demo 占位按钮）
+      if (!href || href === '#' || href.length < 2) return;
+      try {
+        const target = document.querySelector(href);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } catch (err) {
+        // querySelector 遇到非法选择器时静默跳过
       }
     });
   });
