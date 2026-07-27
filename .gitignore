@@ -16,7 +16,7 @@ venv/
 !.env.example
 
 # 数据与索引（隐私 + 体积）
-data/
+/data/
 data/local_document_rag/
 data/lancedb/
 *.lancedb

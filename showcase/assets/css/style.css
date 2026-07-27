@@ -237,6 +237,18 @@ body {
   background: var(--bg-card-hover);
 }
 
+/* Demo 即将上线按钮 */
+.demo-coming {
+  opacity: 0.65;
+  cursor: not-allowed;
+  border-style: dashed !important;
+}
+.demo-coming:hover {
+  opacity: 0.8;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 /* === 通用 Section === */
 .section {
   padding: 6rem 2rem;

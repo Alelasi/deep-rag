@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeepRAG 面试话术 — 3分钟电梯演讲 + 技术问答</title>
+<style>
+  :root {
+    --bg: #0a0a0f; --card: #14141e; --border: #2a2a3e;
+    --text: #e0e0f0; --muted: #8888a0; --accent: #6366f1;
+    --green: #10b981; --orange: #f59e0b; --red: #ef4444;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, 'Microsoft YaHei', sans-serif; line-height: 1.8; padding: 2rem; max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.8rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
+  h2 { font-size: 1.3rem; color: var(--accent); margin: 2rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.1rem; color: var(--text); margin: 1.2rem 0 0.6rem; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  .pitch { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 1rem 0; }
+  .pitch-segment { margin: 1rem 0; padding-left: 1rem; border-left: 3px solid var(--accent); }
+  .timer { display: inline-block; background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; margin-right: 0.5rem; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+  th, td { padding: 0.6rem 0.8rem; border: 1px solid var(--border); text-align: left; font-size: 0.9rem; }
+  th { background: var(--card); color: var(--accent); font-weight: 600; }
+  .qa { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 0.8rem 0; }
+  .qa .q { color: var(--orange); font-weight: 600; margin-bottom: 0.4rem; }
+  .qa .a { color: var(--text); font-size: 0.92rem; }
+  .highlight { color: var(--green); }
+  .warn { color: var(--orange); }
+  .danger { color: var(--red); }
+  code { background: var(--card); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--accent); }
+  .tag { display: inline-block; background: var(--card); border: 1px solid var(--border); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; margin: 2px; color: var(--muted); }
+  .footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+
+<h1>DeepRAG 面试话术</h1>
+<p class="meta">v2.9.x | 2026-07-27 | 基于「审计真相表_P0」诚实口径</p>
+
+<!-- ==================== 电梯演讲 ==================== -->
+
+<h2>一、3分钟电梯演讲</h2>
+
+<div class="pitch">
+
+<div class="pitch-segment">
+<span class="timer">0:00-0:30</span> <strong>项目是什么</strong><br>
+我做了一个基于 LangGraph 的 Agentic RAG 系统，叫 DeepRAG。它不是简单的"文档问答机器人"，而是一个带自纠错能力的智能检索系统——当检索到的文档不相关时，它会自动改写查询重试；当生成的答案有幻觉风险时，它会自我反思并重新生成。整个系统是 7 层 Pipeline，7个月从 60% 准确率迭代到现在的水平。
+</div>
+
+<div class="pitch-segment">
+<span class="timer">0:30-1:30</span> <strong>解决什么问题</strong><br>
+出发点很实际：学习 LangChain/LangGraph 时，官方文档分散在 Python 文档、JS 文档、API Reference、GitHub 四五个地方，版本从 0.1 到 0.3 快速迭代。查一个问题平均要花 10-30 分钟，打开一堆标签页对比版本差异。我就想，能不能用 RAG 自己解决这个问题？<br><br>
+但传统 RAG 有两个硬伤：一是只能查本地知识库，遇到"最新版本有什么bug"这种实时问题就废了；二是没有质量校验，答案可能包含幻觉。所以我把系统做成了 Agentic RAG——Agent 能自动判断问题类型，选择向量检索、GitHub API、Web 搜索等不同工具；生成答案后还有事实校验和幻觉检测。
+</div>
+
+<div class="pitch-segment">
+<span class="timer">1:30-2:30</span> <strong>技术方案</strong><br>
+核心架构是 LangGraph 状态机驱动的 7 层 Pipeline：<br>
+<strong>Query Analysis → Retrieval → Doc Grading → Generation → Fact Checking → Conflict Detection → Final Answer</strong><br><br>
+关键技术决策：<br>
+- <strong>Corrective RAG</strong>：文档评分不相关时改写查询重试，最多 3 次<br>
+- <strong>Self-RAG</strong>：生成后做事实校验，检测幻觉并重新生成（默认 fast 模式关闭循环，质量模式开启）<br>
+- <strong>混合检索</strong>：BM25 关键词 + 向量语义 + RRF 融合排序，Top-5 准确率从 78% 提到 88%<br>
+- <strong>多后端支持</strong>：ChromaDB、Qdrant、FAISS、LanceDB、pgvector 五种向量库<br>
+- <strong>工程化</strong>：CI/CD 6 个 job 全通过、Docker 多阶段构建、Railway 部署、GitHub Pages 展示
+</div>
+
+<div class="pitch-segment">
+<span class="timer">2:30-3:00</span> <strong>成果与诚实口径</strong><br>
+代码量 17,800+ 行，60+ 源文件，17 个测试文件。评测方面，主 Golden 集 60 条，意图专项 150 条 L1≈72%。需要说明的是，这些是离线启发式评测，不是官方 RAGAS 包，也不是生产 SLA。幻觉检测准确率 92%，自动纠错成功率 82%。整个项目已上线 GitHub，有完整的 CI 流水线和在线展示页。
+</div>
+
+</div>
+
+<!-- ==================== 技术亮点 ==================== -->
+
+<h2>二、技术亮点详述</h2>
+
+<h3>1. 7层 LangGraph Pipeline</h3>
+<p>不是简单的 retrieve-generate，而是带两个纠错循环的完整状态机：</p>
+<table>
+<tr><th>层</th><th>节点</th><th>作用</th></tr>
+<tr><td>1</td><td>Query Analysis</td><td>查询分析：意图识别、问题分类</td></tr>
+<tr><td>2</td><td>Retrieval</td><td>混合检索：BM25 + Vector + RRF</td></tr>
+<tr><td>3</td><td>Doc Grading</td><td>文档评分：LLM/规则判断相关性</td></tr>
+<tr><td>4</td><td>Generation</td><td>答案生成：带上下文的 LLM 生成</td></tr>
+<tr><td>5</td><td>Fact Checking</td><td>事实校验：检测幻觉</td></tr>
+<tr><td>6</td><td>Conflict Detection</td><td>冲突检测：多文档矛盾处理</td></tr>
+<tr><td>7</td><td>Final Answer</td><td>最终输出：格式化 + 引用标注</td></tr>
+</table>
+<p><span class="warn">纠错路径</span>：第3层不相关 → Query Rewrite → 回到第2层（Corrective RAG，最多3次）；第5层检测到幻觉 → Regenerate → 回到第4层（Self-RAG，最多1次）</p>
+
+<h3>2. Corrective RAG vs Self-RAG</h3>
+<div class="qa">
+<div class="q">两者解决什么不同问题？</div>
+<div class="a">
+<strong>Corrective RAG</strong>：解决"检索不到好文档"的问题。当文档评分不相关时，自动改写查询重试，或者用 Web 搜索兜底。这是输入端的纠错。<br>
+<strong>Self-RAG</strong>：解决"生成的内容有幻觉"的问题。生成后检查答案是否包含检索上下文中没有的信息，检测到幻觉则重新生成。这是输出端的纠错。<br>
+两者形成闭环：输入端确保文档质量，输出端确保答案质量。
+</div>
+</div>
+
+<h3>3. 混合检索 + RRF</h3>
+<p>单一检索方式各有盲区：</p>
+<table>
+<tr><th>方式</th><th>优势</th><th>劣势</th><th>Top-5准确率</th></tr>
+<tr><td>纯向量</td><td>语义理解</td><td>关键词精确匹配差</td><td>78%</td></tr>
+<tr><td>BM25</td><td>关键词精确</td><td>无语义理解</td><td>~70%</td></tr>
+<tr><td>混合+RRF</td><td>两者优势</td><td>延迟稍高</td><td>88%</td></tr>
+<tr><td>混合+Reranker</td><td>精排优化</td><td>Cross-Encoder慢</td><td>92%</td></tr>
+</table>
+<p>RRF（Reciprocal Rank Fusion）公式：<code>score = Σ 1/(k + rank_i)</code>，k=60</p>
+
+<!-- ==================== 诚实数据表 ==================== -->
+
+<h2>三、诚实数据表（面试安全口径）</h2>
+<table>
+<tr><th>指标</th><th>数值</th><th>口径说明</th></tr>
+<tr><td>包版本 / 能力版本</td><td>0.2.9 / v2.9.x</td><td>pyproject.toml + 审计真相表</td></tr>
+<tr><td>Golden 主测试集</td><td>60 条</td><td>evaluation/golden_test_set.json</td></tr>
+<tr><td>意图专项评测</td><td>150 条，L1≈72%</td><td>仅意图分类，非系统准确率</td></tr>
+<tr><td>E2E 回归测试</td><td>20 条</td><td>强制 src.graph 主路径</td></tr>
+<tr><td>RAGAS 四指标</td><td>启发式（非官方包）</td><td>中文 jieba/bigram，非官方 ragas</td></tr>
+<tr><td>Self-RAG 闭环</td><td>默认关</td><td>ENABLE_SELF_RAG_LOOP=false（省5-7s）</td></tr>
+<tr><td>幻觉检测准确率</td><td>92%</td><td>150条评测集，12/150有幻觉，11/12检出</td></tr>
+<tr><td>自动纠错成功率</td><td>82%</td><td>9/11 重新生成后正确</td></tr>
+<tr><td>代码行数</td><td>17,800+ 行</td><td>含性能测试、工具支持、配置文件</td></tr>
+<tr><td>核心业务代码</td><td>7,600+ 行</td><td>agents/retrieval/evaluation/observability</td></tr>
+<tr><td>CI/CD</td><td>6 job 全通过</td><td>test×3 / lint / security / docker</td></tr>
+</table>
+<p class="warn"><strong>重要提醒</strong>：历史报告中的 95% / 99.5% / -64% / 100% 覆盖等数字，未与本仓库最新 pytest 绑定，仅作历史实验叙述。面试时不要说"系统准确率95%"，要说"意图分类L1约72%，混合检索Top-5准确率88%"。</p>
+
+<!-- ==================== 常见面试问题 ==================== -->
+
+<h2>四、常见面试问题 Q&A</h2>
+
+<div class="qa">
+<div class="q">Q1: 为什么选 LangGraph 不用 LangChain？</div>
+<div class="a">
+LangChain 的 Chain 是线性的，做 RAG 可以但做不了复杂的状态机。LangGraph 支持条件路由、循环、状态持久化，才能实现 Corrective RAG 的"不相关就重试"循环和 Self-RAG 的"有幻觉就重新生成"循环。另外 LangGraph 的 checkpoint 机制可以做对话中断恢复。
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q2: Self-RAG 和 Corrective RAG 有什么区别？</div>
+<div class="a">
+Corrective RAG 是输入端纠错：文档评分不相关 → 改写查询 → 重新检索（最多3次）。解决"检索不到好文档"的问题。<br>
+Self-RAG 是输出端纠错：生成答案 → 事实校验 → 检测幻觉 → 重新生成（最多1次）。解决"答案包含虚构信息"的问题。<br>
+两者形成输入+输出的双重质量保障闭环。
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q3: 混合检索的 RRF 怎么实现的？</div>
+<div class="a">
+BM25 和向量检索分别返回各自的 Top-K 结果，每条结果的得分用 RRF 公式融合：<code>score(d) = Σ 1/(k + rank_i(d))</code>，k=60。这样不依赖原始得分尺度，只看排名，避免了不同检索器分值不可比的问题。融合后再可选 Cross-Encoder Reranker 精排到 Top-5。
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q4: 怎么评价 RAG 系统的质量？</div>
+<div class="a">
+我用了四个维度：<br>
+- <strong>Context Recall</strong>：检索的文档是否覆盖了答案需要的信息<br>
+- <strong>Context Precision</strong>：检索的文档中有多少是真正相关的<br>
+- <strong>Faithfulness</strong>：答案是否忠实于检索到的上下文（不幻觉）<br>
+- <strong>Answer Relevancy</strong>：答案是否回应了用户的问题<br>
+诚实说，我用的是离线启发式评估（中文 jieba/bigram 分词），不是官方 RAGAS 包。官方 RAGAS 对中文支持不好，Answer Relevancy 在英文 split 下对中文完全失效。
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q5: 项目有什么不足？</div>
+<div class="a">
+三个主要不足：<br>
+1. <strong>评测规模小</strong>：Golden 集只有 60 条，意图集 150 条，离工业级评测（几千条）还有距离<br>
+2. <strong>Self-RAG 默认关闭</strong>：因为每次校验要额外 5-7 秒，7B 模型延迟太高。质量模式才开启<br>
+3. <strong>知识库规模有限</strong>：演示用 LangChain 文档，没有大规模真实场景验证<br>
+这些我在 README 的"审计真相表"里都诚实标注了。
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q6: 为什么支持 5 种向量数据库？是不是过度设计？</div>
+<div class="a">
+不是为了炫技，是不同场景的需求：<br>
+- <strong>ChromaDB</strong>：本地开发，零配置启动<br>
+- <strong>Qdrant</strong>：生产部署，支持稠密+稀疏向量混合检索<br>
+- <strong>FAISS</strong>：热数据缓存，查询极快（1.7M docs/s 写入）<br>
+- <strong>LanceDB</strong>：冷数据存储，磁盘友好<br>
+- <strong>pgvector</strong>：已有 PostgreSQL 的团队无缝集成<br>
+实际项目中通过统一接口 AbstractIndexer 抽象，切换只需改一个环境变量。
+</div>
+</div>
+
+<!-- ==================== 项目价值 ==================== -->
+
+<h2>五、项目价值定位</h2>
+
+<h3>技术价值</h3>
+<p>
+<span class="tag">LangGraph 状态机</span>
+<span class="tag">Corrective RAG</span>
+<span class="tag">Self-RAG</span>
+<span class="tag">混合检索+RRF</span>
+<span class="tag">多向量数据库</span>
+<span class="tag">CI/CD</span>
+<span class="tag">Docker</span>
+<span class="tag">Railway 部署</span>
+</p>
+
+<h3>工程能力展示</h3>
+<table>
+<tr><th>维度</th><th>证据</th></tr>
+<tr><td>代码质量</td><td>flake8 lint 通过、113 个测试用例、conftest.py CI 跳过外部服务</td></tr>
+<tr><td>CI/CD</td><td>GitHub Actions 6 job、concurrency 控制、Dependabot 自动更新</td></tr>
+<tr><td>容器化</td><td>Dockerfile 多阶段构建、非 root 用户、HEALTHCHECK</td></tr>
+<tr><td>部署</td><td>railway.json 配置、Qdrant Cloud 种子脚本、GitHub Pages 展示</td></tr>
+<tr><td>文档</td><td>README + CHANGELOG + CONTRIBUTING + SECURITY + 审计真相表</td></tr>
+<tr><td>版本管理</td><td>7个月持续迭代、Conventional Commits、CHANGELOG</td></tr>
+</table>
+
+<h3>求职场景定位</h3>
+<p>这个项目不是"做了一个聊天机器人"，而是"用工程化方法解决了一个真实痛点"。面试时强调三点：</p>
+<p>1. <strong class="highlight">发现问题</strong>：学习 LangChain 时文档分散的痛点是真实的<br>
+2. <strong class="highlight">技术深度</strong>：不是调 API，而是理解 RRF、Corrective RAG、Self-RAG 的原理并实现<br>
+3. <strong class="highlight">工程能力</strong>：CI/CD、Docker、部署、文档——证明不是"玩具项目"</p>
+
+<div class="footer">
+<p>生成时间：2026-07-27 | 基于 DeepRAG v2.9.x | 数据口径：审计真相表_P0.md</p>
+<p>⚠️ 面试时始终用"审计真相表"口径，不要用历史报告中的 95%/99.5% 数字</p>
+</div>
+
+</body>
+</html>

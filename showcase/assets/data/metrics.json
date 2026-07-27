@@ -1,0 +1,56 @@
+{
+  "project": {
+    "name": "DeepRAG",
+    "version": "v2.9.x",
+    "package_version": "0.2.9",
+    "tagline": "企业级 Agentic RAG 技术文档问答系统",
+    "description": "基于 LangGraph 的自纠错 RAG：混合检索 + Corrective RAG + 可选 Self-RAG 闭环"
+  },
+  "retrieval_accuracy": {
+    "source": "README.md - 两阶段检索效果对比",
+    "data": [
+      {"stage": "纯向量检索", "accuracy": 78, "color": "#6366f1"},
+      {"stage": "混合检索 (BM25+Vector+RRF)", "accuracy": 88, "color": "#8b5cf6"},
+      {"stage": "混合检索 + Reranker", "accuracy": 92, "color": "#ec4899"}
+    ]
+  },
+  "hallucination": {
+    "source": "README.md - Self-RAG 自我反思",
+    "hallucination_rate": 8,
+    "detection_accuracy": 92,
+    "correction_success_rate": 82,
+    "total_evaluated": 150
+  },
+  "ragas_scores": {
+    "source": "evaluation_reports/ragas_report_20260521_140012.md",
+    "note": "5题样例，离线启发式评估（非官方ragas包），Answer Relevancy=0因英文split中文失效已修复为jieba/bigram",
+    "data": [
+      {"metric": "Context Recall", "score": 0.900},
+      {"metric": "Faithfulness", "score": 0.904},
+      {"metric": "Context Precision", "score": 0.400},
+      {"metric": "RAGAS Score", "score": 0.551}
+    ]
+  },
+  "evaluation_assets": {
+    "source": "docs/审计真相表_P0.md",
+    "data": [
+      {"name": "Golden 主测试集", "count": 60, "purpose": "主 golden 测试"},
+      {"name": "意图专项评测", "count": 150, "purpose": "L1≈72%，仅意图"},
+      {"name": "E2E 回归测试", "count": 20, "purpose": "主路径 src.graph 回归"},
+      {"name": "RAGAS 样例", "count": 5, "purpose": "历史启发式报告"}
+    ]
+  },
+  "version_evolution": {
+    "source": "README.md - 版本演进",
+    "data": [
+      {"version": "v0.1", "date": "2025.11", "accuracy": 60, "description": "简单RAG（111行）"},
+      {"version": "v1.0", "date": "2025.12", "accuracy": 75, "description": "Corrective RAG（300行）"},
+      {"version": "v2.0", "date": "2026.02", "accuracy": 82, "description": "Self-RAG（500行）"},
+      {"version": "v2.1", "date": "2026.03", "accuracy": 88, "description": "混合检索（800行）"},
+      {"version": "v2.2", "date": "2026.06", "accuracy": 95, "description": "增强检索（1867行）"},
+      {"version": "v2.3", "date": "2026.06", "accuracy": 95, "description": "LLMOps工程化（810行）"},
+      {"version": "v2.4-v2.8", "date": "2026.06-07", "accuracy": 95, "description": "ReAct Agent + 多模型路由 + Reranker API + Ollama 优化"},
+      {"version": "v2.9.x", "date": "2026.07", "accuracy": 95, "description": "GitHub 上线 + CI/CD + 展示网站 + Railway 部署配置 ⭐"}
+    ]
+  }
+}

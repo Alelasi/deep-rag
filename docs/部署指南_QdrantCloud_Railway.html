@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeepRAG 部署指南 - Qdrant Cloud + Railway</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-card: #161b22;
+    --bg-code: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-yellow: #d29922;
+    --accent-red: #f85149;
+    --accent-purple: #bc8cff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans CJK SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+  h2 {
+    font-size: 1.4rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--accent);
+  }
+  h3 { font-size: 1.15rem; margin-top: 1.5rem; margin-bottom: 0.75rem; color: var(--accent-purple); }
+  p { margin-bottom: 0.75rem; }
+  code {
+    background: var(--bg-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: var(--accent-green);
+    font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+  }
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 0.75rem 0 1rem;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    color: var(--text);
+  }
+  .step {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin: 1rem 0;
+  }
+  .step-num {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-right: 0.5rem;
+  }
+  .badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .badge-free { background: rgba(63,185,80,0.15); color: var(--accent-green); border: 1px solid var(--accent-green); }
+  .badge-warn { background: rgba(210,153,34,0.15); color: var(--accent-yellow); border: 1px solid var(--accent-yellow); }
+  .badge-info { background: rgba(88,166,255,0.15); color: var(--accent); border: 1px solid var(--accent); }
+  .tip {
+    border-left: 3px solid var(--accent-green);
+    background: rgba(63,185,80,0.05);
+    padding: 0.75rem 1rem;
+    border-radius: 0 8px 8px 0;
+    margin: 1rem 0;
+  }
+  .warn {
+    border-left: 3px solid var(--accent-yellow);
+    background: rgba(210,153,34,0.05);
+    padding: 0.75rem 1rem;
+    border-radius: 0 8px 8px 0;
+    margin: 1rem 0;
+  }
+  .danger {
+    border-left: 3px solid var(--accent-red);
+    background: rgba(248,81,73,0.05);
+    padding: 0.75rem 1rem;
+    border-radius: 0 8px 8px 0;
+    margin: 1rem 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+  }
+  th, td {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border);
+    text-align: left;
+    font-size: 0.9rem;
+  }
+  th { background: var(--bg-card); color: var(--accent); }
+  .toc {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ul { list-style: none; padding-left: 1rem; }
+  .toc li { margin: 0.3rem 0; }
+  .summary-box {
+    background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(188,140,255,0.08));
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .summary-box h3 { margin-top: 0; }
+  .checklist {
+    list-style: none;
+    padding-left: 0;
+  }
+  .checklist li {
+    padding: 0.4rem 0;
+    padding-left: 1.8rem;
+    position: relative;
+  }
+  .checklist li::before {
+    content: "☐";
+    position: absolute;
+    left: 0;
+    font-size: 1.2rem;
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<h1>DeepRAG 部署指南 — Qdrant Cloud + Railway</h1>
+<p style="color: var(--text-dim);">从本地开发到线上 Demo 的完整操作手册 | 更新时间：2026-07-27</p>
+
+<div class="summary-box">
+  <h3>部署概览</h3>
+  <p>本指南分 4 个阶段，预计耗时 30-45 分钟（不含构建等待时间）：</p>
+  <table>
+    <tr><th>阶段</th><th>内容</th><th>耗时</th><th>操作者</th></tr>
+    <tr><td>1. Qdrant Cloud</td><td>注册、创建 Cluster、获取密钥</td><td>~10 min</td><td>用户</td></tr>
+    <tr><td>2. Railway 部署</td><td>连接 GitHub、配置环境变量、自动构建</td><td>~15 min</td><td>用户</td></tr>
+    <tr><td>3. 数据上传</td><td>运行 seed 脚本，上传向量到 Cloud</td><td>~5 min</td><td>AI 助手</td></tr>
+    <tr><td>4. 验证与收尾</td><td>健康检查、更新 README/Showcase</td><td>~5 min</td><td>AI 助手</td></tr>
+  </table>
+</div>
+
+<div class="toc">
+  <strong>目录</strong>
+  <ul>
+    <li><a href="#phase1">阶段 1：Qdrant Cloud 注册与配置</a></li>
+    <li><a href="#phase2">阶段 2：Railway 部署</a></li>
+    <li><a href="#phase3">阶段 3：向量数据上传</a></li>
+    <li><a href="#phase4">阶段 4：验证与收尾</a></li>
+    <li><a href="#troubleshoot">常见问题排查</a></li>
+    <li><a href="#checklist">部署前检查清单</a></li>
+  </ul>
+</div>
+
+<!-- ===== Phase 1 ===== -->
+<h2 id="phase1">阶段 1：Qdrant Cloud 注册与配置</h2>
+
+<p><span class="badge badge-free">免费 1GB</span> Qdrant Cloud 免费层提供 1GB 存储，足够部署 Demo。</p>
+
+<div class="step">
+  <h3><span class="step-num">1</span>注册 Qdrant Cloud</h3>
+  <p>访问 <a href="https://cloud.qdrant.io/" style="color: var(--accent);">https://cloud.qdrant.io/</a>，点击 Sign Up。</p>
+  <p>支持 GitHub / Google / 邮箱注册。推荐用 GitHub 登录（一键授权）。</p>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">2</span>创建 Cluster</h3>
+  <p>登录后点击 <strong>Create Cluster</strong>，填写以下信息：</p>
+  <table>
+    <tr><th>参数</th><th>推荐值</th><th>说明</th></tr>
+    <tr><td>Cluster Name</td><td><code>deep-rag-demo</code></td><td>自定义名称</td></tr>
+    <tr><td>Cloud Provider</td><td>AWS</td><td>默认即可</td></tr>
+    <tr><td>Region</td><td>us-east-1</td><td>免费层默认区域</td></tr>
+    <tr><td>Plan</td><td>Free (1GB)</td><td>免费层足够 Demo 使用</td></tr>
+  </table>
+  <p>点击 <strong>Create</strong>，等待约 1-2 分钟创建完成。</p>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">3</span>获取连接信息</h3>
+  <p>Cluster 创建完成后，在详情页找到以下两个关键信息：</p>
+  <ul style="padding-left: 1.5rem; margin: 0.5rem 0;">
+    <li><strong>Cluster URL</strong>：形如 <code>https://xxxxxxxx-xxxx-xxxx.xxxx.aws.cloud.qdrant.io:6333</code></li>
+    <li><strong>API Key</strong>：点击 <strong>API Keys</strong> 标签页生成新 Key</li>
+  </ul>
+  <div class="warn">
+    <strong>请记录这两个值</strong>，后续需要配置到 Railway 环境变量和 seed 脚本中。
+  </div>
+</div>
+
+<div class="tip">
+  <strong>验证连接</strong>：在终端执行以下命令验证 Cluster 可达：
+  <pre><code>curl -H "api-key: YOUR_API_KEY" YOUR_CLUSTER_URL/collections</code></pre>
+  返回 <code>{"result":{"collections":[]},"status":"ok","time":0}</code> 即为成功。
+</div>
+
+<!-- ===== Phase 2 ===== -->
+<h2 id="phase2">阶段 2：Railway 部署</h2>
+
+<p><span class="badge badge-info">Railway 免费层</span> 每月 500 小时执行时间 + $5 额度，足够 Demo 运行。</p>
+
+<div class="step">
+  <h3><span class="step-num">1</span>登录 Railway</h3>
+  <p>访问 <a href="https://railway.app/" style="color: var(--accent);">https://railway.app/</a>，点击 <strong>Login</strong>，选择 <strong>GitHub</strong> 授权。</p>
+  <p>首次使用可能需要授权 Railway 访问 GitHub 仓库。建议只授权 <code>Alelasi/deep-rag</code> 仓库。</p>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">2</span>创建项目</h3>
+  <p>点击 <strong>New Project</strong> → <strong>Deploy from GitHub repo</strong> → 选择 <code>Alelasi/deep-rag</code>。</p>
+  <p>Railway 会自动检测 <code>railway.json</code> 配置文件，使用 <code>Dockerfile.streamlit</code> 构建。</p>
+  <div class="tip">
+    如果看不到仓库，点击 <strong>Configure GitHub App</strong>，在 GitHub App 设置中添加 <code>Alelasi/deep-rag</code> 仓库的访问权限。
+  </div>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">3</span>配置环境变量</h3>
+  <p>在 Railway 项目的 <strong>Variables</strong> 标签页，添加以下环境变量：</p>
+
+  <h4>必需变量</h4>
+  <pre><code># === 向量数据库 ===
+QDRANT_MODE=cloud
+QDRANT_CLOUD_URL=https://xxxxxxxx-xxxx-xxxx.xxxx.aws.cloud.qdrant.io:6333
+QDRANT_CLOUD_KEY=your_qdrant_api_key
+QDRANT_COLLECTION=deep_rag_docs
+
+# === LLM 后端 ===
+LLM_BACKEND=siliconcloud
+LLM_MODEL=THUDM/GLM-Z1-9B-0414
+SILICONFLOW_API_KEY=your_siliconflow_api_key
+
+# === Embedding ===
+EMBEDDING_MODEL=BAAI/bge-small-zh-v1.5
+
+# === 安全 ===
+API_KEY=
+CORS_ORIGINS=*
+
+# === Pipeline 配置 ===
+ENABLE_HYBRID_SEARCH=true
+ENABLE_RERANKER=false
+ENABLE_SELF_RAG_LOOP=false
+USE_LLM_PIPELINE_NODES=false
+RETRIEVAL_MODE=enhanced</code></pre>
+
+  <h4>可选变量（提升体验）</h4>
+  <pre><code># 备用 LLM（免费降级链）
+CEREBRAS_API_KEY=
+GROQ_API_KEY=
+ZHIPU_API_KEY=
+
+# 日志级别
+LOG_LEVEL=INFO</code></pre>
+
+  <div class="warn">
+    <strong>API Key 安全</strong>：SiliconCloud API Key 在 <a href="https://cloud.siliconflow.cn/" style="color: var(--accent);">cloud.siliconflow.cn</a> 获取。免费层每日有额度限制。
+  </div>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">4</span>部署与监控</h3>
+  <p>添加环境变量后，Railway 会自动触发部署。在 <strong>Deployments</strong> 标签页可以查看构建日志。</p>
+  <p>构建过程（预计 5-10 分钟）：</p>
+  <ul style="padding-left: 1.5rem; margin: 0.5rem 0;">
+    <li>拉取 Python 3.11-slim 基础镜像</li>
+    <li>安装依赖（pyproject.toml + langchain 等）</li>
+    <li>构建 runtime 镜像（非 root 用户）</li>
+    <li>启动 Streamlit 服务</li>
+  </ul>
+  <p>部署成功后，Railway 会分配一个公网 URL，形如：</p>
+  <pre><code>https://deep-rag-production.up.railway.app</code></pre>
+  <div class="tip">
+    <strong>自定义域名</strong>：在 Settings → Networking 中可以绑定自定义域名（可选）。
+  </div>
+</div>
+
+<!-- ===== Phase 3 ===== -->
+<h2 id="phase3">阶段 3：向量数据上传</h2>
+
+<p>此阶段由 AI 助手执行。用户需要提供 Qdrant Cloud URL 和 API Key。</p>
+
+<div class="step">
+  <h3><span class="step-num">1</span>配置 seed 脚本环境变量</h3>
+  <p>在本地终端设置以下环境变量：</p>
+  <pre><code>$env:DATA_SOURCE = "chromadb"
+$env:QDRANT_CLOUD_URL = "https://xxxxxxxx-xxxx-xxxx.xxxx.aws.cloud.qdrant.io:6333"
+$env:QDRANT_CLOUD_KEY = "your_qdrant_api_key"
+$env:QDRANT_COLLECTION = "deep_rag_docs"
+$env:CHROMA_SERVER_HOST = "localhost"
+$env:CHROMA_SERVER_PORT = "8000"</code></pre>
+  <div class="warn">
+    <strong>前提条件</strong>：ChromaDB 服务器需在本地运行（<code>chroma run --path "path" --port 8000</code>）。
+    如果本地用的是 Qdrant 而非 ChromaDB，设置 <code>$env:DATA_SOURCE = "qdrant"</code> 并指定 <code>$env:QDRANT_LOCAL_PATH</code>。
+  </div>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">2</span>执行数据上传</h3>
+  <pre><code>cd D:\文档\ai提问相关\工作\deep-rag
+python scripts/seed_qdrant_cloud.py</code></pre>
+  <p>脚本执行流程：</p>
+  <ol style="padding-left: 1.5rem; margin: 0.5rem 0;">
+    <li>从本地 ChromaDB/Qdrant 读取向量数据（分批 500 条）</li>
+    <li>连接 Qdrant Cloud，自动创建 collection（如不存在）</li>
+    <li>分批上传（每批 200 条），显示进度</li>
+    <li>验证上传结果（count 对比）</li>
+  </ol>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">3</span>验证数据</h3>
+  <pre><code>curl -H "api-key: YOUR_API_KEY" \
+  YOUR_CLUSTER_URL/collections/deep_rag_docs
+
+# 返回中 points_count 应与本地数据量一致</code></pre>
+</div>
+
+<!-- ===== Phase 4 ===== -->
+<h2 id="phase4">阶段 4：验证与收尾</h2>
+
+<div class="step">
+  <h3><span class="step-num">1</span>健康检查</h3>
+  <pre><code>curl https://your-railway-url/_stcore/health
+
+# 返回 {"status": "ok"} 即为成功</code></pre>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">2</span>功能测试</h3>
+  <p>打开 Railway 分配的 URL，测试以下场景：</p>
+  <table>
+    <tr><th>测试场景</th><th>预期结果</th></tr>
+    <tr><td>输入"你好"</td><td>闲聊路由，快速回复</td></tr>
+    <tr><td>输入"LangChain是什么"</td><td>RAG 检索，引用文档回答</td></tr>
+    <tr><td>输入"What is RAG"</td><td>英文问题，中文回答</td></tr>
+    <tr><td>查看侧边栏</td><td>显示检索来源和 Pipeline 状态</td></tr>
+  </table>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">3</span>更新 README 和 Showcase</h3>
+  <p>获取 Railway URL 后，需要更新以下文件：</p>
+
+  <h4>README.md</h4>
+  <p>将部署章节的占位符替换为真实 URL：</p>
+  <pre><code># 找到
+[Railway 部署，链接见展示网站]
+
+# 替换为
+[![Railway](https://img.shields.io/badge/demo-Railway-6C3EC7.svg)](https://your-railway-url)</code></pre>
+
+  <h4>showcase/index.html</h4>
+  <p>将 Demo 按钮从占位改为真实链接：</p>
+  <pre><code>// 找到 nav 中的
+&lt;a href="#" class="cta-btn demo-coming" ...&gt;Demo (即将上线)&lt;/a&gt;
+
+// 替换为
+&lt;a href="https://your-railway-url" target="_blank" class="cta-btn"&gt;在线 Demo&lt;/a&gt;</code></pre>
+  <pre><code>// 找到 hero 中的
+&lt;a href="#" class="cta-secondary demo-coming" ...&gt;在线 Demo (即将上线)&lt;/a&gt;
+
+// 替换为
+&lt;a href="https://your-railway-url" target="_blank" class="cta-secondary"&gt;在线体验&lt;/a&gt;</code></pre>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">4</span>更新简历</h3>
+  <p>在简历项目经历中添加三个链接：</p>
+  <pre><code>DeepRAG - 企业级 Agentic RAG 技术文档问答系统
+  GitHub: https://github.com/Alelasi/deep-rag
+  Demo:   https://your-railway-url
+  展示页: https://alelasi.github.io/deep-rag/</code></pre>
+</div>
+
+<!-- ===== Troubleshooting ===== -->
+<h2 id="troubleshoot">常见问题排查</h2>
+
+<h3>Railway 构建失败</h3>
+<div class="step">
+  <p><strong>问题</strong>：Dockerfile 构建超时或内存不足</p>
+  <p><strong>解决</strong>：</p>
+  <ul style="padding-left: 1.5rem;">
+    <li>检查 Railway Plan 是否为免费层（免费层有 512MB RAM 限制）</li>
+    <li>如果 <code>pip install</code> 失败，尝试在 Railway Variables 中设置 <code>RAILWAY_DOCKERFILE_PATH=Dockerfile.streamlit</code></li>
+    <li>确认 <code>pyproject.toml</code> 中依赖版本固定（避免编译冲突）</li>
+  </ul>
+</div>
+
+<h3>Streamlit 启动后白屏</h3>
+<div class="step">
+  <p><strong>问题</strong>：页面打开但无内容</p>
+  <p><strong>解决</strong>：</p>
+  <ul style="padding-left: 1.5rem;">
+    <li>检查 Railway Logs，确认 <code>QDRANT_CLOUD_URL</code> 和 <code>QDRANT_CLOUD_KEY</code> 已正确设置</li>
+    <li>确认 <code>LLM_BACKEND</code> 和对应 API Key 已配置</li>
+    <li>如果是首次启动，等待 30-40 秒让健康检查通过</li>
+  </ul>
+</div>
+
+<h3>Qdrant Cloud 连接超时</h3>
+<div class="step">
+  <p><strong>问题</strong>：<code>seed_qdrant_cloud.py</code> 报连接超时</p>
+  <p><strong>解决</strong>：</p>
+  <ul style="padding-left: 1.5rem;">
+    <li>确认 Cluster URL 格式正确（含 <code>https://</code> 和端口号 <code>:6333</code>）</li>
+    <li>检查 API Key 是否有效（在 Qdrant Cloud 控制台重新生成）</li>
+    <li>网络问题：尝试使用代理或 VPN</li>
+  </ul>
+</div>
+
+<h3>Railway 免费额度用尽</h3>
+<div class="step">
+  <p><strong>问题</strong>：Railway 部署暂停</p>
+  <p><strong>解决</strong>：</p>
+  <ul style="padding-left: 1.5rem;">
+    <li>在 Settings → Sleep 中配置服务休眠时间（如夜间自动暂停）</li>
+    <li>升级到 Developer Plan（$5/月）获得不限时运行</li>
+    <li>面试前手动唤醒即可，不需要 24/7 运行</li>
+  </ul>
+</div>
+
+<!-- ===== Checklist ===== -->
+<h2 id="checklist">部署前检查清单</h2>
+
+<div class="step">
+  <h3>用户操作前确认</h3>
+  <ul class="checklist">
+    <li>GitHub 仓库 <code>Alelasi/deep-rag</code> 已上线且 CI 通过</li>
+    <li>GitHub Pages 展示页可访问 (<code>https://alelasi.github.io/deep-rag/</code>)</li>
+    <li>本地 ChromaDB/Qdrant 有向量数据可供上传</li>
+    <li>SiliconCloud API Key 已获取 (<code>cloud.siliconflow.cn</code>)</li>
+    <li>GitHub Token 已撤销并重新生成（安全原因）</li>
+  </ul>
+</div>
+
+<div class="step">
+  <h3>部署完成后验证</h3>
+  <ul class="checklist">
+    <li>Railway URL 可访问，Streamlit 界面正常加载</li>
+    <li>健康检查 <code>/_stcore/health</code> 返回 ok</li>
+    <li>Qdrant Cloud collection <code>deep_rag_docs</code> 有数据</li>
+    <li>测试问题能正常检索和回答</li>
+    <li>README 已更新 Railway Demo URL</li>
+    <li>Showcase Demo 按钮链接已替换为真实 URL</li>
+    <li>简历已添加 GitHub + Demo + 展示页链接</li>
+  </ul>
+</div>
+
+<hr style="border: none; border-top: 1px solid var(--border); margin: 2rem 0;">
+
+<p style="color: var(--text-dim); font-size: 0.85rem; text-align: center;">
+  DeepRAG v2.9.x · 部署指南 · 2026-07-27<br>
+  如有问题，在 TRAE 对话中直接询问 AI 助手
+</p>
+
+</body>
+</html>

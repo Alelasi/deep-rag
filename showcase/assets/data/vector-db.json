@@ -1,0 +1,51 @@
+{
+  "source": "docs/向量数据库性能对比报告.md",
+  "test_conditions": "1000条文档，384维向量，Windows 11, Python 3.13",
+  "databases": [
+    {
+      "name": "FAISS",
+      "index_speed": 1033589,
+      "search_speed": 0.78,
+      "memory": 1.5,
+      "rating": 5,
+      "use_case": "热数据缓存",
+      "note": "纯内存操作，亚毫秒级响应"
+    },
+    {
+      "name": "LanceDB",
+      "index_speed": 35616,
+      "search_speed": 21.44,
+      "memory": 8.7,
+      "rating": 4,
+      "use_case": "冷数据存储",
+      "note": "列式存储，压缩效率高"
+    },
+    {
+      "name": "ChromaDB",
+      "index_speed": 2798,
+      "search_speed": 1764.31,
+      "memory": 27.9,
+      "rating": 3,
+      "use_case": "本地开发",
+      "note": "嵌入式数据库，开发友好"
+    },
+    {
+      "name": "Qdrant",
+      "index_speed": 2035,
+      "search_speed": null,
+      "memory": null,
+      "rating": 5,
+      "use_case": "生产级（稠密+稀疏）",
+      "note": "Rust高性能，混合检索，分布式支持（README标注，未参与本轮基准测试）"
+    },
+    {
+      "name": "pgvector",
+      "index_speed": 354,
+      "search_speed": null,
+      "memory": null,
+      "rating": 3,
+      "use_case": "PostgreSQL集成",
+      "note": "ACID事务，SQL查询（README标注）"
+    }
+  ]
+}

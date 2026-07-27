@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>技术博客大纲 — 从零构建 Agentic RAG：LangGraph + Self-RAG 的工程实践</title>
+<style>
+  :root {
+    --bg: #0a0a0f; --card: #14141e; --border: #2a2a3e;
+    --text: #e0e0f0; --muted: #8888a0; --accent: #6366f1;
+    --green: #10b981; --orange: #f59e0b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, 'Microsoft YaHei', sans-serif; line-height: 1.8; padding: 2rem; max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
+  h2 { font-size: 1.2rem; color: var(--accent); margin: 2rem 0 0.8rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1rem; color: var(--text); margin: 1rem 0 0.4rem; }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  .chapter { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.5rem; margin: 1rem 0; }
+  .chapter-num { display: inline-block; background: var(--accent); color: #fff; width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; font-weight: 700; font-size: 0.85rem; margin-right: 0.5rem; }
+  .chapter-title { font-size: 1.05rem; font-weight: 600; }
+  .est { float: right; color: var(--muted); font-size: 0.8rem; }
+  ul { padding-left: 1.5rem; margin: 0.5rem 0; }
+  li { margin: 0.3rem 0; font-size: 0.92rem; }
+  code { background: var(--card); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--accent); }
+  .highlight { color: var(--green); }
+  .warn { color: var(--orange); }
+  table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; }
+  th, td { padding: 0.5rem 0.7rem; border: 1px solid var(--border); text-align: left; font-size: 0.88rem; }
+  th { background: var(--card); color: var(--accent); }
+  .footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+
+<h1>技术博客大纲</h1>
+<p class="meta">标题：从零构建 Agentic RAG：LangGraph + Self-RAG 的工程实践<br>
+平台：掘金 / 知乎 | 预计字数：8,000-10,000 | 目标读者：有 RAG 基础的 AI 开发者</p>
+
+<!-- ==================== 引言 ==================== -->
+
+<h2>写作目标</h2>
+<div class="chapter">
+<p>这篇文章不是教程，而是<strong>工程实践复盘</strong>。分享我从"60%准确率的简单RAG"到"带自纠错闭环的 Agentic RAG"的 7 个月迭代过程，重点讲<strong>关键决策的取舍</strong>和<strong>踩过的坑</strong>。</p>
+<p>读者收益：</p>
+<ul>
+<li>理解 Agentic RAG 与传统 RAG 的本质区别（不是调 API，是状态机设计）</li>
+<li>掌握 Corrective RAG 和 Self-RAG 的实现原理和工程取舍</li>
+<li>了解混合检索（BM25 + Vector + RRF）的工程实现细节</li>
+<li>获得 RAG 系统评测的"诚实口径"（避免面试翻车）</li>
+</ul>
+</div>
+
+<!-- ==================== 章节大纲 ==================== -->
+
+<h2>章节大纲</h2>
+
+<!-- 第一章 -->
+<div class="chapter">
+<span class="chapter-num">1</span><span class="chapter-title">为什么需要 Agentic RAG？</span><span class="est">~800字</span>
+<h3>1.1 传统 RAG 的三大痛点</h3>
+<ul>
+<li>只能查本地知识库，无法回答实时问题（"最新版本有什么bug？"）</li>
+<li>没有质量校验，答案可能包含幻觉</li>
+<li>检索失败时无降级策略，直接返回"不知道"</li>
+</ul>
+<h3>1.2 Agentic RAG 的核心差异</h3>
+<ul>
+<li>动态工具路由：Agent 自动选择向量检索 / GitHub API / Web 搜索</li>
+<li>自纠错循环：Corrective RAG（输入端）+ Self-RAG（输出端）</li>
+<li>多工具编排：并行调用 + 结果聚合 + 质量评估</li>
+</ul>
+<h3>1.3 真实场景示例</h3>
+<ul>
+<li>对比传统 RAG vs Agentic RAG 处理"LangChain 0.3 新特性 + 已知 bug"的过程</li>
+<li>展示工具路由决策链和最终综合答案</li>
+</ul>
+<p><span class="warn">写作要点</span>：不要上来就讲架构，先让读者感受到痛点是真实的。用学习 LangChain 时文档分散的个人经历引入。</p>
+</div>
+
+<!-- 第二章 -->
+<div class="chapter">
+<span class="chapter-num">2</span><span class="chapter-title">架构设计：7层 Pipeline 状态机</span><span class="est">~1500字</span>
+<h3>2.1 为什么用 LangGraph 不用 LangChain</h3>
+<ul>
+<li>LangChain Chain 是线性的，做不了循环和条件路由</li>
+<li>LangGraph 支持状态持久化、条件边、循环</li>
+<li>Checkpoint 机制可做对话中断恢复</li>
+</ul>
+<h3>2.2 7层 Pipeline 详解</h3>
+<table>
+<tr><th>层</th><th>节点</th><th>核心逻辑</th><th>关键代码</th></tr>
+<tr><td>1</td><td>Query Analysis</td><td>意图识别 + 问题分类</td><td>src/agents/analyzer.py</td></tr>
+<tr><td>2</td><td>Retrieval</td><td>BM25 + Vector + RRF 融合</td><td>src/retrieval/hybrid.py</td></tr>
+<tr><td>3</td><td>Doc Grading</td><td>LLM/规则判断文档相关性</td><td>src/agents/grader.py</td></tr>
+<tr><td>4</td><td>Generation</td><td>带上下文 + 引用标注的生成</td><td>src/agents/generator.py</td></tr>
+<tr><td>5</td><td>Fact Checking</td><td>幻觉检测：答案 vs 上下文一致性</td><td>src/agents/fact_checker.py</td></tr>
+<tr><td>6</td><td>Conflict Detection</td><td>多文档矛盾检测与处理</td><td>src/agents/conflict_resolver.py</td></tr>
+<tr><td>7</td><td>Final Answer</td><td>格式化输出 + 来源标注</td><td>src/graph.py</td></tr>
+</table>
+<h3>2.3 两个纠错循环</h3>
+<ul>
+<li><strong>Corrective RAG</strong>：第3层 → 不相关 → Query Rewrite → 回到第2层（最多3次）</li>
+<li><strong>Self-RAG</strong>：第5层 → 检测到幻觉 → Regenerate → 回到第4层（最多1次）</li>
+<li>代码实现：<code>graph.add_conditional_edges()</code> 条件路由</li>
+</ul>
+<p><span class="warn">写作要点</span>：配一张完整的 Mermaid 流程图（README 已有），重点讲条件路由的实现逻辑。</p>
+</div>
+
+<!-- 第三章 -->
+<div class="chapter">
+<span class="chapter-num">3</span><span class="chapter-title">关键技术决策与取舍</span><span class="est">~2000字</span>
+<h3>3.1 混合检索：为什么不用纯向量？</h3>
+<ul>
+<li>纯向量 Top-5 准确率 78%，加 BM25 后 88%（+10pp）</li>
+<li>RRF 融合公式：<code>score(d) = Σ 1/(k + rank_i(d))</code>，k=60</li>
+<li>为什么不直接用原始得分：不同检索器分值尺度不可比</li>
+<li>代码：<code>HybridRetriever.retrieve()</code> 并行调用 + RRF 排序</li>
+</ul>
+<h3>3.2 Self-RAG：默认关闭的工程取舍</h3>
+<ul>
+<li>每次事实校验额外 5-7 秒（7B 模型）</li>
+<li><strong>fast 模式</strong>（默认）：校验后直接输出，省 5-7s</li>
+<li><strong>质量模式</strong>：校验失败可 regenerate，适合高难度场景</li>
+<li>面试场景：如何向面试官解释"默认关闭"不是偷懒，而是延迟优化的工程决策</li>
+</ul>
+<h3>3.3 Reranker：从 CPU 到 API 到关闭</h3>
+<ul>
+<li>Cross-Encoder CPU 模式：准确率 +7pp，但延迟从 5s 飙到 24s</li>
+<li>SiliconCloud API 模式：~200ms，但需要 API Key</li>
+<li>7B 模型 VRAM 紧张时必须关闭 Reranker（4.6+0.5+0.5+1.2=6.8GB > 8GB）</li>
+<li>最终方案：API 模式默认开，无 Key 时降级 CPU，VRAM 不足时关闭</li>
+</ul>
+<h3>3.4 多向量数据库：抽象接口设计</h3>
+<ul>
+<li><code>AbstractIndexer</code> 统一接口：retrieve / add / delete / count</li>
+<li>5 种实现：ChromaDB / Qdrant / FAISS / LanceDB / pgvector</li>
+<li>切换只需改 <code>VECTOR_DB</code> 环境变量</li>
+<li>分层存储方案：FAISS 热缓存 → LanceDB 核心库 → 冷存储</li>
+</ul>
+<p><span class="warn">写作要点</span>：每个决策都讲"为什么这么选"和"放弃了什么"，不要只讲最终方案。读者最想看的是取舍过程。</p>
+</div>
+
+<!-- 第四章 -->
+<div class="chapter">
+<span class="chapter-num">4</span><span class="chapter-title">评测体系：诚实的数字比好看的数字更重要</span><span class="est">~1200字</span>
+<h3>4.1 评测集设计</h3>
+<ul>
+<li>Golden 主测试集：60 条（简单/中等/困难 = 2:5:3）</li>
+<li>意图专项集：150 条（L1≈72%，仅意图分类）</li>
+<li>E2E 回归：20 条（强制 src.graph 主路径）</li>
+</ul>
+<h3>4.2 四指标启发式评估</h3>
+<ul>
+<li>Context Recall / Context Precision / Faithfulness / Answer Relevancy</li>
+<li><strong>诚实说明</strong>：离线启发式（中文 jieba/bigram），非官方 RAGAS</li>
+<li>为什么不用官方 RAGAS：英文 split 对中文 Answer Relevancy 完全失效</li>
+<li>面试安全口径：说"意图L1约72%"，不说"系统准确率95%"</li>
+</ul>
+<h3>4.3 版本演进数据</h3>
+<table>
+<tr><th>版本</th><th>准确率</th><th>核心变化</th></tr>
+<tr><td>v0.1</td><td>60%</td><td>简单 RAG（111行）</td></tr>
+<tr><td>v1.0</td><td>75%</td><td>Corrective RAG（300行）</td></tr>
+<tr><td>v2.0</td><td>82%</td><td>Self-RAG（500行）</td></tr>
+<tr><td>v2.1</td><td>88%</td><td>混合检索（800行）</td></tr>
+<tr><td>v2.2</td><td>95%</td><td>增强检索（1867行）</td></tr>
+</table>
+<p><span class="warn">写作要点</span>：这部分要"自曝其短"——明确说明哪些数字是可靠口径，哪些是历史实验值。读者会信任诚实的作者。</p>
+</div>
+
+<!-- 第五章 -->
+<div class="chapter">
+<span class="chapter-num">5</span><span class="chapter-title">工程化实践：从玩具到生产</span><span class="est">~1500字</span>
+<h3>5.1 CI/CD 流水线</h3>
+<ul>
+<li>GitHub Actions：test×3（Python 3.11/3.12/3.13）+ lint + security + docker</li>
+<li>concurrency 控制取消旧 run，避免排队</li>
+<li>conftest.py 自动跳过依赖外部服务的测试</li>
+<li>Dependabot 自动更新（limit=3 避免CI资源耗尽）</li>
+</ul>
+<h3>5.2 Docker 多阶段构建</h3>
+<ul>
+<li>Builder + Runtime 两阶段，减小镜像体积</li>
+<li>非 root 用户（appuser）运行，安全合规</li>
+<li>HEALTHCHECK + 精简 COPY（不复制 tests/docs）</li>
+<li>移除 Reranker 依赖，构建时间从 19min 降到可控范围</li>
+</ul>
+<h3>5.3 Railway 部署 + Qdrant Cloud</h3>
+<ul>
+<li>railway.json + Dockerfile.streamlit 一键部署</li>
+<li>Qdrant Cloud 免费层（1GB）作为云端向量库</li>
+<li>种子脚本：从本地 ChromaDB/Qdrant 上传到 Qdrant Cloud</li>
+<li>GitHub Pages 展示网站（Mermaid + D3 + Chart.js）</li>
+</ul>
+<h3>5.4 文档体系</h3>
+<ul>
+<li>README + CHANGELOG + CONTRIBUTING + SECURITY</li>
+<li>审计真相表：P0 级数据口径，防止面试翻车</li>
+<li>工作日志：每次迭代的问题 + 解决方案</li>
+</ul>
+<p><span class="warn">写作要点</span>：这章是"圈地自萌"质疑的直接回应——不是玩具项目，有完整的工程化链路。</p>
+</div>
+
+<!-- 第六章 -->
+<div class="chapter">
+<span class="chapter-num">6</span><span class="chapter-title">踩坑与经验</span><span class="est">~1200字</span>
+<h3>6.1 ChromaDB HNSW 索引损坏（6次）</h3>
+<ul>
+<li>根因：在已有数据库路径上创建 PersistentClient 会导致 HNSW 大规模损坏</li>
+<li>解决：服务器模式 + HttpClient，禁止 PersistentClient</li>
+<li>教训：社区文档不一定对，要看官方源码</li>
+</ul>
+<h3>6.2 7B 模型 + Reranker 显存溢出</h3>
+<ul>
+<li>RTX 4060 8GB：模型 4.6GB + Embedding 0.5GB + ChromaDB 0.5GB + Reranker 1.2GB = 6.8GB</li>
+<li>看似没超，但实际运行时 Reranker 导致模型互相驱逐</li>
+<li>延迟从 5s 飙到 41-55s（模型被卸载后重新加载）</li>
+<li>解决：ENABLE_RERANKER=false 或用 API 模式</li>
+</ul>
+<h3>6.3 CI 排队 10 小时未执行</h3>
+<ul>
+<li>根因：多个 CI run 排队，无并发控制</li>
+<li>解决：concurrency.cancel-in-progress: true</li>
+</ul>
+<h3>6.4 ENABLE_RERANKER 配置未生效</h3>
+<ul>
+<li>根因：config.py 定义了开关，但 graph.py 两处检索代码从未检查，始终创建 Reranker</li>
+<li>修复后 7B 模型延迟从 24.4s 降到 5.7s</li>
+<li>教训：配置项必须有测试覆盖验证其生效</li>
+</ul>
+<p><span class="warn">写作要点</span>：踩坑章节是最受欢迎的。每个坑讲"现象 → 根因 → 解决方案 → 教训"，不要只讲解决方案。</p>
+</div>
+
+<!-- 第七章 -->
+<div class="chapter">
+<span class="chapter-num">7</span><span class="chapter-title">总结与展望</span><span class="est">~500字</span>
+<ul>
+<li>Agentic RAG 的核心不是"用了什么模型"，而是"状态机设计 + 纠错闭环"</li>
+<li>诚实评测比好看数字更重要——面试和论文都适用</li>
+<li>工程化（CI/CD + Docker + 部署）是把"玩具"变成"项目"的关键</li>
+<li>后续方向：更大规模评测集、真实用户场景验证、Multi-Agent 协作</li>
+</ul>
+</div>
+
+<!-- ==================== 写作计划 ==================== -->
+
+<h2>写作计划</h2>
+<table>
+<tr><th>步骤</th><th>内容</th><th>预计耗时</th></tr>
+<tr><td>1</td><td>初稿（按大纲填充内容）</td><td>4-5 小时</td></tr>
+<tr><td>2</td><td>配图（Mermaid 流程图 + 代码截图）</td><td>1 小时</td></tr>
+<tr><td>3</td><td>审校（数据口径核对审计真相表）</td><td>30 分钟</td></tr>
+<tr><td>4</td><td>掘金发布（Markdown 格式）</td><td>30 分钟</td></tr>
+<tr><td>5</td><td>知乎同步（可略简化）</td><td>30 分钟</td></tr>
+</table>
+
+<h3>配图清单</h3>
+<ul>
+<li>7层 Pipeline Mermaid 流程图（已有，README 中）</li>
+<li>Agentic 路由 D3 力导向图（已有，showcase 中）</li>
+<li>版本演进 Chart.js 折线图（已有，showcase 中）</li>
+<li>混合检索准确率对比柱状图（需制作）</li>
+<li>ChromaDB 损坏问题时间线（需制作）</li>
+</ul>
+
+<h3>发布策略</h3>
+<ul>
+<li><strong>掘金</strong>：技术社区，读者精准，适合详细技术文章</li>
+<li><strong>知乎</strong>：受众更广，可略简化技术细节，增加"为什么做这个项目"的叙事</li>
+<li><strong>标签</strong>：RAG、LangGraph、LLM、AI Agent、检索增强生成</li>
+</ul>
+
+<div class="footer">
+<p>生成时间：2026-07-27 | 基于 DeepRAG v2.9.x | 数据口径：审计真相表_P0.md</p>
+<p>⚠️ 发布前务必核对所有数字与审计真相表一致，不要用历史报告数字</p>
+</div>
+
+</body>
+</html>
