@@ -1,13 +1,27 @@
-"""Pytest 全局配置：CI 环境自动跳过依赖外部服务的测试
+"""Pytest 全局配置：CI 环境自动跳过依赖外部服务的测试 + 测试金字塔分层标记
 
 在 GitHub Actions 中，无 ChromaDB/Qdrant/Ollama/LM Studio 等外部服务，
 这些测试会无限等待连接，导致 CI 挂死。本文件在 collection 阶段自动跳过它们。
+
+测试金字塔分层：
+  L1 — 单元测试（无外部依赖，纯逻辑验证）
+  L2 — 集成测试（需要外部服务：Qdrant/Ollama/API）
+  L3 — 端到端测试（完整 RAG 管道）
+  L4 — 性能基准（响应时间、吞吐量、召回率）
 """
 import os
 import pytest
 
 # CI 环境标记
 IN_CI = os.getenv("GITHUB_ACTIONS") == "true" or os.getenv("CI") == "true"
+
+
+def pytest_configure(config):
+    """注册测试金字塔分层标记"""
+    config.addinivalue_line("markers", "L1: 单元测试（无外部依赖）")
+    config.addinivalue_line("markers", "L2: 集成测试（需要外部服务）")
+    config.addinivalue_line("markers", "L3: 端到端测试（完整RAG管道）")
+    config.addinivalue_line("markers", "L4: 性能基准（响应时间/吞吐量/召回率）")
 
 
 def pytest_collection_modifyitems(config, items):
