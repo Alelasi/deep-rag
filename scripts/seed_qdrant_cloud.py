@@ -191,7 +191,7 @@ def seed_qdrant_cloud():
     cloud_collections = [c.name for c in cloud_client.get_collections().collections]
     if cloud_collection not in cloud_collections:
         if vector_dim is None:
-            vector_dim = 512  # 默认 bge-small-zh
+            vector_dim = 768  # 默认 bge-base-zh
         print(f"  创建 Cloud collection: {cloud_collection} (dim={vector_dim})")
         cloud_client.create_collection(
             collection_name=cloud_collection,
