@@ -75,6 +75,40 @@ _NEWS_HINT_RE = re.compile(
 )
 
 
+# ---------------------------------------------------------------------------
+# 环境变量驱动的配置（生产化：避免静默造假）
+# ---------------------------------------------------------------------------
+# WEB_FALLBACK_MOCK     : "true"/"1"/"yes" -> 强制返回带 is_mock=True 的占位结果
+# ENABLE_WEB_FALLBACK   : "false"/"0"/"no" -> 关闭 Web 兜底（返回 []，不造假）
+# WEB_FALLBACK_ENGINE   : 选择引擎
+#                         (auto|duckduckgo|news|tavily|serper|google_news|rss|today_news)
+# 原则：除非显式开启 mock，否则绝不静默返回假数据；真实检索失败时明确报错（返回 []
+#       并记录 error 日志）。
+def _env_flag(name: str) -> Optional[bool]:
+    """读取布尔型环境变量：未设置返回 None，否则按常见真假词解析。"""
+    v = os.getenv(name)
+    if v is None:
+        return None
+    s = v.strip().lower()
+    if s in ("1", "true", "yes", "on", "y", "启用", "开启"):
+        return True
+    if s in ("0", "false", "no", "off", "n", "禁用", "关闭"):
+        return False
+    return None
+
+
+def _mock_mode_enabled() -> bool:
+    return _env_flag("WEB_FALLBACK_MOCK") is True
+
+
+def _web_fallback_disabled() -> bool:
+    return _env_flag("ENABLE_WEB_FALLBACK") is False
+
+
+class WebFallbackError(RuntimeError):
+    """真实检索路径彻底失败时的明确错误信号（不静默造假）。"""
+
+
 def today_cn(now: Optional[datetime] = None) -> date:
     """返回东八区今天的 date。"""
     n = now or datetime.now(CN_TZ)
@@ -168,19 +202,54 @@ def web_search_fallback(
     *,
     today_only: bool = False,
 ) -> List[Dict]:
-    """外部搜索兜底。
+    """外部搜索兜底（环境变量驱动）。
 
     Args:
         query: 搜索查询
         max_results: 最大结果数
         engine: auto | duckduckgo | news | tavily | serper | google_news | rss | today_news
         today_only: True 时硬过滤为东八区「今天」
+
+    行为（避免静默造假）：
+        - WEB_FALLBACK_MOCK=true        -> 返回带 is_mock=True 的占位结果
+        - ENABLE_WEB_FALLBACK=false     -> 关闭兜底，返回 []
+        - 引擎完全未配置（无 env、无显式 engine、且未启用）-> 离线占位（mock，带告警）
+        - 其余情况走真实检索；真实检索全失败时返回 [] 并记录 error（不造假）
     """
-    engine = (engine or "auto").lower().strip()
     q = (query or "").strip()
     if not q:
         return []
 
+    original_engine = (engine or "auto").lower().strip()
+    env_engine = os.getenv("WEB_FALLBACK_ENGINE")
+    # env 引擎仅在调用方使用默认 auto 时覆盖
+    if original_engine == "auto" and env_engine:
+        effective_engine = env_engine.lower().strip()
+    else:
+        effective_engine = original_engine
+
+    # 1) 显式 mock
+    if _mock_mode_enabled():
+        log.warning("WEB_FALLBACK_MOCK=true -> 返回 MOCK 占位结果（非真实检索）。")
+        return _mock_results(q, max_results)
+
+    # 2) 显式关闭
+    if _web_fallback_disabled():
+        log.info("ENABLE_WEB_FALLBACK=false -> Web 兜底已关闭，返回 []。")
+        return []
+
+    # 3) 完全未配置 -> 离线占位（明确告警，可识别）
+    caller_explicit = original_engine != "auto"
+    if (not caller_explicit) and (not env_engine) and (
+        _env_flag("ENABLE_WEB_FALLBACK") is not True
+    ):
+        log.warning(
+            "Web 兜底未配置（WEB_FALLBACK_ENGINE 未设置且未启用）-> 返回 MOCK 占位结果。"
+        )
+        return _mock_results(q, max_results)
+
+    # 4) 真实检索路径
+    engine = effective_engine
     if engine in ("today_news", "today"):
         return web_search_today_news(q, max_results=max_results)
 
@@ -199,8 +268,8 @@ def web_search_fallback(
     elif engine == "serper":
         results = _search_serper(q, max_results)
     else:
-        log.error("Unknown search engine: %s", engine)
-        return _mock_results(q, max_results)
+        log.error("Unknown search engine: %s —— 真实检索失败，返回 []（不造假）。", engine)
+        return []
 
     if today_only:
         today_items = filter_today_results(results, allow_missing_date=False)
@@ -215,6 +284,9 @@ def web_search_fallback(
 
 def web_search_today_news(query: str = "今日新闻", max_results: int = 10) -> List[Dict]:
     """强制「今天」新闻：多路 Google News RSS + 日期硬过滤（免费）。"""
+    if _mock_mode_enabled():
+        log.warning("WEB_FALLBACK_MOCK=true -> web_search_today_news 返回 MOCK 占位。")
+        return _mock_results(query, max_results)
     day = today_cn()
     day_s = day.isoformat()
     # 多路拉取，再统一 filter_today
@@ -347,8 +419,8 @@ def _search_auto(query: str, max_results: int) -> List[Dict]:
         log.info("web auto cascade partial n=%s query=%s", len(merged), query[:50])
         return merged[:max_results]
 
-    log.warning("web auto cascade empty for: %s", query[:50])
-    return _mock_results(query, max_results)
+    log.warning("web auto cascade empty for: %s —— 真实检索无结果，返回 []（不造假）。", query[:50])
+    return []
 
 
 def _is_mock_item(item: Dict) -> bool:
@@ -429,6 +501,7 @@ def _search_duckduckgo(query: str, max_results: int) -> List[Dict]:
                         "page": 0,
                         "metadata": {
                             "is_web": True,
+                            "is_mock": False,
                             "engine": "duckduckgo",
                             "title": result.get("title", ""),
                             "snippet": (result.get("body") or "")[:200],
@@ -472,6 +545,7 @@ def _search_duckduckgo_news(query: str, max_results: int) -> List[Dict]:
                         "page": 0,
                         "metadata": {
                             "is_web": True,
+                            "is_mock": False,
                             "engine": "duckduckgo_news",
                             "title": result.get("title", ""),
                             "snippet": body[:200],
@@ -625,13 +699,14 @@ def _search_public_rss(query: str, max_results: int) -> List[Dict]:
                         "content": body[:800],
                         "source": it["link"] or url,
                         "page": 0,
-                        "metadata": {
-                            "is_web": True,
-                            "engine": f"rss:{name}",
-                            "title": title,
-                            "snippet": body[:200],
-                            "date": it.get("pubDate") or "",
-                        },
+                    "metadata": {
+                        "is_web": True,
+                        "is_mock": False,
+                        "engine": f"rss:{name}",
+                        "title": title,
+                        "snippet": body[:200],
+                        "date": it.get("pubDate") or "",
+                    },
                     }
                 )
                 if len(results) >= max_results:
@@ -674,6 +749,7 @@ def _search_tavily(query: str, max_results: int) -> List[Dict]:
                     "page": 0,
                     "metadata": {
                         "is_web": True,
+                        "is_mock": False,
                         "engine": "tavily",
                         "title": item.get("title", ""),
                         "snippet": item.get("content", "")[:200],
@@ -714,6 +790,7 @@ def _search_serper(query: str, max_results: int) -> List[Dict]:
                     "page": 0,
                     "metadata": {
                         "is_web": True,
+                        "is_mock": False,
                         "engine": "serper",
                         "title": item.get("title", ""),
                         "snippet": item.get("snippet", ""),
@@ -744,6 +821,29 @@ def _mock_results(query: str, max_results: int) -> List[Dict]:
         }
         for i in range(max_results)
     ]
+
+
+class WebSearchFallback:
+    """面向上层（enhanced_knowledge_retrieval 等）的面向对象封装。
+
+    与函数式 API 行为一致，同样受环境变量约束：
+    - WEB_FALLBACK_MOCK=true   -> search() 返回带 is_mock=True 的占位结果
+    - ENABLE_WEB_FALLBACK=false -> search() 返回 []
+    - 未配置                   -> 离线占位（mock，带告警）
+    """
+
+    def __init__(self, engine: Optional[str] = None, max_results: int = 3):
+        env_engine = os.getenv("WEB_FALLBACK_ENGINE")
+        self.engine = (engine or env_engine or "auto").lower().strip()
+        self.max_results = max_results
+
+    def search(self, query: str, top_k: Optional[int] = None) -> List[Dict]:
+        n = top_k if top_k is not None else self.max_results
+        return web_search_fallback(query, max_results=n, engine=self.engine)
+
+    def is_mock_result(self, item: Dict) -> bool:
+        """上层据此区分真实结果与占位结果。"""
+        return bool((item.get("metadata") or {}).get("is_mock"))
 
 
 if __name__ == "__main__":

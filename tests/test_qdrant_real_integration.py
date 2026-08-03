@@ -6,6 +6,7 @@
 4. Query API + RRF 融合
 """
 import sys
+import pytest
 from pathlib import Path
 PROJECT_ROOT = str(Path(__file__).parent.parent)
 sys.path.insert(0, PROJECT_ROOT)
@@ -13,6 +14,9 @@ sys.path.insert(0, PROJECT_ROOT)
 from qdrant_client import QdrantClient
 from src.retrieval.qdrant_retriever import QdrantRetriever
 from src.state import Document
+
+# 模块级标记：L2 集成测试
+pytestmark = pytest.mark.L2
 
 
 def test_real_hybrid_search_chinese():

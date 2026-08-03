@@ -52,6 +52,16 @@ log = logging.getLogger("code_agent")
 
 # ========== 1. 数据结构 ==========
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
+
 @dataclass
 class CodeRequest:
     """代码生成请求"""
@@ -432,8 +442,8 @@ class CodeAgent:
     )
 
     result = agent.generate_and_test(request)
-    print(result.code)
-    print(result.execution_result)
+    logger.info(result.code)
+    logger.info(result.execution_result)
     ```
     """
 
@@ -531,8 +541,8 @@ if __name__ == "__main__":
     agent = create_code_agent()
 
     code = agent.quick_generate("写一个计算斐波那契数列的函数")
-    print("Generated code:")
-    print(code)
+    logger.info("Generated code:")
+    logger.info(code)
 
     # 示例2：完整流程
     request = CodeRequest(
@@ -549,16 +559,16 @@ if __name__ == "__main__":
 
     result = agent.generate_and_test(request, execute=True)
 
-    print("\n=== Code Generation Result ===")
-    print(f"Language: {result.language}")
-    print(f"Explanation: {result.explanation}")
-    print(f"\nCode:\n{result.code}")
+    logger.info("\n=== Code Generation Result ===")
+    logger.info(f"Language: {result.language}")
+    logger.info(f"Explanation: {result.explanation}")
+    logger.info(f"\nCode:\n{result.code}")
 
     if result.execution_result:
-        print(f"\n=== Execution Result ===")
-        print(f"Success: {result.execution_result['success']}")
-        print(f"Exit code: {result.execution_result['exit_code']}")
-        print(f"Execution time: {result.execution_result['execution_time']:.3f}s")
-        print(f"Stdout:\n{result.execution_result['stdout']}")
+        logger.info(f"\n=== Execution Result ===")
+        logger.info(f"Success: {result.execution_result['success']}")
+        logger.info(f"Exit code: {result.execution_result['exit_code']}")
+        logger.info(f"Execution time: {result.execution_result['execution_time']:.3f}s")
+        logger.info(f"Stdout:\n{result.execution_result['stdout']}")
         if result.execution_result['stderr']:
-            print(f"Stderr:\n{result.execution_result['stderr']}")
+            logger.info(f"Stderr:\n{result.execution_result['stderr']}")

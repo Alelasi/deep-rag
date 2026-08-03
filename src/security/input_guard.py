@@ -6,10 +6,13 @@
 """
 from __future__ import annotations
 
+import logging
 import os
 import re
 from pathlib import Path
 from typing import List, Tuple
+
+logger = logging.getLogger(__name__)
 
 # 默认最大问题长度（可用 MAX_QUESTION_CHARS 覆盖）
 DEFAULT_MAX_QUESTION_CHARS = int(os.getenv("MAX_QUESTION_CHARS", "4000"))
@@ -105,6 +108,7 @@ def validate_index_path(docs_dir: str) -> Path:
             if path == root:
                 return path
 
+    logger.warning("索引路径被拒绝（不在白名单）: %s", docs_dir)
     raise PermissionError(
         f"索引路径不在白名单内。允许根: {[str(r) for r in _allowed_roots()]}。"
         f"可通过 INDEX_ALLOWED_ROOTS 扩展。"

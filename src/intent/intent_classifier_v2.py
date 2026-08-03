@@ -11,6 +11,16 @@ from dataclasses import dataclass
 from enum import Enum
 
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
+
 class IntentL1(Enum):
     """一级意图"""
     KNOWLEDGE_QUERY = "知识查询"
@@ -358,15 +368,15 @@ if __name__ == "__main__":
         "为什么报 ImportError？",
     ]
 
-    print("=" * 80)
-    print("意图识别测试（规则 + LLM）")
-    print("=" * 80)
+    logger.info("=" * 80)
+    logger.info("意图识别测试（规则 + LLM）")
+    logger.info("=" * 80)
 
     for query in test_queries:
         result = classifier.classify(query)
-        print(f"\nQuery: {query}")
-        print(f"  L1: {result.intent_l1.value}")
-        print(f"  L2: {result.intent_l2.value}")
-        print(f"  Confidence: {result.confidence:.2f}")
-        print(f"  Route: {result.route_decision}")
-        print(f"  Reason: {result.reason}")
+        logger.info(f"\nQuery: {query}")
+        logger.info(f"  L1: {result.intent_l1.value}")
+        logger.info(f"  L2: {result.intent_l2.value}")
+        logger.info(f"  Confidence: {result.confidence:.2f}")
+        logger.info(f"  Route: {result.route_decision}")
+        logger.info(f"  Reason: {result.reason}")

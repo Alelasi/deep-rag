@@ -4,11 +4,17 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"  # 修复 OpenMP 冲突
 os.environ["no_proxy"] = "localhost,127.0.0.1"  # 绕过代理，防止 ChromaDB 连接被拦截
 os.environ["NO_PROXY"] = "localhost,127.0.0.1"
 from pathlib import Path
+from typing import Any, Callable, Dict, Optional
 from dotenv import load_dotenv
 
 load_dotenv()
 
 PROJECT_ROOT = Path(__file__).parent.parent
+
+# 可配置根目录：默认用项目根，可用环境变量 DEEP_RAG_HOME 覆盖（指向数据/模型中心）
+_DEEP_RAG_HOME_ENV = os.getenv("DEEP_RAG_HOME")
+DEEP_RAG_HOME: Path = Path(_DEEP_RAG_HOME_ENV) if _DEEP_RAG_HOME_ENV else PROJECT_ROOT
+
 DATA_DIR = PROJECT_ROOT / "data"
 
 # GPU 自动检测
@@ -19,10 +25,11 @@ except ImportError:
     DEVICE = "cpu"
 
 # ChromaDB 数据目录（仅 chroma run --path 使用；代码禁止 PersistentClient）
-# 默认中心：哲思灵智/向量数据库
+# 默认中心：项目内 data/chroma（可用 CHROMA_DB_PATH 或 DEEP_RAG_HOME 覆盖）
+# 旧默认曾指向个人目录「哲思灵智/向量数据库」，现改项目相对路径以避免硬编码绝对路径
 CHROMA_DB_PATH = os.getenv(
     "CHROMA_DB_PATH",
-    r"D:\文档\ai提问相关\哲思灵智\向量数据库",
+    str(DEEP_RAG_HOME / "data" / "chroma"),
 )
 DOCS_DIR = DATA_DIR / "sample_docs"
 
@@ -32,7 +39,7 @@ CHROMA_SERVER_PORT = int(os.getenv("CHROMA_SERVER_PORT", "8000"))
 
 _chroma_client = None
 
-def get_chroma_client():
+def get_chroma_client() -> Any:
     """获取 ChromaDB 客户端 — 使用 HttpClient 连接服务器模式
 
     安全说明：
@@ -68,7 +75,9 @@ LLM_TEMPERATURE = 0.3  # 向后兼容默认值，新代码应使用 get_temperat
 # v2.9: 动态温度策略 — 根据任务类型调节 temperature
 # 事实校验/文档评分需要确定性(temp=0)，答案生成适度创造性(temp=0.3)，
 # 查询改写需要多样性(temp=0.5)，创意场景高创造性(temp=0.7)
-TEMPERATURE_STRATEGY = {
+# 来源：v2.9 动态温度策略设计（事实校验需确定性、答案生成需适度创造性、改写需多样性），
+# 经 2026-07 多后端实测确定各任务类型的合适 temperature。
+TEMPERATURE_STRATEGY: Dict[str, float] = {
     "fact_check": 0.0,      # 事实校验: 确定性
     "doc_grading": 0.0,     # 文档评分: 确定性
     "generation": 0.3,      # 答案生成: 适度创造性
@@ -95,7 +104,7 @@ VECTOR_DB = os.getenv("VECTOR_DB", "qdrant")  # qdrant / chromadb / lancedb / pg
 # server=Docker/独立服务（可多客户端同时访问，推荐）
 # local=单进程独占磁盘（建库时不能开前端，不推荐日常）
 QDRANT_MODE = os.getenv("QDRANT_MODE", "server")
-QDRANT_PATH = os.getenv("QDRANT_PATH", r"D:\文档\ai提问相关\哲思灵智\qdrant_data")
+QDRANT_PATH = os.getenv("QDRANT_PATH", str(DEEP_RAG_HOME / "data" / "qdrant_data"))
 QDRANT_HOST = os.getenv("QDRANT_HOST", "127.0.0.1")  # 勿用 localhost(IPv6 慢)
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
 QDRANT_COLLECTION = os.getenv("QDRANT_COLLECTION", "proj_work")
@@ -121,7 +130,9 @@ if _env_model:
 else:
     EMBEDDING_MODEL = _EMBEDDING_MODELS.get(EMBEDDING_MODE, _EMBEDDING_MODELS["precise"])
 # Embedding 维度映射表（添加新模型时在此扩展）
-EMBEDDING_DIM_MAP = {
+# 来源：sentence-transformers / HuggingFace 官方模型卡片公布的输出维度
+# （BAAI/bge 系列、all-MiniLM-L6-v2）。
+EMBEDDING_DIM_MAP: Dict[str, int] = {
     "BAAI/bge-small-zh-v1.5": 512,
     "BAAI/bge-base-zh-v1.5": 768,
     "BAAI/bge-large-zh-v1.5": 1024,
@@ -130,7 +141,7 @@ EMBEDDING_DIM_MAP = {
 }
 
 
-def get_embedding_dim(model_name: str = None) -> int:
+def get_embedding_dim(model_name: Optional[str] = None) -> int:
     """获取 embedding 模型的维度。支持自动检测或查表。"""
     name = model_name or EMBEDDING_MODEL
     if name in EMBEDDING_DIM_MAP:
@@ -209,16 +220,181 @@ CIRCUIT_BREAKER_FAILURE_THRESHOLD = int(os.getenv("CIRCUIT_BREAKER_FAILURE_THRES
 CIRCUIT_BREAKER_OPEN_DURATION_SEC = int(os.getenv("CIRCUIT_BREAKER_OPEN_DURATION_SEC", "30"))
 
 
-def get_llm(temperature: float = None):
+def _build_openai_compatible(
+    backend: str,
+    temp: float,
+    model: str,
+    api_key: Optional[str] = None,
+    base_url: Optional[str] = None,
+) -> Any:
+    """构建 OpenAI 兼容后端的 LLM 实例（含实例缓存）。"""
+    from .llm.rate_limiter import get_cached_llm
+
+    def _factory() -> Any:
+        from langchain_openai import ChatOpenAI
+
+        kwargs: Dict[str, Any] = {"model": model, "temperature": temp}
+        if api_key is not None:
+            kwargs["api_key"] = api_key
+        if base_url is not None:
+            kwargs["base_url"] = base_url
+        return ChatOpenAI(**kwargs)
+
+    return get_cached_llm(backend, model, temp, _factory)
+
+
+def _build_anthropic(temp: float) -> Any:
+    model = LLM_MODEL or "claude-sonnet-4-20250514"
+    from .llm.rate_limiter import get_cached_llm
+
+    def _factory() -> Any:
+        from langchain_anthropic import ChatAnthropic
+
+        return ChatAnthropic(model=model, temperature=temp)
+
+    return get_cached_llm("anthropic", model, temp, _factory)
+
+
+def _build_zhipu(temp: float) -> Any:
+    # 免费档实测优于 4.5-flash
+    model = LLM_MODEL or "glm-4-flash"
+    return _build_openai_compatible(
+        "zhipu", temp, model, ZHIPU_API_KEY, "https://open.bigmodel.cn/api/paas/v4"
+    )
+
+
+def _build_ollama(temp: float) -> Any:
+    model = LLM_MODEL or "qwen2.5:1.5b"
+    from .llm.rate_limiter import get_cached_llm
+
+    def _factory() -> Any:
+        from langchain_ollama import ChatOllama
+
+        return ChatOllama(
+            model=model,
+            temperature=temp,
+            base_url="http://localhost:11434",
+            num_predict=300,  # v2.8.1: 禁用思考后300 token足够
+        )
+
+    return get_cached_llm("ollama", model, temp, _factory)
+
+
+def _build_lmstudio(temp: float) -> Any:
+    model = LLM_MODEL or "google/gemma-3-4b"
+    # LM Studio 不需要真实 key
+    return _build_openai_compatible("lmstudio", temp, model, "lm-studio", "http://localhost:11434/v1")
+
+
+def _build_siliconcloud(temp: float) -> Any:
+    model = LLM_MODEL or "THUDM/GLM-Z1-9B-0414"
+    return _build_openai_compatible(
+        "siliconcloud", temp, model, SILICONFLOW_API_KEY, "https://api.siliconflow.cn/v1"
+    )
+
+
+def _build_groq(temp: float) -> Any:
+    # Groq：LPU，~30RPM；默认 8B 更快更稳（2026-07-18 实测）
+    # 备选：qwen/qwen3.6-27b, openai/gpt-oss-20b, openai/gpt-oss-120b
+    model = LLM_MODEL or "llama-3.1-8b-instant"
+    return _build_openai_compatible(
+        "groq", temp, model, GROQ_API_KEY, "https://api.groq.com/openai/v1"
+    )
+
+
+def _build_cerebras(temp: float) -> Any:
+    # Cerebras：超高吞吐；默认 gpt-oss-120b（v3 评测第1）
+    # 备选：gemma-4-31b, zai-glm-4.7
+    model = LLM_MODEL or "gpt-oss-120b"
+    return _build_openai_compatible(
+        "cerebras", temp, model, CEREBRAS_API_KEY, "https://api.cerebras.ai/v1"
+    )
+
+
+def _build_openrouter(temp: float) -> Any:
+    # OpenRouter：免费模型聚合，20RPM/50RPD
+    # 推荐模型：meta-llama/llama-3.3-70b-instruct:free, openai/gpt-oss-20b:free
+    model = LLM_MODEL or "meta-llama/llama-3.3-70b-instruct:free"
+    return _build_openai_compatible(
+        "openrouter", temp, model, OPENROUTER_API_KEY, "https://openrouter.ai/api/v1"
+    )
+
+
+def _build_openai(temp: float) -> Any:
+    model = LLM_MODEL or "gpt-4o-mini"
+    return _build_openai_compatible("openai", temp, model)
+
+
+def _build_none(temp: float) -> Any:
+    return None
+
+
+# LLM 后端注册表：后端名 -> 工厂函数（temp -> LLM 实例）
+# 新增后端只需在此注册，get_llm 通过查表循环分发，无需新增 if/elif 分支。
+LLM_REGISTRY: Dict[str, Callable[[float], Any]] = {
+    "anthropic": _build_anthropic,
+    "zhipu": _build_zhipu,
+    "ollama": _build_ollama,
+    "lmstudio": _build_lmstudio,
+    "siliconcloud": _build_siliconcloud,
+    "groq": _build_groq,
+    "cerebras": _build_cerebras,
+    "openrouter": _build_openrouter,
+    "openai": _build_openai,
+    "none": _build_none,
+}
+
+
+def _resolve_backend(backend: str) -> str:
+    """解析 auto 模式为具体后端名；非 auto 原样返回。"""
+    if backend != "auto":
+        return backend
+
+    # auto: 2026-07-18 免费模型实测后优先「快+稳」
+    # Cerebras GPT-OSS-120B 综合分最高(~805ms) → Groq 8B → Silicon → Zhipu
+    if ANTHROPIC_API_KEY:
+        return "anthropic"
+    if CEREBRAS_API_KEY:
+        return "cerebras"  # 吞吐+质量最佳免费档
+    if GROQ_API_KEY:
+        return "groq"  # 高 RPM + 低延迟
+    if SILICONFLOW_API_KEY:
+        return "siliconcloud"
+    if ZHIPU_API_KEY:
+        return "zhipu"
+    if OPENAI_API_KEY:
+        return "openai"
+    if OPENROUTER_API_KEY:
+        return "openrouter"
+    if LLM_MODEL and (
+        LLM_MODEL.startswith("google/")
+        or LLM_MODEL.startswith("qwen/")
+        or LLM_MODEL.startswith("deepseek/")
+    ):
+        return "lmstudio"
+    # 尝试本地 Ollama
+    try:
+        import urllib.request
+
+        req = urllib.request.Request("http://localhost:11434/api/tags", method="GET")
+        with urllib.request.urlopen(req, timeout=1) as resp:
+            return "ollama" if resp.status == 200 else "none"
+    except Exception:
+        return "none"
+
+
+def get_llm(temperature: float = None) -> Optional[Any]:
     """
-    统一LLM工厂 — 支持多后端切换（v2.7：实例缓存 + 限流重试）
+    统一LLM工厂 — 支持多后端切换（注册表分发，v2.7：实例缓存 + 限流重试）
 
-    优先级（auto模式）：anthropic → zhipu(免费) → openai → ollama → none(规则)
+    优先级（auto模式）：anthropic → cerebras → groq → siliconcloud → zhipu
+        → openai → openrouter → lmstudio → ollama → none(规则)
 
-    v2.7优化：
-    - LLM实例缓存：相同参数不重复创建
-    - 限流器：控制请求频率避免429
-    - 重试装饰器：429时自动退避重试
+    保留原函数名与调用签名，行为与原 if/elif 工厂一致：
+    - 模型路由（ENABLE_MODEL_ROUTING）优先返回路由包装器
+    - LLM 实例缓存：相同参数不重复创建
+    - 限流器：控制请求频率避免 429
+    - 重试装饰器：429 时自动退避重试
     """
     temp = temperature if temperature is not None else LLM_TEMPERATURE
 
@@ -227,145 +403,15 @@ def get_llm(temperature: float = None):
         from .llm.model_router_wrapper import get_routed_llm
         return get_routed_llm(temp)
 
-    backend = LLM_BACKEND.lower()
+    backend = _resolve_backend(LLM_BACKEND.lower())
 
-    # auto: 2026-07-18 免费模型实测后优先「快+稳」
-    # Cerebras GPT-OSS-120B 综合分最高(~805ms) → Groq 8B → Silicon → Zhipu
-    if backend == "auto":
-        if ANTHROPIC_API_KEY:
-            backend = "anthropic"
-        elif CEREBRAS_API_KEY:
-            backend = "cerebras"  # 吞吐+质量最佳免费档
-        elif GROQ_API_KEY:
-            backend = "groq"  # 高 RPM + 低延迟
-        elif SILICONFLOW_API_KEY:
-            backend = "siliconcloud"
-        elif ZHIPU_API_KEY:
-            backend = "zhipu"
-        elif OPENAI_API_KEY:
-            backend = "openai"
-        elif OPENROUTER_API_KEY:
-            backend = "openrouter"
-        elif LLM_MODEL and (LLM_MODEL.startswith("google/") or LLM_MODEL.startswith("qwen/") or LLM_MODEL.startswith("deepseek/")):
-            backend = "lmstudio"
-        else:
-            # 尝试本地 Ollama
-            try:
-                import urllib.request
-                req = urllib.request.Request("http://localhost:11434/api/tags", method="GET")
-                with urllib.request.urlopen(req, timeout=1) as resp:
-                    if resp.status == 200:
-                        backend = "ollama"
-                    else:
-                        backend = "none"
-            except Exception:
-                backend = "none"
-
-    if backend == "none":
-        return None
-
-    # v2.7: 使用缓存的LLM实例
-    from .llm.rate_limiter import get_cached_llm
-
-    if backend == "anthropic":
-        model = LLM_MODEL or "claude-sonnet-4-20250514"
-        def _factory():
-            from langchain_anthropic import ChatAnthropic
-            return ChatAnthropic(model=model, temperature=temp)
-        return get_cached_llm(backend, model, temp, _factory)
-
-    if backend == "zhipu":
-        model = LLM_MODEL or "glm-4-flash"  # 免费档实测优于 4.5-flash
-        def _factory():
-            from langchain_openai import ChatOpenAI
-            return ChatOpenAI(
-                model=model, temperature=temp,
-                api_key=ZHIPU_API_KEY,
-                base_url="https://open.bigmodel.cn/api/paas/v4",
-            )
-        return get_cached_llm(backend, model, temp, _factory)
-
-    if backend == "ollama":
-        model = LLM_MODEL or "qwen2.5:1.5b"
-        def _factory():
-            from langchain_ollama import ChatOllama
-            return ChatOllama(
-                model=model, temperature=temp,
-                base_url="http://localhost:11434",
-                num_predict=300,  # v2.8.1: 禁用思考后300 token足够
-            )
-        return get_cached_llm(backend, model, temp, _factory)
-
-    if backend == "lmstudio":
-        model = LLM_MODEL or "google/gemma-3-4b"
-        def _factory():
-            from langchain_openai import ChatOpenAI
-            return ChatOpenAI(
-                model=model, temperature=temp,
-                api_key="lm-studio",  # LM Studio 不需要真实 key
-                base_url="http://localhost:11434/v1",
-            )
-        return get_cached_llm(backend, model, temp, _factory)
-
-    if backend == "siliconcloud":
-        model = LLM_MODEL or "THUDM/GLM-Z1-9B-0414"
-        def _factory():
-            from langchain_openai import ChatOpenAI
-            return ChatOpenAI(
-                model=model, temperature=temp,
-                api_key=SILICONFLOW_API_KEY,
-                base_url="https://api.siliconflow.cn/v1",
-            )
-        return get_cached_llm(backend, model, temp, _factory)
-
-    # v3.0: 免费低延迟 API（2026-07-13实测）
-    if backend == "groq":
-        # Groq：LPU，~30RPM；默认 8B 更快更稳（2026-07-18 实测）
-        # 备选：qwen/qwen3.6-27b, openai/gpt-oss-20b, openai/gpt-oss-120b
-        model = LLM_MODEL or "llama-3.1-8b-instant"
-        def _factory():
-            from langchain_openai import ChatOpenAI
-            return ChatOpenAI(
-                model=model, temperature=temp,
-                api_key=GROQ_API_KEY,
-                base_url="https://api.groq.com/openai/v1",
-            )
-        return get_cached_llm(backend, model, temp, _factory)
-
-    if backend == "cerebras":
-        # Cerebras：超高吞吐；默认 gpt-oss-120b（v3 评测第1）
-        # 备选：gemma-4-31b, zai-glm-4.7
-        model = LLM_MODEL or "gpt-oss-120b"
-        def _factory():
-            from langchain_openai import ChatOpenAI
-            return ChatOpenAI(
-                model=model, temperature=temp,
-                api_key=CEREBRAS_API_KEY,
-                base_url="https://api.cerebras.ai/v1",
-            )
-        return get_cached_llm(backend, model, temp, _factory)
-
-    if backend == "openrouter":
-        # OpenRouter：免费模型聚合，20RPM/50RPD
-        # 推荐模型：meta-llama/llama-3.3-70b-instruct:free, openai/gpt-oss-20b:free
-        model = LLM_MODEL or "meta-llama/llama-3.3-70b-instruct:free"
-        def _factory():
-            from langchain_openai import ChatOpenAI
-            return ChatOpenAI(
-                model=model, temperature=temp,
-                api_key=OPENROUTER_API_KEY,
-                base_url="https://openrouter.ai/api/v1",
-            )
-        return get_cached_llm(backend, model, temp, _factory)
-
-    if backend == "openai":
-        model = LLM_MODEL or "gpt-4o-mini"
-        def _factory():
-            from langchain_openai import ChatOpenAI
-            return ChatOpenAI(model=model, temperature=temp)
-        return get_cached_llm(backend, model, temp, _factory)
-
-    raise ValueError(f"Unknown LLM_BACKEND: {backend}. Use: auto/anthropic/zhipu/ollama/openai/none")
+    builder = LLM_REGISTRY.get(backend)
+    if builder is None:
+        raise ValueError(
+            f"Unknown LLM_BACKEND: {backend}. "
+            f"Use: {', '.join(sorted(LLM_REGISTRY))}"
+        )
+    return builder(temp)
 
 
 def get_llm_with_fallback(temperature: float = None):

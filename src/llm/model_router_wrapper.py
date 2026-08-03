@@ -23,6 +23,16 @@ from ..config import (
 )
 
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
+
 class RoutedLLM(BaseChatModel):
     """
     路由包装的 LLM（LangChain 兼容）
@@ -260,7 +270,7 @@ if __name__ == "__main__":
     # 创建路由 LLM
     llm = get_routed_llm(temperature=0.3)
 
-    print("✅ 路由 LLM 创建成功")
-    print(f"候选模型：{[c.id for c in llm.router.candidates]}")
-    print(f"熔断阈值：{CIRCUIT_BREAKER_FAILURE_THRESHOLD} 次")
-    print(f"熔断时长：{CIRCUIT_BREAKER_OPEN_DURATION_SEC} 秒")
+    logger.info("✅ 路由 LLM 创建成功")
+    logger.info(f"候选模型：{[c.id for c in llm.router.candidates]}")
+    logger.info(f"熔断阈值：{CIRCUIT_BREAKER_FAILURE_THRESHOLD} 次")
+    logger.info(f"熔断时长：{CIRCUIT_BREAKER_OPEN_DURATION_SEC} 秒")

@@ -8,6 +8,16 @@ import json
 from datetime import datetime
 
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
+
 class ConversationMemory:
     """
     对话记忆管理器
@@ -231,34 +241,34 @@ def demo_conversation_memory():
         ("统计订单总数", [{"count": 100}]),
     ]
 
-    print("=" * 60)
-    print("模拟多轮对话")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("模拟多轮对话")
+    logger.info("=" * 60)
 
     for query, result in conversations:
         memory.add(query, result)
-        print(f"\n用户: {query}")
-        print(f"结果: {result}")
+        logger.info(f"\n用户: {query}")
+        logger.info(f"结果: {result}")
 
     # 获取上下文
-    print("\n" + "=" * 60)
-    print("获取最近3轮对话上下文")
-    print("=" * 60)
-    print(memory.get_context(k=3))
+    logger.info("\n" + "=" * 60)
+    logger.info("获取最近3轮对话上下文")
+    logger.info("=" * 60)
+    logger.info(memory.get_context(k=3))
 
     # 搜索历史
-    print("\n" + "=" * 60)
-    print("搜索包含'用户'的历史记录")
-    print("=" * 60)
+    logger.info("\n" + "=" * 60)
+    logger.info("搜索包含'用户'的历史记录")
+    logger.info("=" * 60)
     matches = memory.search("用户")
     for i, match in enumerate(matches, 1):
-        print(f"{i}. {match['query']} → {match['result']}")
+        logger.info(f"{i}. {match['query']} → {match['result']}")
 
     # 获取摘要
-    print("\n" + "=" * 60)
-    print("对话摘要")
-    print("=" * 60)
-    print(memory.get_summary())
+    logger.info("\n" + "=" * 60)
+    logger.info("对话摘要")
+    logger.info("=" * 60)
+    logger.info(memory.get_summary())
 
 
 if __name__ == "__main__":

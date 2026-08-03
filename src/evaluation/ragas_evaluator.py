@@ -17,6 +17,16 @@ import re
 from pathlib import Path
 
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
+
 def _tokenize_zh(text: str) -> Set[str]:
     """中英混合分词：优先 jieba，失败则字符 bigram + 英文词"""
     if not text:
@@ -309,41 +319,41 @@ class RAGASEvaluator:
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(self.results, f, ensure_ascii=False, indent=2)
 
-        print(f"✅ 评测结果已保存到: {output_path}")
+        logger.info(f"✅ 评测结果已保存到: {output_path}")
 
     def print_report(self, metrics: Dict):
         """打印评测报告"""
-        print("\n" + "="*60)
-        print("📊 RAGAS 评测报告")
-        print("="*60)
+        logger.info("\n" + "="*60)
+        logger.info("📊 RAGAS 评测报告")
+        logger.info("="*60)
 
         if "individual_results" in metrics:
             # 批量评测结果
-            print(f"\n总测试用例数: {metrics['total_cases']}")
-            print("\n平均指标:")
+            logger.info(f"\n总测试用例数: {metrics['total_cases']}")
+            logger.info("\n平均指标:")
             avg = metrics["average_metrics"]
-            print(f"  • Answer Relevancy (答案相关性):    {avg['answer_relevancy']:.3f}")
-            print(f"  • Context Precision (上下文精确度):  {avg['context_precision']:.3f}")
-            print(f"  • Context Recall (上下文召回率):     {avg['context_recall']:.3f}")
-            print(f"  • Faithfulness (忠实度):            {avg['faithfulness']:.3f}")
-            print(f"  • RAGAS Score (综合得分):           {avg['ragas_score']:.3f}")
+            logger.info(f"  • Answer Relevancy (答案相关性):    {avg['answer_relevancy']:.3f}")
+            logger.info(f"  • Context Precision (上下文精确度):  {avg['context_precision']:.3f}")
+            logger.info(f"  • Context Recall (上下文召回率):     {avg['context_recall']:.3f}")
+            logger.info(f"  • Faithfulness (忠实度):            {avg['faithfulness']:.3f}")
+            logger.info(f"  • RAGAS Score (综合得分):           {avg['ragas_score']:.3f}")
 
             # 显示每个用例的得分
-            print("\n各用例详情:")
+            logger.info("\n各用例详情:")
             for i, result in enumerate(metrics["individual_results"], 1):
-                print(f"\n  [{i}] {result['question'][:50]}...")
-                print(f"      RAGAS Score: {result['ragas_score']:.3f}")
+                logger.info(f"\n  [{i}] {result['question'][:50]}...")
+                logger.info(f"      RAGAS Score: {result['ragas_score']:.3f}")
         else:
             # 单个查询结果
-            print(f"\n问题: {metrics['question']}")
-            print(f"\n指标:")
-            print(f"  • Answer Relevancy (答案相关性):    {metrics['answer_relevancy']:.3f}")
-            print(f"  • Context Precision (上下文精确度):  {metrics['context_precision']:.3f}")
-            print(f"  • Context Recall (上下文召回率):     {metrics['context_recall']:.3f}")
-            print(f"  • Faithfulness (忠实度):            {metrics['faithfulness']:.3f}")
-            print(f"  • RAGAS Score (综合得分):           {metrics['ragas_score']:.3f}")
+            logger.info(f"\n问题: {metrics['question']}")
+            logger.info(f"\n指标:")
+            logger.info(f"  • Answer Relevancy (答案相关性):    {metrics['answer_relevancy']:.3f}")
+            logger.info(f"  • Context Precision (上下文精确度):  {metrics['context_precision']:.3f}")
+            logger.info(f"  • Context Recall (上下文召回率):     {metrics['context_recall']:.3f}")
+            logger.info(f"  • Faithfulness (忠实度):            {metrics['faithfulness']:.3f}")
+            logger.info(f"  • RAGAS Score (综合得分):           {metrics['ragas_score']:.3f}")
 
-        print("\n" + "="*60 + "\n")
+        logger.info("\n" + "="*60 + "\n")
 
 
 def evaluate_from_state(state: Dict) -> Dict:

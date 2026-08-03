@@ -9,7 +9,7 @@ os.environ['NO_PROXY'] = 'localhost,127.0.0.1'
 os.environ.setdefault('QDRANT_MODE', os.getenv('QDRANT_MODE', 'server'))
 os.environ.setdefault('QDRANT_HOST', os.getenv('QDRANT_HOST', '127.0.0.1'))
 os.environ.setdefault('QDRANT_PORT', os.getenv('QDRANT_PORT', '6333'))
-if os.getenv('QDRANT_PATH') is None and os.name == 'nt':
+if os.getenv('QDRANT_PATH') is None and os.name == 'nt' and os.getenv('QDRANT_MODE', 'server') != 'cloud':
     os.environ.setdefault('QDRANT_PATH', r'D:\文档\ai提问相关\哲思灵智\qdrant_data')
 os.environ.setdefault('VECTOR_DB', os.getenv('VECTOR_DB', 'qdrant'))
 os.environ.setdefault('OMP_NUM_THREADS', '2')
@@ -21,6 +21,14 @@ import re
 
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).parent))
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+logger = get_logger(__name__)
+
 # === Qdrant 向量数据库（替代 ChromaDB，解决 HNSW 重启损坏问题）===
 def _check_vector_store():
     """检查向量数据库状态：优先有数据的 collection"""
@@ -31,14 +39,14 @@ def _check_vector_store():
         if nonempty:
             best = max(nonempty, key=lambda x: x["points"])
             retriever = get_qdrant_retriever(best["name"])
-            print(f"[Qdrant] Connected collections={len(stats)} "
-                  f"best={best['name']} docs={best['points']}")
+            logger.info(f"[Qdrant] Connected collections={len(stats)} "
+                        f"best={best['name']} docs={best['points']}")
             return True
         retriever = get_qdrant_retriever("proj_psychology")
-        print(f"[Qdrant] Connected, {retriever.count()} documents (psychology)")
+        logger.info(f"[Qdrant] Connected, {retriever.count()} documents (psychology)")
         return True
     except Exception as e:
-        print(f"[Qdrant] Connection failed: {e}")
+        logger.error(f"[Qdrant] Connection failed: {e}")
         return False
 
 _check_vector_store()
@@ -581,7 +589,7 @@ config_cols[0].metric("LLM后端", llm_backend)
 config_cols[1].metric("模型", llm_model or "N/A")
 config_cols[2].metric("检索模式", mode)
 _has_key = bool(
-    zhipu_key or anthropic_key or openai_key or siliconflow_key
+    cerebras_key or groq_key or zhipu_key or anthropic_key or openai_key or siliconflow_key
     or llm_backend in ("ollama", "lmstudio", "none")
 )
 config_cols[3].metric("API Key", "✅ 已配置" if _has_key else "❌ 未配置")

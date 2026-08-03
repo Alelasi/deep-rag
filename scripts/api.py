@@ -48,12 +48,14 @@ from src.security import (
     audit_log,
     get_rate_limiter,
     is_auth_enabled,
+    is_jwt_enabled,
     sanitize_question,
     validate_index_path,
     verify_api_key,
+    verify_jwt,
 )
 
-log = logging.getLogger("deeprag.api")
+logger = logging.getLogger(__name__)
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
 
 START_TIME = time.time()
@@ -65,9 +67,18 @@ REQUEST_COUNT = {
     "errors": 0,
 }
 
-# CORS：生产用逗号分隔白名单；默认本地开发
-_cors = os.getenv("CORS_ORIGINS", "http://localhost:8501,http://127.0.0.1:8501,*")
-CORS_ORIGINS = [o.strip() for o in _cors.split(",") if o.strip()]
+# CORS：禁止默认 '*'。从 CORS_ALLOW_ORIGINS（兼容旧 CORS_ORIGINS）读取逗号分隔白名单；
+# 缺省仅本地开发来源（不含 '*'）。
+_cors_raw = os.getenv("CORS_ALLOW_ORIGINS", os.getenv("CORS_ORIGINS", "")).strip()
+if _cors_raw:
+    CORS_ORIGINS = [o.strip() for o in _cors_raw.split(",") if o.strip()]
+else:
+    # 安全默认：仅本地来源，避免任意站点跨域访问
+    CORS_ORIGINS = ["http://localhost:8501", "http://127.0.0.1:8501"]
+
+# 仅在显式配置 '*' 时放开为通配符（并关闭凭据，否则 CORSMiddleware 会拒绝）
+_allow_origins = ["*"] if "*" in CORS_ORIGINS else CORS_ORIGINS
+_allow_credentials = "*" not in CORS_ORIGINS
 
 app = FastAPI(
     title="DeepRAG API",
@@ -79,11 +90,29 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS if "*" not in CORS_ORIGINS else ["*"],
-    allow_credentials=True,
+    allow_origins=_allow_origins,
+    allow_credentials=_allow_credentials,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+async def _security_startup_check() -> None:
+    """启动时明确提示安全默认值状态。"""
+    if not is_auth_enabled():
+        logger.warning(
+            "安全告警：未配置 API Key（DEEP_RAG_API_KEY），API 以开发模式运行，"
+            "不做任何鉴权。生产环境请设置该变量以启用强制鉴权。"
+        )
+    else:
+        logger.info("API 鉴权已启用（DEEP_RAG_API_KEY 已配置）。")
+    if is_jwt_enabled():
+        logger.info("可选 JWT 鉴权已启用。")
+    if "*" in CORS_ORIGINS:
+        logger.warning(
+            "安全告警：CORS 允许通配符 '*'，存在跨站请求风险；生产请改用显式来源白名单。"
+        )
 
 
 class QueryRequest(BaseModel):
@@ -145,15 +174,18 @@ async def require_auth(
     client = _client_ip(request)
 
     token = x_api_key or authorization
-    if is_auth_enabled() and not verify_api_key(token):
-        audit_log(
-            "auth_denied",
-            request_id=request_id,
-            client=client,
-            detail={"path": str(request.url.path)},
-            level="warning",
-        )
-        raise HTTPException(status_code=401, detail="Invalid or missing API key")
+    if is_auth_enabled():
+        # 优先 API Key；开启 JWT 时允许 Bearer JWT 通过
+        authed = verify_api_key(token) or (is_jwt_enabled() and verify_jwt(token))
+        if not authed:
+            audit_log(
+                "auth_denied",
+                request_id=request_id,
+                client=client,
+                detail={"path": str(request.url.path)},
+                level="warning",
+            )
+            raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
     allowed, remaining = get_rate_limiter().allow(client)
     request.state.rate_remaining = remaining
@@ -303,7 +335,7 @@ async def index_docs(req: IndexRequest, request: Request, request_id: str = Depe
         count = indexer.index_directory(str(docs_path))
     except Exception as e:
         REQUEST_COUNT["errors"] += 1
-        log.exception("Index failed")
+        logger.exception("Index failed")
         audit_log("index_error", request_id=request_id, client=client, detail={"err": str(e)}, level="error")
         raise HTTPException(status_code=500, detail="Index failed")
 
@@ -352,7 +384,7 @@ async def query_endpoint(req: QueryRequest, request: Request, request_id: str = 
         )
     except Exception as e:
         REQUEST_COUNT["errors"] += 1
-        log.exception("Query failed")
+        logger.exception("Query failed")
         audit_log(
             "query_error",
             request_id=request_id,
@@ -416,7 +448,7 @@ async def query_stream(req: QueryRequest, request: Request, request_id: str = De
             audit_log("query_stream_ok", request_id=request_id, client=client, detail={})
         except Exception as e:
             REQUEST_COUNT["errors"] += 1
-            log.exception("Stream query failed")
+            logger.exception("Stream query failed")
             yield f"data: {json.dumps({'type': 'error', 'message': 'Query failed', 'request_id': request_id})}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
@@ -426,7 +458,7 @@ async def query_stream(req: QueryRequest, request: Request, request_id: str = De
 async def unhandled(request: Request, exc: Exception):
     REQUEST_COUNT["errors"] += 1
     rid = getattr(request.state, "request_id", "")
-    log.exception("Unhandled error rid=%s", rid)
+    logger.exception("Unhandled error rid=%s", rid)
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error", "request_id": rid},

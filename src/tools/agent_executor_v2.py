@@ -17,6 +17,16 @@ from .modules import (
 )
 
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
+
 class AgentExecutorV2:
     """
     Agent执行器 v2.0（企业级增强版）
@@ -115,9 +125,9 @@ class AgentExecutorV2:
             planning_result = None
             if self.planner:
                 if verbose:
-                    print(f"\n{'='*60}")
-                    print("📋 步骤1: 任务规划")
-                    print(f"{'='*60}")
+                    logger.info(f"\n{'='*60}")
+                    logger.info("📋 步骤1: 任务规划")
+                    logger.info(f"{'='*60}")
 
                 self.stats["total_planning_calls"] += 1
                 planning_result = self.planner.plan(user_query, verbose=verbose)
@@ -130,19 +140,19 @@ class AgentExecutorV2:
             if self.memory and use_memory:
                 memory_context = self.memory.get_context(k=3)
                 if memory_context and verbose:
-                    print(f"\n{'='*60}")
-                    print("🧠 步骤2: 记忆上下文")
-                    print(f"{'='*60}")
-                    print(memory_context[:300] + "..." if len(memory_context) > 300 else memory_context)
+                    logger.info(f"\n{'='*60}")
+                    logger.info("🧠 步骤2: 记忆上下文")
+                    logger.info(f"{'='*60}")
+                    logger.info(memory_context[:300] + "..." if len(memory_context) > 300 else memory_context)
 
             # 🆕 步骤3: 加载Prompt（版本化）
             system_prompt = self._build_system_prompt_v2(memory_context)
 
             # 步骤4: ReAct循环
             if verbose:
-                print(f"\n{'='*60}")
-                print("🤖 步骤3: ReAct执行")
-                print(f"{'='*60}")
+                logger.info(f"\n{'='*60}")
+                logger.info("🤖 步骤3: ReAct执行")
+                logger.info(f"{'='*60}")
 
             result = self._run_react_loop(
                 user_query=user_query,
@@ -284,9 +294,9 @@ class AgentExecutorV2:
 
         for iteration in range(self.max_iterations):
             if verbose:
-                print(f"\n{'='*60}")
-                print(f"迭代 {iteration + 1}/{self.max_iterations}")
-                print(f"{'='*60}")
+                logger.info(f"\n{'='*60}")
+                logger.info(f"迭代 {iteration + 1}/{self.max_iterations}")
+                logger.info(f"{'='*60}")
 
             if self.logger:
                 self.logger.start_timer(f"iteration_{iteration}")
@@ -301,7 +311,7 @@ class AgentExecutorV2:
                 agent_output = self._parse_agent_output(response)
 
                 if verbose:
-                    print(f"思考: {agent_output.get('thought', 'N/A')}")
+                    logger.info(f"思考: {agent_output.get('thought', 'N/A')}")
 
                 # 记录历史
                 step_record = {
@@ -326,7 +336,7 @@ class AgentExecutorV2:
                             pass
 
                     if verbose:
-                        print(f"✅ 完成: {final_answer}")
+                        logger.info(f"✅ 完成: {final_answer}")
 
                     # 🆕 记录日志
                     if self.logger:
@@ -351,8 +361,8 @@ class AgentExecutorV2:
                 action_input = agent_output.get("action_input", {})
 
                 if verbose:
-                    print(f"行动: {action}")
-                    print(f"参数: {json.dumps(action_input, ensure_ascii=False)}")
+                    logger.info(f"行动: {action}")
+                    logger.info(f"参数: {json.dumps(action_input, ensure_ascii=False)}")
 
                 # 白名单检查
                 if action != "search_database":
@@ -370,7 +380,7 @@ class AgentExecutorV2:
                         observation = f"❌ 执行失败: {str(e)}"
 
                 if verbose:
-                    print(f"观察: {observation[:200]}...")
+                    logger.info(f"观察: {observation[:200]}...")
 
                 # 更新历史
                 history[-1]["observation"] = observation
@@ -398,7 +408,7 @@ class AgentExecutorV2:
 
             except Exception as e:
                 if verbose:
-                    print(f"❌ 迭代失败: {str(e)}")
+                    logger.error(f"❌ 迭代失败: {str(e)}")
 
                 if self.logger:
                     self.logger.log_error("iteration_error", str(e), {"iteration": iteration + 1})
@@ -515,7 +525,7 @@ def demo_agent_v2():
     from .modules import init_default_prompts
 
     # 初始化
-    print("初始化Agent v2.0...")
+    logger.info("初始化Agent v2.0...")
     register_builtin_tools()
 
     # 初始化默认Prompt
@@ -542,26 +552,26 @@ def demo_agent_v2():
     ]
 
     for i, query in enumerate(test_cases, 1):
-        print(f"\n{'#'*60}")
-        print(f"查询 {i}: {query}")
-        print(f"{'#'*60}")
+        logger.info(f"\n{'#'*60}")
+        logger.info(f"查询 {i}: {query}")
+        logger.info(f"{'#'*60}")
 
         result = agent.run(query, verbose=True)
 
-        print(f"\n最终结果:")
-        print(f"  成功: {result['success']}")
+        logger.info(f"\n最终结果:")
+        logger.info(f"  成功: {result['success']}")
         if result['success']:
-            print(f"  答案: {result['answer']}")
+            logger.info(f"  答案: {result['answer']}")
         else:
-            print(f"  错误: {result.get('error', 'N/A')}")
-        print(f"  迭代次数: {result['iterations']}")
+            logger.error(f"  错误: {result.get('error', 'N/A')}")
+        logger.info(f"  迭代次数: {result['iterations']}")
 
     # 统计
-    print(f"\n{'='*60}")
-    print("统计信息")
-    print(f"{'='*60}")
+    logger.info(f"\n{'='*60}")
+    logger.info("统计信息")
+    logger.info(f"{'='*60}")
     stats = agent.get_stats()
-    print(json.dumps(stats, ensure_ascii=False, indent=2))
+    logger.info(json.dumps(stats, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

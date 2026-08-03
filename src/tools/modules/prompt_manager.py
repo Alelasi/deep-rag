@@ -15,6 +15,16 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
+
 class PromptManager:
     """
     Prompt版本管理器
@@ -144,7 +154,7 @@ class PromptManager:
         if cache_key in self.cache:
             del self.cache[cache_key]
 
-        print(f"✅ 保存Prompt成功: {file_path}")
+        logger.info(f"✅ 保存Prompt成功: {file_path}")
 
     def list_versions(self, prompt_name: str) -> list:
         """
@@ -334,7 +344,7 @@ def init_default_prompts(manager: PromptManager):
         author="system"
     )
 
-    print("✅ 初始化默认Prompt完成")
+    logger.info("✅ 初始化默认Prompt完成")
 
 
 # ============================================================================
@@ -349,9 +359,9 @@ def demo_prompt_manager():
     if not manager.list_versions("system_prompt"):
         init_default_prompts(manager)
 
-    print("=" * 60)
-    print("加载Prompt")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("加载Prompt")
+    logger.info("=" * 60)
 
     # 加载最新版本
     prompt = manager.load_prompt(
@@ -360,17 +370,17 @@ def demo_prompt_manager():
         variables={"tools_desc": "[工具列表...]"}
     )
 
-    print(f"最新版本: {manager.get_latest_version('system_prompt')}")
-    print(f"Prompt内容（前200字）:\n{prompt[:200]}...")
+    logger.info(f"最新版本: {manager.get_latest_version('system_prompt')}")
+    logger.info(f"Prompt内容（前200字）:\n{prompt[:200]}...")
 
     # 列出所有版本
-    print("\n" + "=" * 60)
-    print("所有版本")
-    print("=" * 60)
+    logger.info("\n" + "=" * 60)
+    logger.info("所有版本")
+    logger.info("=" * 60)
     versions = manager.list_versions("system_prompt")
     for v in versions:
         info = manager.get_version_info("system_prompt", v)
-        print(f"- {v}: {info['description']}")
+        logger.info(f"- {v}: {info['description']}")
 
 
 if __name__ == "__main__":

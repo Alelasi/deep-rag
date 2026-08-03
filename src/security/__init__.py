@@ -5,7 +5,13 @@
 - 配置 API_KEY 后强制校验
 """
 
-from src.security.api_auth import verify_api_key, is_auth_enabled
+from src.security.api_auth import (
+    verify_api_key,
+    is_auth_enabled,
+    verify_jwt,
+    is_jwt_enabled,
+    get_configured_api_key,
+)
 from src.security.rate_limiter import RateLimiter, get_rate_limiter
 from src.security.input_guard import sanitize_question, validate_index_path
 from src.security.audit import audit_log
@@ -13,6 +19,9 @@ from src.security.audit import audit_log
 __all__ = [
     "verify_api_key",
     "is_auth_enabled",
+    "verify_jwt",
+    "is_jwt_enabled",
+    "get_configured_api_key",
     "RateLimiter",
     "get_rate_limiter",
     "sanitize_question",

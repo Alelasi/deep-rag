@@ -10,6 +10,14 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 from pathlib import Path
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+logger = get_logger(__name__)
+
 
 class StructuredLogger:
     """
@@ -299,27 +307,27 @@ class LogAnalyzer:
 def demo_structured_logger():
     """演示结构化日志"""
     # 创建日志记录器（输出到文件和控制台）
-    logger = StructuredLogger(
+    slog = StructuredLogger(
         log_file="logs/agent_execution.log",
         console_output=True
     )
 
-    print("=" * 60)
-    print("模拟Agent执行并记录日志")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("模拟Agent执行并记录日志")
+    logger.info("=" * 60)
 
     # 模拟Agent执行
-    logger.start_timer("total")
+    slog.start_timer("total")
 
     for i in range(1, 4):
-        logger.start_timer(f"step_{i}")
+        slog.start_timer(f"step_{i}")
 
         # 模拟执行
         time.sleep(0.1)
 
-        step_latency = logger.stop_timer(f"step_{i}")
+        step_latency = slog.stop_timer(f"step_{i}")
 
-        logger.log_agent_step(
+        slog.log_agent_step(
             iteration=i,
             thought=f"这是第{i}步的思考",
             action="search_database",
@@ -327,9 +335,9 @@ def demo_structured_logger():
             latency_ms=step_latency
         )
 
-    total_latency = logger.stop_timer("total")
+    total_latency = slog.stop_timer("total")
 
-    logger.log_agent_complete(
+    slog.log_agent_complete(
         success=True,
         iterations=3,
         total_latency_ms=total_latency,
@@ -337,12 +345,12 @@ def demo_structured_logger():
     )
 
     # 记录指标
-    logger.log_metric("llm_latency", 45.2, "ms")
-    logger.log_metric("sql_latency", 12.8, "ms")
+    slog.log_metric("llm_latency", 45.2, "ms")
+    slog.log_metric("sql_latency", 12.8, "ms")
 
-    print("\n" + "=" * 60)
-    print("日志已保存到: logs/agent_execution.log")
-    print("=" * 60)
+    logger.info("\n" + "=" * 60)
+    logger.info("日志已保存到: logs/agent_execution.log")
+    logger.info("=" * 60)
 
 
 if __name__ == "__main__":

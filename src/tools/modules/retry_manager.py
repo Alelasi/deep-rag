@@ -8,6 +8,16 @@ from typing import Callable, Any, Optional, List, Type
 from functools import wraps
 
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
+
 class RetryConfig:
     """重试配置"""
 
@@ -137,7 +147,7 @@ class RetryManager:
                 # 计算延迟时间
                 delay = self._calculate_delay(attempt)
 
-                print(f"⚠️ 重试 {attempt + 1}/{self.config.max_retries}: {error_type} - 等待 {delay:.1f}s")
+                logger.warning(f"⚠️ 重试 {attempt + 1}/{self.config.max_retries}: {error_type} - 等待 {delay:.1f}s")
 
                 # 等待后重试
                 time.sleep(delay)
@@ -260,9 +270,9 @@ def demo_retry_manager():
     manager = RetryManager(RetryConfig(max_retries=3, base_delay=1.0))
 
     # 测试1: 模拟临时失败（最终成功）
-    print("=" * 60)
-    print("测试1: 临时失败（第3次成功）")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.error("测试1: 临时失败（第3次成功）")
+    logger.info("=" * 60)
 
     attempt_count = [0]  # 使用列表避免闭包问题
 
@@ -274,14 +284,14 @@ def demo_retry_manager():
 
     try:
         result = manager.retry_with_backoff(flaky_function)
-        print(f"✅ 最终结果: {result}")
+        logger.info(f"✅ 最终结果: {result}")
     except Exception as e:
-        print(f"❌ 失败: {str(e)}")
+        logger.error(f"❌ 失败: {str(e)}")
 
     # 测试2: 不可重试错误
-    print("\n" + "=" * 60)
-    print("测试2: 不可重试错误（立即失败）")
-    print("=" * 60)
+    logger.info("\n" + "=" * 60)
+    logger.error("测试2: 不可重试错误（立即失败）")
+    logger.info("=" * 60)
 
     def non_retryable_function():
         raise Exception("Invalid SQL syntax")
@@ -289,22 +299,22 @@ def demo_retry_manager():
     try:
         result = manager.retry_with_backoff(non_retryable_function)
     except Exception as e:
-        print(f"❌ 立即失败（不重试）: {str(e)}")
+        logger.error(f"❌ 立即失败（不重试）: {str(e)}")
 
     # 统计
-    print("\n" + "=" * 60)
-    print("重试统计")
-    print("=" * 60)
+    logger.info("\n" + "=" * 60)
+    logger.info("重试统计")
+    logger.info("=" * 60)
     stats = manager.get_stats()
     for key, value in stats.items():
-        print(f"{key}: {value}")
+        logger.info(f"{key}: {value}")
 
 
 def demo_retry_decorator():
     """演示重试装饰器"""
-    print("\n" + "=" * 60)
-    print("测试装饰器版本")
-    print("=" * 60)
+    logger.info("\n" + "=" * 60)
+    logger.info("测试装饰器版本")
+    logger.info("=" * 60)
 
     @retry(max_retries=3, base_delay=0.5)
     def api_call():
@@ -315,9 +325,9 @@ def demo_retry_decorator():
 
     try:
         result = api_call()
-        print(f"✅ {result}")
+        logger.info(f"✅ {result}")
     except Exception as e:
-        print(f"❌ 最终失败: {str(e)}")
+        logger.error(f"❌ 最终失败: {str(e)}")
 
 
 if __name__ == "__main__":

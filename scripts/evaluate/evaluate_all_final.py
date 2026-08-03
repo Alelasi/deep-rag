@@ -130,14 +130,14 @@ def evaluate_all_models():
             all_results[model] = {'success_count': 0, 'total': len(test_cases), 'avg_score': 0}
 
     # 最终总结
-    print(f'\\n\\n{\"=\"*80}')
+    print('\n\n' + '=' * 80)
     print('最终总结')
-    print(f'{\"=\"*80}')
+    print('=' * 80)
 
     for model, result in all_results.items():
         print(f'\\n{model}:')
-        print(f'  成功率: {result[\"success_count\"]}/{result[\"total\"]}')
-        print(f'  得分: {result[\"avg_score\"]:.1f}/10')
+        print(f'  成功率: {result['success_count']}/{result['total']}')
+        print(f'  得分: {result['avg_score']:.1f}/10')
 
 if __name__ == '__main__':
     evaluate_all_models()

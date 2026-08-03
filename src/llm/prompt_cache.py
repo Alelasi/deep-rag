@@ -11,6 +11,12 @@
 2. 缓存友好的消息构建
 3. 缓存命中率统计
 
+v3.0改进（缓存与限流统一抽象）：
+- 统计计数器加锁（线程安全）
+- 接入统一 CacheBackend 抽象（backend 参数，默认 MemoryBackend，预留 RedisBackend 钩子）
+- 日志统一使用标准库 logging.getLogger(__name__)
+- 补充类型注解
+
 用法：
     from src.llm.prompt_cache import PromptCacheManager
 
@@ -28,10 +34,14 @@
 """
 import time
 import logging
+import threading
+import hashlib
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
 
-log = logging.getLogger("deeprag")
+from src.retrieval.cache import CacheBackend, MemoryBackend, RedisBackend
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -75,12 +85,17 @@ class PromptCacheManager:
     对于API后端（Claude/OpenAI）：
     - Claude: 使用cache_control断点标记
     - OpenAI: 自动缓存（>1024 tokens）
+
+    Args:
+        backend: 缓存后端（默认 MemoryBackend），预留 RedisBackend 钩子
     """
 
-    def __init__(self):
+    def __init__(self, backend: Optional[CacheBackend] = None):
+        self._backend: CacheBackend = backend if backend is not None else MemoryBackend()
         self._stats = CacheStats()
         self._last_system_prompt_hash: Optional[str] = None
         self._system_prompt_cache_count: int = 0
+        self._lock = threading.Lock()  # 保护统计与命中状态
 
     def build_messages(
         self,
@@ -104,7 +119,7 @@ class PromptCacheManager:
         Returns:
             消息列表
         """
-        messages = []
+        messages: List[Dict[str, str]] = []
 
         # 1. System Prompt（固定，放最前面，最有可能被缓存）
         messages.append({"role": "system", "content": system_prompt})
@@ -131,8 +146,9 @@ class PromptCacheManager:
         # 5. 用户查询（动态，放最后）
         messages.append({"role": "user", "content": user_content})
 
-        # 统计
-        self._stats.total_requests += 1
+        # 统计（线程安全）
+        with self._lock:
+            self._stats.total_requests += 1
         self._check_cache_hit(system_prompt)
 
         return messages
@@ -172,39 +188,42 @@ class PromptCacheManager:
             context=context,
         )
 
-    def _check_cache_hit(self, system_prompt: str):
-        """检查是否命中缓存（基于System Prompt哈希）"""
-        import hashlib
+    def _check_cache_hit(self, system_prompt: str) -> None:
+        """检查是否命中缓存（基于System Prompt哈希）；线程安全"""
         current_hash = hashlib.md5(system_prompt.encode()).hexdigest()
 
-        if self._last_system_prompt_hash == current_hash:
-            self._stats.cache_hits += 1
-            self._system_prompt_cache_count += 1
-            self._stats.last_hit_time = time.time()
-            log.debug(
-                f"[PromptCache] System Prompt缓存命中 "
-                f"(连续命中: {self._system_prompt_cache_count})"
-            )
-        else:
-            self._stats.cache_misses += 1
-            self._system_prompt_cache_count = 0
-            self._last_system_prompt_hash = current_hash
+        with self._lock:
+            if self._last_system_prompt_hash == current_hash:
+                self._stats.cache_hits += 1
+                self._system_prompt_cache_count += 1
+                self._stats.last_hit_time = time.time()
+                logger.debug(
+                    f"[PromptCache] System Prompt缓存命中 "
+                    f"(连续命中: {self._system_prompt_cache_count})"
+                )
+            else:
+                self._stats.cache_misses += 1
+                self._system_prompt_cache_count = 0
+                self._last_system_prompt_hash = current_hash
 
     def get_stats(self) -> Dict[str, Any]:
-        """获取缓存统计"""
-        return self._stats.to_dict()
+        """获取缓存统计（线程安全）"""
+        with self._lock:
+            return self._stats.to_dict()
 
     def estimate_tokens_saved(self) -> int:
         """估算节省的token数
 
         假设System Prompt平均500 tokens，每次命中节省重新计算的开销。
         """
-        return self._stats.cache_hits * 500
+        with self._lock:
+            return self._stats.cache_hits * 500
 
     def get_cache_config(self) -> Dict[str, Any]:
         """获取当前缓存配置建议"""
         import os
         return {
+            "backend": type(self._backend).__name__,
             "ollama_kv_cache_type": os.getenv("OLLAMA_KV_CACHE_TYPE", "未配置"),
             "ollama_flash_attention": os.getenv("OLLAMA_FLASH_ATTENTION", "未配置"),
             "ollama_keep_alive": os.getenv("OLLAMA_KEEP_ALIVE", "未配置"),
@@ -284,11 +303,15 @@ JSON: {"verified": true/false, "confidence": 0-100, "evidence": [...]}"""
 # ============================================================
 
 _manager_instance: Optional[PromptCacheManager] = None
+_manager_lock = threading.Lock()  # 保护单例创建
 
 
 def get_prompt_cache_manager() -> PromptCacheManager:
-    """获取全局Prompt缓存管理器"""
+    """获取全局Prompt缓存管理器（线程安全单例）"""
     global _manager_instance
-    if _manager_instance is None:
-        _manager_instance = PromptCacheManager()
-    return _manager_instance
+    if _manager_instance is not None:
+        return _manager_instance
+    with _manager_lock:
+        if _manager_instance is None:
+            _manager_instance = PromptCacheManager()
+        return _manager_instance

@@ -1,0 +1,36 @@
+# DeepRAG 预提交钩子：统一格式化与静态检查
+# 安装：pip install pre-commit && pre-commit install
+# 手动全量运行：pre-commit run --all-files
+# DeepRAG 预提交钩子：统一格式化与静态检查
+# 安装：pip install pre-commit && pre-commit install
+# 手动全量运行：pre-commit run --all-files
+default_language_version:
+  python: python3.11
+# 跳过大型目录与二进制文件（与 pyproject 中 ruff/mypy exclude 对齐）
+exclude: '(\.venv/|node_modules/|/data/|\.db$|\.lance$)'
+repos:
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 24.10.0
+    hooks:
+      - id: black
+        args: ["--line-length=88"]
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile=black", "--line-length=88"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        args: ["--ignore-missing-imports", "--exclude=tests"]
+        additional_dependencies: []
+        files: ^(src|scripts)/

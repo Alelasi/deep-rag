@@ -16,7 +16,13 @@ COPY api.py app.py ./
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -e ".[llm,api,ui,qdrant]" && \
-    pip install --no-cache-dir langchain-openai langchain-ollama psutil
+    pip install --no-cache-dir langchain-openai langchain-ollama psutil && \
+    pip install --no-cache-dir sentence-transformers tiktoken
+
+# 预下载 embedding 模型（使用 hf-mirror 加速国内构建）
+ENV HF_ENDPOINT=https://hf-mirror.com
+RUN python -c "from sentence_transformers import SentenceTransformer; \
+    SentenceTransformer('BAAI/bge-base-zh-v1.5')" || echo "Model download skipped"
 
 # ---- Stage 2: Runtime ----
 FROM python:3.11-slim
@@ -34,12 +40,21 @@ WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
+# Copy pre-downloaded model cache
+COPY --from=builder --chown=appuser:appuser /root/.cache/huggingface /home/appuser/.cache/huggingface
+
 # Copy only application code (not tests, docs, benchmarks)
 COPY --chown=appuser:appuser pyproject.toml ./
 COPY --chown=appuser:appuser src/ ./src/
 COPY --chown=appuser:appuser api.py app.py ./
 COPY --chown=appuser:appuser start_mcp_server.py ./
 COPY --chown=appuser:appuser scripts/ ./scripts/
+COPY --chown=appuser:appuser .streamlit/ ./.streamlit/
+
+# Environment: offline mode for HuggingFace (model already cached)
+ENV HF_HOME=/home/appuser/.cache/huggingface
+ENV HF_HUB_OFFLINE=1
+ENV TRANSFORMERS_OFFLINE=1
 
 # Switch to non-root user
 USER appuser
