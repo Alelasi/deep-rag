@@ -14,6 +14,16 @@ from src.state import Document
 from abc import ABC, abstractmethod
 
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
+
 class RetrievalTool(ABC):
     """检索工具基类"""
 
@@ -287,13 +297,11 @@ class WebSearchTool(RetrievalTool):
                             metadata={"title": r.get("title", ""), "engine": "duckduckgo"},
                         ))
             except ImportError:
-                import logging
-                logging.getLogger("deeprag").warning(
+                logger.warning(
                     "duckduckgo-search not installed. Run: pip install duckduckgo-search"
                 )
             except Exception as e:
-                import logging
-                logging.getLogger("deeprag").warning(f"WebSearch failed: {e}")
+                logger.warning("WebSearch failed: %s", e)
 
         return results
 
@@ -391,10 +399,10 @@ class AgenticRAGToolbox:
     def __init__(self):
         self.tools: Dict[str, RetrievalTool] = {}
 
-    def register_tool(self, name: str, tool: RetrievalTool):
+    def register_tool(self, name: str, tool: RetrievalTool) -> None:
         """注册工具"""
         self.tools[name] = tool
-        print(f"Registered tool: {name}")
+        logger.info(f"Registered tool: {name}")
 
     def get_tool(self, name: str) -> Optional[RetrievalTool]:
         """获取工具"""
@@ -420,7 +428,7 @@ class AgenticRAGToolbox:
 
 
 # 示例：如何使用Agentic RAG工具箱
-def create_toolbox(retriever) -> AgenticRAGToolbox:
+def create_toolbox(retriever) -> "AgenticRAGToolbox":
     """创建工具箱并注册全部4个工具
 
     全部工具零成本实现：

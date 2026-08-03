@@ -54,3 +54,8 @@ rag_evaluation_template.xlsx
 !CONTRIBUTING.md
 !SECURITY.md
 !CHANGELOG.md
+
+# 本地启动产物（Qdrant 二进制 / 运行日志 / 冒烟测试，勿入库）
+/bin/
+/logs/
+/qdrant_smoketest/

@@ -14,6 +14,16 @@ from dataclasses import dataclass
 from enum import Enum
 
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
+
 class CircuitState(Enum):
     """熔断器状态"""
     CLOSED = "closed"      # 正常，允许请求
@@ -78,7 +88,7 @@ class CircuitBreaker:
             # 半开状态下成功 → 恢复到关闭状态
             self.state = CircuitState.CLOSED
             self.consecutive_failures = 0
-            print(f"  ✅ 熔断器恢复：HALF_OPEN → CLOSED")
+            logger.info(f"  ✅ 熔断器恢复：HALF_OPEN → CLOSED")
 
         # 关闭状态下成功 → 重置计数器
         self.consecutive_failures = 0
@@ -93,14 +103,14 @@ class CircuitBreaker:
             # 半开状态下失败 → 重新熔断
             self.state = CircuitState.OPEN
             self.open_until = now + self.open_duration_sec
-            print(f"  ⚠️ 熔断器重新打开：HALF_OPEN → OPEN（冷却 {self.open_duration_sec}s）")
+            logger.warning(f"  ⚠️ 熔断器重新打开：HALF_OPEN → OPEN（冷却 {self.open_duration_sec}s）")
 
         elif self.state == CircuitState.CLOSED:
             # 关闭状态下连续失败达到阈值 → 熔断
             if self.consecutive_failures >= self.failure_threshold:
                 self.state = CircuitState.OPEN
                 self.open_until = now + self.open_duration_sec
-                print(f"  🔥 熔断器打开：连续失败 {self.consecutive_failures} 次 → OPEN（冷却 {self.open_duration_sec}s）")
+                logger.error(f"  🔥 熔断器打开：连续失败 {self.consecutive_failures} 次 → OPEN（冷却 {self.open_duration_sec}s）")
 
     def get_status(self) -> Dict:
         """获取熔断器状态"""
@@ -124,9 +134,9 @@ class ModelRouter:
             c.id: CircuitBreaker() for c in self.candidates
         }
 
-        print(f"✅ 模型路由器初始化完成：{len(self.candidates)} 个候选")
+        logger.info(f"✅ 模型路由器初始化完成：{len(self.candidates)} 个候选")
         for i, c in enumerate(self.candidates, 1):
-            print(f"  {i}. {c.id} ({c.provider}) - 优先级 {c.priority}")
+            logger.info(f"  {i}. {c.id} ({c.provider}) - 优先级 {c.priority}")
 
     def call_with_fallback(
         self,
@@ -157,26 +167,26 @@ class ModelRouter:
             # 检查熔断器是否允许调用
             if not breaker.allow_call():
                 status = breaker.get_status()
-                print(f"  ⏭️ 跳过 {candidate.id}：熔断中（{status['time_until_retry']}s 后重试）")
+                logger.info(f"  ⏭️ 跳过 {candidate.id}：熔断中（{status['time_until_retry']}s 后重试）")
                 attempted.append((candidate.id, "circuit_open"))
                 continue
 
             try:
-                print(f"\n🔄 尝试候选 {i+1}/{min(max_retries, len(self.candidates))}: {candidate.id}")
+                logger.info(f"\n🔄 尝试候选 {i+1}/{min(max_retries, len(self.candidates))}: {candidate.id}")
 
                 # 调用模型
                 result = caller(candidate)
 
                 # 成功：记录到熔断器
                 breaker.record_success()
-                print(f"  ✅ 成功：{candidate.id}")
+                logger.info(f"  ✅ 成功：{candidate.id}")
 
                 return result
 
             except Exception as e:
                 # 失败：记录到熔断器
                 breaker.record_failure()
-                print(f"  ❌ 失败：{candidate.id} - {str(e)[:50]}")
+                logger.error(f"  ❌ 失败：{candidate.id} - {str(e)[:50]}")
                 attempted.append((candidate.id, str(e)[:50]))
 
         # 所有候选都失败
@@ -236,36 +246,36 @@ if __name__ == "__main__":
         return f"Response from {candidate.id}"
 
     # 测试故障转移
-    print("\n" + "="*60)
-    print("测试 1：第一次调用（qwen3-max 失败 → 切换到 glm-4.7）")
-    print("="*60)
+    logger.info("\n" + "="*60)
+    logger.error("测试 1：第一次调用（qwen3-max 失败 → 切换到 glm-4.7）")
+    logger.info("="*60)
     try:
         result = router.call_with_fallback(mock_call_llm)
-        print(f"\n最终结果：{result}")
+        logger.info(f"\n最终结果：{result}")
     except Exception as e:
-        print(f"\n调用失败：{e}")
+        logger.error(f"\n调用失败：{e}")
 
-    print("\n" + "="*60)
-    print("测试 2：第二次调用（qwen3-max 失败第 2 次 → 熔断 → 直接走 glm-4.7）")
-    print("="*60)
+    logger.info("\n" + "="*60)
+    logger.error("测试 2：第二次调用（qwen3-max 失败第 2 次 → 熔断 → 直接走 glm-4.7）")
+    logger.info("="*60)
     try:
         result = router.call_with_fallback(mock_call_llm)
-        print(f"\n最终结果：{result}")
+        logger.info(f"\n最终结果：{result}")
     except Exception as e:
-        print(f"\n调用失败：{e}")
+        logger.error(f"\n调用失败：{e}")
 
-    print("\n" + "="*60)
-    print("测试 3：第三次调用（qwen3-max 已熔断 → 跳过 → 直接走 glm-4.7）")
-    print("="*60)
+    logger.info("\n" + "="*60)
+    logger.info("测试 3：第三次调用（qwen3-max 已熔断 → 跳过 → 直接走 glm-4.7）")
+    logger.info("="*60)
     try:
         result = router.call_with_fallback(mock_call_llm)
-        print(f"\n最终结果：{result}")
+        logger.info(f"\n最终结果：{result}")
     except Exception as e:
-        print(f"\n调用失败：{e}")
+        logger.error(f"\n调用失败：{e}")
 
     # 查看熔断器状态
-    print("\n" + "="*60)
-    print("熔断器状态")
-    print("="*60)
+    logger.info("\n" + "="*60)
+    logger.info("熔断器状态")
+    logger.info("="*60)
     for model_id, status in router.get_status().items():
-        print(f"{model_id}: {status}")
+        logger.info(f"{model_id}: {status}")

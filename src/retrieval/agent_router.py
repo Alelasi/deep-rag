@@ -14,6 +14,16 @@ from src.retrieval.agentic_tools import AgenticRAGToolbox
 from src.state import Document
 
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
+
 class BaseRouter:
     """路由器基类"""
 
@@ -57,7 +67,7 @@ class RuleBasedRouter(BaseRouter):
         "2026", "2025年下半年", "this week", "latest",
     ]
 
-    def __init__(self, default_tool: str = "vector_search"):
+    def __init__(self, default_tool: str = "vector_search") -> None:
         self.default_tool = default_tool
 
     def route(self, question: str) -> str:
@@ -97,7 +107,7 @@ class LLMRouter(BaseRouter):
 请只输出工具名（如：vector_search），不要输出其他内容。"""
 
     def __init__(self, llm, toolbox: AgenticRAGToolbox,
-                 fallback_tool: str = "vector_search"):
+                 fallback_tool: str = "vector_search") -> None:
         """
         Args:
             llm: LLM实例（需有invoke方法或可调用）
@@ -131,7 +141,7 @@ class LLMRouter(BaseRouter):
             else:
                 text = self.llm(prompt)
         except Exception as e:
-            print(f"[LLMRouter] LLM call failed: {e}, using fallback")
+            logger.error(f"[LLMRouter] LLM call failed: {e}, using fallback")
             return self.fallback_tool
 
         # 解析输出（取第一个匹配的工具名）
@@ -142,7 +152,7 @@ class LLMRouter(BaseRouter):
                 return tool_name
 
         # 找不到匹配工具时fallback
-        print(f"[LLMRouter] No tool matched in '{text}', using fallback")
+        logger.info(f"[LLMRouter] No tool matched in '{text}', using fallback")
         return self.fallback_tool
 
 
@@ -156,7 +166,7 @@ class AgenticRetriever:
         docs = retriever.retrieve("INTJ的主导功能")  # 自动路由
     """
 
-    def __init__(self, toolbox: AgenticRAGToolbox, router: BaseRouter):
+    def __init__(self, toolbox: AgenticRAGToolbox, router: BaseRouter) -> None:
         self.toolbox = toolbox
         self.router = router
 

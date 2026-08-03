@@ -13,6 +13,7 @@
 用法：
     python tests/comprehensive_test.py
 """
+import argparse
 import json
 import time
 import sys
@@ -282,10 +283,15 @@ def evaluate_answer(question_data: dict, answer: str, response_time: float) -> E
 # 4. 测试执行器
 # ============================================================
 
-def run_test():
-    """执行100道题的全面测评"""
+def run_test(use_real: bool = False):
+    """执行100道题的全面测评
+
+    Args:
+        use_real: True=调用真实RAG管道(real_test), False=模拟评分(simulate_test)
+    """
+    mode_label = "真实RAG管道" if use_real else "模拟"
     print("=" * 60)
-    print("DeepRAG 综合测评 — 100道题×8维度")
+    print(f"DeepRAG 综合测评 — 100道题×8维度 [{mode_label}模式]")
     print("=" * 60)
 
     results = []
@@ -294,9 +300,11 @@ def run_test():
     for i, q in enumerate(TEST_QUESTIONS):
         print(f"\n[{i+1}/100] 测试: {q['question'][:30]}...")
 
-        # 这里模拟测试（实际应调用系统）
-        # 由于无法直接调用系统API，我们基于问题特征生成模拟评分
-        score = simulate_test(q)
+        # --real 使用真实RAG管道，否则使用模拟评分
+        if use_real:
+            score = real_test(q)
+        else:
+            score = simulate_test(q)
         results.append(score)
 
         # 打印进度
@@ -357,6 +365,47 @@ def simulate_test(question_data: dict) -> EvalScore:
     score.calc_total()
 
     return score
+
+
+def real_test(question_data: dict) -> 'EvalScore':
+    """真实 RAG 管道测试 — 调用实际 graph.query
+    
+    与 simulate_test 不同，此函数调用真实的 RAG 管道，
+    测试端到端的检索-生成-评分流程。
+    
+    需要 Qdrant 和 Ollama 服务运行中。
+    """
+    from src.graph import query as rag_query
+    
+    question = question_data["question"]
+    start = time.time()
+    
+    try:
+        result = rag_query(question)
+        elapsed = time.time() - start
+        
+        # 提取答案
+        if isinstance(result, dict):
+            answer = result.get("answer", str(result))
+            sources = result.get("sources", [])
+        else:
+            answer = str(result)
+            sources = []
+        
+        return evaluate_answer(question_data, answer, elapsed)
+        
+    except Exception as e:
+        elapsed = time.time() - start
+        score = EvalScore(
+            question_id=question_data["id"],
+            category=question_data["category"],
+            difficulty=question_data["difficulty"],
+            question=question,
+            response_time=elapsed,
+            error=f"调用失败: {e}"
+        )
+        score.calc_total()
+        return score
 
 
 def generate_report(results: List[EvalScore], total_time: float) -> str:
@@ -499,4 +548,34 @@ def generate_report(results: List[EvalScore], total_time: float) -> str:
 # ============================================================
 
 if __name__ == "__main__":
-    run_test()
+    parser = argparse.ArgumentParser(
+        description="DeepRAG 综合测评脚本 — 100道题×多维度评分",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例:
+  python scripts/comprehensive_test.py                 # 模拟测试（默认）
+  python scripts/comprehensive_test.py --real          # 真实RAG管道测试
+  python scripts/comprehensive_test.py --simulate      # 模拟测试（显式指定）
+        """,
+    )
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument(
+        "--real",
+        action="store_true",
+        default=False,
+        help="使用真实RAG管道测试（需要Qdrant和Ollama运行）",
+    )
+    mode_group.add_argument(
+        "--simulate",
+        action="store_true",
+        default=False,
+        help="使用模拟测试（默认模式，无需外部服务）",
+    )
+    args = parser.parse_args()
+
+    # --real 优先；默认为模拟模式
+    use_real = args.real
+    mode_label = "真实RAG管道" if use_real else "模拟"
+    print(f"测试模式: {mode_label}")
+
+    run_test(use_real=use_real)

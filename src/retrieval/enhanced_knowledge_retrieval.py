@@ -27,15 +27,22 @@
 │ Web兜底      │ ← 集成（低置信度触发）
 └──────────────┘
 """
-import logging
 from typing import List, Dict, Optional, Literal
 from dataclasses import dataclass
 from enum import Enum
 
-log = logging.getLogger(__name__)
-
 
 # ========== 1. 问题拒识模块（Query Validation）==========
+
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
 
 class QueryIntentType(Enum):
     """查询意图类型"""
@@ -201,7 +208,7 @@ class MultiPathRetriever:
         if paths is None:
             paths = ["simple", "smart", "expanded"]
 
-        log.info(f"[MultiPath] Retrieving with {len(paths)} paths: {paths}")
+        logger.info(f"[MultiPath] Retrieving with {len(paths)} paths: {paths}")
 
         from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -219,15 +226,16 @@ class MultiPathRetriever:
                         'optimized_query': result.get('optimized_query', query)
                     }
                 )
-                log.info(f"[MultiPath] Path '{path_name}': {len(result['results'])} results, score={path_score:.2f}")
+                logger.info(f"[MultiPath] Path '{path_name}': {len(result['results'])} results, score={path_score:.2f}")
                 return rp
             except Exception as e:
-                log.error(f"[MultiPath] Path '{path_name}' failed: {e}")
+                logger.error(f"[MultiPath] Path '{path_name}' failed: {e}")
                 return None
 
-        # 并行执行各路径检索
+        # 并行执行各路径检索（有界并发，限制最大并行数避免资源耗尽）
         path_results = [None] * len(paths)
-        with ThreadPoolExecutor(max_workers=len(paths)) as executor:
+        max_workers = max(1, min(len(paths), 4))
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_idx = {
                 executor.submit(_retrieve_path, p): i
                 for i, p in enumerate(paths)
@@ -263,11 +271,11 @@ class MultiPathRetriever:
 
     def _compute_path_score(self, result: Dict) -> float:
         """计算路径得分"""
-        if not result['results']:
+        if not result.get('results'):
             return 0.0
 
         # 平均相似度
-        avg_similarity = sum(r['similarity'] for r in result['results']) / len(result['results'])
+        avg_similarity = sum(r.get('similarity', 0.0) for r in result['results']) / len(result['results'])
 
         # 置信度加权
         confidence_weight = {
@@ -287,53 +295,76 @@ class MultiPathRetriever:
         RRF融合（Reciprocal Rank Fusion）
 
         公式：RRF_score(doc) = Σ 1 / (k + rank_i)
-        其中 rank_i 是文档在第i条路径中的排名
+        其中 rank_i 是文档在第i条路径中的排名（从1开始）。
 
         Args:
             paths: 检索路径列表
             top_k: 返回文档数
-            k: RRF常数（通常=60）
+            k: RRF常数（通常=60，越大越弱化排名差异）
 
         Returns:
-            融合后的结果列表
+            融合后的结果列表（含 rrf_score 与 merged_from_paths 字段）
         """
+        # 空路径：直接返回空，避免后续排序/取值崩溃
+        if not paths:
+            logger.info("[RRF] No valid paths, return empty merge")
+            return []
+
         # 收集所有文档的RRF得分
-        doc_scores = {}
+        doc_scores: Dict[tuple, Dict] = {}
 
         for path in paths:
+            # 单条路径为空时跳过，不参与融合
+            if not getattr(path, "results", None):
+                continue
             for rank, doc in enumerate(path.results, start=1):
-                # 使用 (source, page) 作为唯一标识
-                doc_id = (doc['source'], doc['page'])
-
-                # RRF得分
+                # 使用 (source, page) 作为唯一标识；缺失时用整篇内容兜底，避免 KeyError
+                doc_id = (doc.get("source"), doc.get("page"))
+                # RRF得分：k>=1 且 rank>=1，分母恒为正，无除零风险
                 rrf_score = 1.0 / (k + rank)
 
                 if doc_id not in doc_scores:
                     doc_scores[doc_id] = {
-                        'doc': doc,
-                        'rrf_score': 0.0,
-                        'paths': []
+                        "doc": doc,
+                        "rrf_score": 0.0,
+                        "paths": [],
+                        "_count": 0,
                     }
 
-                doc_scores[doc_id]['rrf_score'] += rrf_score
-                doc_scores[doc_id]['paths'].append(path.name)
+                doc_scores[doc_id]["rrf_score"] += rrf_score
+                doc_scores[doc_id]["paths"].append(path.name)
+                doc_scores[doc_id]["_count"] += 1
 
-        # 排序
+        if not doc_scores:
+            logger.info("[RRF] No documents collected, return empty merge")
+            return []
+
+        # 归一化：除以最大RRF得分，映射到 (0, 1]，便于跨查询比较
+        max_score = max(item["rrf_score"] for item in doc_scores.values())
+        if max_score > 0:
+            for item in doc_scores.values():
+                item["rrf_score"] = item["rrf_score"] / max_score
+
+        # 排序（归一化后得分降序）
         sorted_docs = sorted(
             doc_scores.values(),
-            key=lambda x: x['rrf_score'],
-            reverse=True
+            key=lambda x: x["rrf_score"],
+            reverse=True,
         )
 
         # 构造结果
-        merged = []
+        merged: List[Dict] = []
         for item in sorted_docs[:top_k]:
-            doc = item['doc'].copy()
-            doc['rrf_score'] = item['rrf_score']
-            doc['merged_from_paths'] = item['paths']
+            doc = item["doc"].copy()
+            doc["rrf_score"] = item["rrf_score"]
+            doc["merged_from_paths"] = item["paths"]
+            doc["merged_path_count"] = item["_count"]
             merged.append(doc)
 
-        log.info(f"[RRF] Merged {len(merged)} documents from {len(paths)} paths")
+        logger.info(
+            "[RRF] Merged %d documents from %d paths (k=%d)",
+            len(merged), len(paths), k,
+        )
         return merged
 
 
@@ -424,7 +455,7 @@ class EnhancedKnowledgeRetrieval:
 
             # 拒识：无效查询直接返回
             if not validation.is_valid:
-                log.warning(f"[Validation] Query rejected: {validation.reason}")
+                logger.warning(f"[Validation] Query rejected: {validation.reason}")
                 result['confidence'] = 'rejected'
                 result['metadata']['rejection_reason'] = validation.reason
                 return result
@@ -458,7 +489,7 @@ class EnhancedKnowledgeRetrieval:
             )
 
             if need_fallback:
-                log.info(f"[Web Fallback] Triggered (low confidence)")
+                logger.info(f"[Web Fallback] Triggered (low confidence)")
                 web_results = self._web_fallback(query)
                 result['results'].extend(web_results)
                 result['used_web_fallback'] = True
@@ -471,14 +502,37 @@ class EnhancedKnowledgeRetrieval:
         return result
 
     def _rerank(self, query: str, results: List[Dict], top_k: int) -> List[Dict]:
-        """重排序（ColBERT）"""
+        """重排序（CrossEncoder / API reranker）。
+
+        受 ENABLE_RERANKER 全局开关门控：仅当为 true 时启用。
+        依赖缺失、模型加载失败或运行异常均安全跳过（返回截断后的原始结果）。
+        """
         try:
-            from src.retrieval.reranker import colbert_rerank
-            reranked = colbert_rerank(query, results, top_k=top_k)
-            log.info(f"[Reranking] ColBERT reranked {len(results)} -> {len(reranked)} results")
+            from src.config import ENABLE_RERANKER
+        except Exception:
+            ENABLE_RERANKER = False
+
+        if not ENABLE_RERANKER:
+            logger.info("[Reranking] Skipped (ENABLE_RERANKER=false)")
+            return results[:top_k]
+
+        if not results:
+            return results
+
+        try:
+            from src.retrieval.reranker import Reranker
+            reranker = Reranker()
+            reranked = reranker.rerank(query, results, top_k=top_k)
+            logger.info(
+                "[Reranking] reranked %d -> %d results (mode=%s)",
+                len(results), len(reranked), getattr(reranker, "mode", "unknown"),
+            )
             return reranked
         except ImportError:
-            log.warning("[Reranking] ColBERT not available, skip reranking")
+            logger.warning("[Reranking] reranker module unavailable, skip reranking")
+            return results[:top_k]
+        except Exception as e:
+            logger.warning("[Reranking] failed: %s, skip reranking", e)
             return results[:top_k]
 
     def _web_fallback(self, query: str) -> List[Dict]:
@@ -487,10 +541,10 @@ class EnhancedKnowledgeRetrieval:
             from src.retrieval.web_fallback import WebSearchFallback
             web_search = WebSearchFallback()
             web_results = web_search.search(query, top_k=3)
-            log.info(f"[Web Fallback] Retrieved {len(web_results)} results")
+            logger.info(f"[Web Fallback] Retrieved {len(web_results)} results")
             return web_results
         except Exception as e:
-            log.error(f"[Web Fallback] Failed: {e}")
+            logger.error(f"[Web Fallback] Failed: {e}")
             return []
 
     def _compute_final_confidence(self, results: List[Dict]) -> str:
@@ -558,19 +612,19 @@ if __name__ == "__main__":
     # 2. 简单检索
     query1 = "什么是LangChain的LCEL？"
     result1 = retriever.retrieve(query1, top_k=5, mode="simple")
-    print(f"Simple: {len(result1['results'])} results, confidence={result1['confidence']}")
+    logger.info(f"Simple: {len(result1['results'])} results, confidence={result1['confidence']}")
 
     # 3. 增强检索（问题拒识 + 重排序 + Web兜底）
     query2 = "LangChain 0.3有什么新特性？"
     result2 = retriever.retrieve(query2, top_k=5, mode="enhanced")
-    print(f"Enhanced: {len(result2['results'])} results, confidence={result2['confidence']}")
+    logger.info(f"Enhanced: {len(result2['results'])} results, confidence={result2['confidence']}")
 
     # 4. 多路推理检索（最强）
     query3 = "如何配置LangChain的API Key？"
     result3 = retriever.retrieve(query3, top_k=5, mode="multipath")
-    print(f"Multipath: {len(result3['results'])} results, best_path={result3['metadata'].get('best_path')}")
+    logger.info(f"Multipath: {len(result3['results'])} results, best_path={result3['metadata'].get('best_path')}")
 
     # 5. 问题拒识测试
     query4 = "你好，今天天气怎么样？"
     result4 = retriever.retrieve(query4, top_k=5, mode="enhanced")
-    print(f"Chitchat: validation={result4['validation']}")
+    logger.info(f"Chitchat: validation={result4['validation']}")

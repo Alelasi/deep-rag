@@ -8,6 +8,16 @@ import json
 import httpx
 
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
+
 class TaskPlanner:
     """
     任务规划器
@@ -62,19 +72,19 @@ class TaskPlanner:
             plan_result = self._parse_plan_output(response)
 
             if verbose:
-                print(f"[TaskPlanner] 查询类型: {'复杂任务' if plan_result['is_complex'] else '简单任务'}")
+                logger.info(f"[TaskPlanner] 查询类型: {'复杂任务' if plan_result['is_complex'] else '简单任务'}")
                 if plan_result['is_complex']:
-                    print(f"[TaskPlanner] 拆解为 {len(plan_result['subtasks'])} 个子任务:")
+                    logger.info(f"[TaskPlanner] 拆解为 {len(plan_result['subtasks'])} 个子任务:")
                     for subtask in plan_result['subtasks']:
-                        print(f"  步骤{subtask['step']}: {subtask['task']}")
+                        logger.info(f"  步骤{subtask['step']}: {subtask['task']}")
 
             return plan_result
 
         except Exception as e:
             # 规划失败，降级为简单任务
             if verbose:
-                print(f"[TaskPlanner] 规划失败: {str(e)}")
-                print(f"[TaskPlanner] 降级为简单任务")
+                logger.error(f"[TaskPlanner] 规划失败: {str(e)}")
+                logger.info(f"[TaskPlanner] 降级为简单任务")
 
             return {
                 "is_complex": False,
@@ -232,14 +242,14 @@ def demo_task_planner():
     ]
 
     for query in test_cases:
-        print(f"\n{'='*60}")
-        print(f"查询: {query}")
-        print(f"{'='*60}")
+        logger.info(f"\n{'='*60}")
+        logger.info(f"查询: {query}")
+        logger.info(f"{'='*60}")
 
         result = planner.plan(query, verbose=True)
 
-        print(f"\n结果:")
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        logger.info(f"\n结果:")
+        logger.info(json.dumps(result, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

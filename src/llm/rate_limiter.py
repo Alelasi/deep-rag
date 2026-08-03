@@ -3,27 +3,34 @@
 v2.8优化：
 1. 全局串行锁：保证同一时刻只有一个LLM请求在执行（彻底消除429）
 2. 指数退避重试：429时自动等待重试，不崩溃
-3. LLM实例缓存：避免每次调用都创建新实例
+3. LLM实例缓存：避免每次调用都创建新实例（线程安全）
 4. 请求队列：多线程调用LLM时自动排队，一次只执行一个
 
 设计原则：
 - 用户要求"要么合并，要么排队" → 这里用排队（全局锁）
 - doc_grader 用合并（5篇文档合为1次LLM调用）
 - 其他LLM调用（generator等）用排队（全局锁保证串行）
+
+v3.0改进（缓存与限流统一抽象）：
+- 所有共享可变状态（串行锁持有者/计数、实例缓存字典）均用 threading.Lock 保护
+- 日志统一使用标准库 logging.getLogger(__name__)
+- 补充类型注解
 """
 import time
 import logging
 import threading
 from functools import wraps
 from contextlib import contextmanager
+from typing import Any, Callable, Optional
 
-log = logging.getLogger("deeprag.llm.rate")
+logger = logging.getLogger(__name__)
 
 # === 全局串行锁（v2.8：一次只允许一个LLM请求）===
 
-_llm_lock = threading.Lock()
-_llm_lock_holder = None  # 当前持有锁的线程标识（调试用）
-_lock_acquire_count = 0  # 统计排队次数
+_llm_lock = threading.Lock()          # 全局串行锁（LLM请求排队）
+_stats_lock = threading.Lock()        # 保护锁统计信息（_llm_lock_holder / _lock_acquire_count）
+_llm_lock_holder: Optional[int] = None  # 当前持有锁的线程标识（调试用）
+_lock_acquire_count: int = 0            # 统计排队次数
 
 
 @contextmanager
@@ -45,31 +52,38 @@ def llm_serial():
         yield
         return
 
-    log.debug(f"[LLM Lock] 线程 {thread_id} 等待锁...")
+    logger.debug(f"[LLM Lock] 线程 {thread_id} 等待锁...")
     _llm_lock.acquire()
-    _lock_acquire_count += 1
-    _llm_lock_holder = thread_id
-    log.debug(f"[LLM Lock] 线程 {thread_id} 获得锁 (排队序号: {_lock_acquire_count})")
+    with _stats_lock:
+        _lock_acquire_count += 1
+        _llm_lock_holder = thread_id
+    logger.debug(f"[LLM Lock] 线程 {thread_id} 获得锁 (排队序号: {_lock_acquire_count})")
     try:
         yield
     finally:
-        _llm_lock_holder = None
+        with _stats_lock:
+            _llm_lock_holder = None
         _llm_lock.release()
-        log.debug(f"[LLM Lock] 线程 {thread_id} 释放锁")
+        logger.debug(f"[LLM Lock] 线程 {thread_id} 释放锁")
 
 
 def get_lock_stats() -> dict:
-    """获取锁统计信息"""
+    """获取锁统计信息（线程安全）"""
+    with _stats_lock:
+        holder = _llm_lock_holder
+        count = _lock_acquire_count
     return {
-        "current_holder": _llm_lock_holder,
-        "total_acquisitions": _lock_acquire_count,
+        "current_holder": holder,
+        "total_acquisitions": count,
         "is_locked": _llm_lock.locked(),
     }
 
 
 # === 指数退避重试（v2.8：集成全局串行锁）===
 
-def retry_with_backoff(max_retries: int = 3, base_delay: float = 1.0):
+def retry_with_backoff(
+    max_retries: int = 3, base_delay: float = 1.0
+) -> Callable[..., Any]:
     """装饰器：LLM调用自动排队 + 429退避重试
 
     v2.8改进：
@@ -81,10 +95,10 @@ def retry_with_backoff(max_retries: int = 3, base_delay: float = 1.0):
         max_retries: 最大重试次数
         base_delay: 基础延迟（秒），实际延迟 = base_delay * 2^attempt
     """
-    def decorator(func):
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
         def wrapper(*args, **kwargs):
-            last_error = None
+            last_error: Optional[BaseException] = None
             for attempt in range(max_retries + 1):
                 try:
                     # v2.8: 全局串行 — 一次只执行一个LLM请求
@@ -106,25 +120,29 @@ def retry_with_backoff(max_retries: int = 3, base_delay: float = 1.0):
                         raise
 
                     delay = base_delay * (2 ** attempt) + 0.5
-                    log.warning(
+                    logger.warning(
                         f"LLM 429 rate limit, retry {attempt + 1}/{max_retries} "
                         f"after {delay:.1f}s delay... ({str(e)[:80]})"
                     )
                     time.sleep(delay)
 
-            raise last_error
+            if last_error is not None:
+                raise last_error
+            return None  # 理论上不可达，仅用于类型完整性
         return wrapper
     return decorator
 
 
-# === LLM实例缓存 ===
+# === LLM实例缓存（线程安全）===
 
-_llm_instances = {}
-_llm_lock = threading.Lock()
+_llm_instances: dict = {}
+_llm_instance_lock = threading.Lock()  # 注意：与全局串行锁 _llm_lock 分离，避免互相阻塞
 
 
-def get_cached_llm(backend: str, model: str, temperature: float, factory_fn):
-    """缓存LLM实例，避免每次调用都创建新实例
+def get_cached_llm(
+    backend: str, model: str, temperature: float, factory_fn: Callable[[], Any]
+) -> Any:
+    """缓存LLM实例，避免每次调用都创建新实例（线程安全，双检锁避免重复创建）
 
     Args:
         backend: LLM后端名称
@@ -134,20 +152,28 @@ def get_cached_llm(backend: str, model: str, temperature: float, factory_fn):
     """
     cache_key = f"{backend}:{model}:{temperature}"
 
-    with _llm_lock:
+    # 第一次检查（只读，不加锁创建）
+    with _llm_instance_lock:
         if cache_key in _llm_instances:
-            log.debug(f"LLM instance cache HIT: {cache_key}")
+            logger.debug(f"LLM instance cache HIT: {cache_key}")
             return _llm_instances[cache_key]
 
+    # 未命中：在锁外创建实例，避免持锁执行耗时构建
     llm = factory_fn()
-    with _llm_lock:
-        _llm_instances[cache_key] = llm
-    log.info(f"LLM instance cache MISS: {cache_key}, created new instance")
+
+    # 第二次检查后写入（双检锁，避免并发重复创建）
+    with _llm_instance_lock:
+        if cache_key not in _llm_instances:
+            _llm_instances[cache_key] = llm
+            logger.info(f"LLM instance cache MISS: {cache_key}, created new instance")
+        else:
+            # 已有其他线程先行创建，复用之
+            llm = _llm_instances[cache_key]
     return llm
 
 
 def reset_llm_cache():
     """清除LLM实例缓存（配置变更时调用）"""
-    with _llm_lock:
+    with _llm_instance_lock:
         _llm_instances.clear()
-        log.info("LLM instance cache cleared")
+        logger.info("LLM instance cache cleared")

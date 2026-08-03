@@ -7,6 +7,11 @@
 3. 预算管理（超预算告警）
 4. 成本优化建议
 
+设计要点（生产化）：
+- 默认结构化 console 输出（JSON 行），便于日志采集。
+- 线程安全：token / cost 累计使用 threading.Lock 保护。
+- tiktoken 为可选依赖，缺失时静默降级为估算（不崩溃）。
+
 使用方式：
 ```python
 from src.observability.cost_tracker import cost_tracker, track_cost
@@ -21,7 +26,9 @@ print(cost_tracker.get_summary())
 """
 import logging
 import time
-from typing import Dict, Optional
+import json
+import threading
+from typing import Any, Callable, Dict, Optional
 from dataclasses import dataclass
 import functools
 
@@ -34,6 +41,15 @@ except ImportError:
     tiktoken = None
 
 log = logging.getLogger(__name__)
+
+
+# ========== 结构化日志辅助 ==========
+
+def _emit(level: int, event: str, **fields: Any) -> None:
+    """以 JSON 行输出结构化日志，便于集中采集。"""
+    payload: Dict[str, Any] = {"event": event}
+    payload.update(fields)
+    log.log(level, json.dumps(payload, ensure_ascii=False, default=str))
 
 
 # ========== 1. 定价表 ==========
@@ -70,19 +86,23 @@ class TokenUsage:
 
 
 class CostTracker:
-    """成本追踪器"""
+    """成本追踪器（线程安全）"""
 
     def __init__(self):
-        self.usage_records = []
-        self.total_cost = 0.0
-        self.budget_limit = None
-        self.budget_warning_threshold = 0.8  # 80%预算时告警
+        self.usage_records: list[TokenUsage] = []
+        self.total_cost: float = 0.0
+        self.budget_limit: Optional[float] = None
+        self.budget_warning_threshold: float = 0.8  # 80%预算时告警
 
-        # 初始化tiktoken
-        if TIKTOKEN_AVAILABLE:
-            self.encodings = {}
-        else:
-            log.warning("tiktoken not installed, using estimation (1.3 char/token for Chinese)")
+        # 线程安全锁：保护累计状态
+        self._lock: threading.Lock = threading.Lock()
+        # tiktoken 编码缓存（构建时也加锁保护）
+        self.encodings: Dict[str, Any] = {}
+        # tiktoken 运行时不可用（如下载依赖缺失）时整体降级为估算
+        self._tiktoken_disabled: bool = False
+
+        if not TIKTOKEN_AVAILABLE:
+            log.warning("tiktoken 未安装，使用估算（约 1.3 token/字符，对中文近似）")
 
     def count_tokens(self, text: str, model: str = "gpt-4") -> int:
         """
@@ -95,16 +115,25 @@ class CostTracker:
         Returns:
             token数量
         """
-        if TIKTOKEN_AVAILABLE:
-            # 使用tiktoken精确计数
-            if model not in self.encodings:
-                try:
-                    self.encodings[model] = tiktoken.encoding_for_model(model)
-                except:
-                    # 回退到默认编码
-                    self.encodings[model] = tiktoken.get_encoding("cl100k_base")
+        if TIKTOKEN_AVAILABLE and not self._tiktoken_disabled:
+            # 编码对象构建需加锁（延迟初始化，非线程安全）
+            with self._lock:
+                if model not in self.encodings:
+                    try:
+                        self.encodings[model] = tiktoken.encoding_for_model(model)
+                    except Exception:
+                        # 下载/依赖不可用（如缺 requests），标记该模型编码不可用
+                        self.encodings[model] = None
+                        self._tiktoken_disabled = True
 
-            return len(self.encodings[model].encode(text))
+                encoding = self.encodings[model]
+
+            if encoding is not None:
+                return len(encoding.encode(text))
+            else:
+                # 本模型无法使用 tiktoken，降级为估算（不崩溃）
+                log.warning(f"tiktoken 编码加载失败，模型 {model} 使用估算")
+                return int(len(text) * 1.3)
         else:
             # 估算（中文约1.3 token/char，英文约0.25 token/word）
             # 简化：统一按1.3计算
@@ -128,14 +157,14 @@ class CostTracker:
             成本（美元）
         """
         # 查找定价（支持模糊匹配）
-        pricing = None
+        pricing: Optional[Dict[str, float]] = None
         for key, value in PRICING.items():
             if key in model.lower() or model.lower() in key:
                 pricing = value
                 break
 
         if not pricing:
-            log.warning(f"Unknown model pricing: {model}, assuming free")
+            log.warning(f"未知模型定价: {model}，按免费处理")
             pricing = {"input": 0.0, "output": 0.0}
 
         cost = (
@@ -180,20 +209,28 @@ class CostTracker:
             timestamp=time.time()
         )
 
-        self.usage_records.append(usage)
-        self.total_cost += cost
+        # 加锁保护累计状态与预算检查
+        with self._lock:
+            self.usage_records.append(usage)
+            self.total_cost += cost
 
-        # 检查预算
-        self._check_budget()
+            _emit(
+                logging.DEBUG,
+                "cost_track",
+                model=model,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                total_tokens=total_tokens,
+                cost_usd=cost,
+                total_cost_usd=self.total_cost,
+            )
 
-        log.debug(
-            f"[Cost] {model}: {input_tokens}+{output_tokens}={total_tokens} tokens, "
-            f"${cost:.6f} (total: ${self.total_cost:.6f})"
-        )
+            # 检查预算（锁内读取，避免重复加锁）
+            self._check_budget_locked()
 
         return usage
 
-    def set_budget(self, budget_usd: float, warning_threshold: float = 0.8):
+    def set_budget(self, budget_usd: float, warning_threshold: float = 0.8) -> None:
         """
         设置预算
 
@@ -201,29 +238,36 @@ class CostTracker:
             budget_usd: 预算（美元）
             warning_threshold: 告警阈值（0-1）
         """
-        self.budget_limit = budget_usd
-        self.budget_warning_threshold = warning_threshold
-        log.info(f"Budget set: ${budget_usd:.2f} (warning at {warning_threshold*100:.0f}%)")
+        with self._lock:
+            self.budget_limit = budget_usd
+            self.budget_warning_threshold = warning_threshold
+        log.info(f"预算已设置: ${budget_usd:.2f} (告警阈值 {warning_threshold*100:.0f}%)")
 
-    def _check_budget(self):
-        """检查预算（内部方法）"""
+    def _check_budget_locked(self) -> None:
+        """检查预算（调用方须已持有 self._lock）"""
         if self.budget_limit is None:
             return
 
         usage_rate = self.total_cost / self.budget_limit
 
         if usage_rate >= 1.0:
-            log.error(
-                f"⛔ Budget exceeded! ${self.total_cost:.2f} / ${self.budget_limit:.2f} "
-                f"({usage_rate*100:.1f}%)"
+            _emit(
+                logging.ERROR,
+                "budget_exceeded",
+                total_cost_usd=self.total_cost,
+                budget_usd=self.budget_limit,
+                usage_rate=usage_rate,
             )
         elif usage_rate >= self.budget_warning_threshold:
-            log.warning(
-                f"⚠️ Budget warning! ${self.total_cost:.2f} / ${self.budget_limit:.2f} "
-                f"({usage_rate*100:.1f}%)"
+            _emit(
+                logging.WARNING,
+                "budget_warning",
+                total_cost_usd=self.total_cost,
+                budget_usd=self.budget_limit,
+                usage_rate=usage_rate,
             )
 
-    def get_summary(self) -> Dict:
+    def get_summary(self) -> Dict[str, Any]:
         """
         获取统计摘要
 
@@ -235,17 +279,24 @@ class CostTracker:
                 'budget': 预算信息
             }
         """
-        if not self.usage_records:
+        # 加锁复制累计状态，避免读取过程中被并发修改
+        with self._lock:
+            records = list(self.usage_records)
+            total_cost = self.total_cost
+            budget_limit = self.budget_limit
+
+        if not records:
             return {
                 'total_cost': 0.0,
                 'total_tokens': 0,
+                'total_calls': 0,
                 'by_model': {},
                 'budget': None
             }
 
         # 按模型统计
-        by_model = {}
-        for record in self.usage_records:
+        by_model: Dict[str, Dict[str, Any]] = {}
+        for record in records:
             model = record.model
             if model not in by_model:
                 by_model[model] = {
@@ -263,24 +314,24 @@ class CostTracker:
             by_model[model]['cost_usd'] += record.cost_usd
 
         # 预算信息
-        budget_info = None
-        if self.budget_limit:
+        budget_info: Optional[Dict[str, Any]] = None
+        if budget_limit is not None:
             budget_info = {
-                'limit_usd': self.budget_limit,
-                'used_usd': self.total_cost,
-                'remaining_usd': self.budget_limit - self.total_cost,
-                'usage_rate': self.total_cost / self.budget_limit
+                'limit_usd': budget_limit,
+                'used_usd': total_cost,
+                'remaining_usd': budget_limit - total_cost,
+                'usage_rate': total_cost / budget_limit
             }
 
         return {
-            'total_cost': self.total_cost,
-            'total_tokens': sum(r.total_tokens for r in self.usage_records),
-            'total_calls': len(self.usage_records),
+            'total_cost': total_cost,
+            'total_tokens': sum(r.total_tokens for r in records),
+            'total_calls': len(records),
             'by_model': by_model,
             'budget': budget_info
         }
 
-    def print_summary(self):
+    def print_summary(self) -> None:
         """打印统计摘要"""
         summary = self.get_summary()
 
@@ -318,7 +369,7 @@ cost_tracker = CostTracker()
 
 # ========== 3. 装饰器 ==========
 
-def track_cost(model: str = "gpt-4"):
+def track_cost(model: str = "gpt-4") -> Callable:
     """
     装饰器：自动追踪成本
 
@@ -330,9 +381,9 @@ def track_cost(model: str = "gpt-4"):
         return response.content
     ```
     """
-    def decorator(func):
+    def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             # 执行函数
             result = func(*args, **kwargs)
 

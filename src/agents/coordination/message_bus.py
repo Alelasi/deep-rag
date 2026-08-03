@@ -14,6 +14,16 @@ from datetime import datetime
 import threading
 
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
+
 class MessageBus:
     """Agent 间消息总线"""
 
@@ -55,7 +65,7 @@ class MessageBus:
                 try:
                     handler(data)
                 except Exception as e:
-                    print(f"Handler error for event '{event}': {e}")
+                    logger.error(f"Handler error for event '{event}': {e}")
 
             return len(handlers)
 

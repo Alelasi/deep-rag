@@ -21,6 +21,16 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 from src.intent.intent_classifier_v2 import IntentClassifier, IntentL1, IntentL2
 
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
+
 class IntentEvaluator:
     """意图识别评测器"""
 
@@ -120,39 +130,39 @@ class IntentEvaluator:
 
     def print_report(self, results: Dict):
         """打印评测报告"""
-        print("=" * 80)
-        print("意图识别评测报告")
-        print("=" * 80)
+        logger.info("=" * 80)
+        logger.info("意图识别评测报告")
+        logger.info("=" * 80)
 
-        print(f"\n📊 总体指标")
-        print(f"  - 总数: {results['total']}")
-        print(f"  - 一级意图准确率: {results['l1_accuracy']:.2%} ({results['l1_correct']}/{results['total']})")
-        print(f"  - 二级意图准确率: {results['l2_accuracy']:.2%} ({results['l2_correct']}/{results['total']})")
-        print(f"  - 路由决策准确率: {results['route_accuracy']:.2%} ({results['route_correct']}/{results['total']})")
+        logger.info(f"\n📊 总体指标")
+        logger.info(f"  - 总数: {results['total']}")
+        logger.info(f"  - 一级意图准确率: {results['l1_accuracy']:.2%} ({results['l1_correct']}/{results['total']})")
+        logger.info(f"  - 二级意图准确率: {results['l2_accuracy']:.2%} ({results['l2_correct']}/{results['total']})")
+        logger.info(f"  - 路由决策准确率: {results['route_accuracy']:.2%} ({results['route_correct']}/{results['total']})")
 
         # 参考目标（马丁第197行）
         target = 0.90
-        print(f"\n🎯 参考目标: ≥{target:.0%}")
+        logger.info(f"\n🎯 参考目标: ≥{target:.0%}")
         if results['l1_accuracy'] >= target:
-            print(f"  ✅ 一级意图准确率达标")
+            logger.info(f"  ✅ 一级意图准确率达标")
         else:
-            print(f"  ❌ 一级意图准确率未达标（差距: {target - results['l1_accuracy']:.2%}）")
+            logger.error(f"  ❌ 一级意图准确率未达标（差距: {target - results['l1_accuracy']:.2%}）")
 
         # 低置信度案例
-        print(f"\n⚠️  低置信度案例（<0.7）: {len(results['low_confidence_cases'])} 个")
+        logger.warning(f"\n⚠️  低置信度案例（<0.7）: {len(results['low_confidence_cases'])} 个")
         if results['low_confidence_cases']:
-            print("  前5个案例:")
+            logger.info("  前5个案例:")
             for i, case in enumerate(results['low_confidence_cases'][:5]):
-                print(f"    {i+1}. {case['query'][:50]}... (置信度: {case['confidence']:.2f})")
+                logger.info(f"    {i+1}. {case['query'][:50]}... (置信度: {case['confidence']:.2f})")
 
         # 错误案例
-        print(f"\n❌ 错误案例: {len(results['error_cases'])} 个")
+        logger.error(f"\n❌ 错误案例: {len(results['error_cases'])} 个")
         if results['error_cases']:
-            print("  前5个案例:")
+            logger.info("  前5个案例:")
             for i, case in enumerate(results['error_cases'][:5]):
-                print(f"    {i+1}. {case['query'][:50]}...")
-                print(f"       预测: {case['pred_l1']} / {case['pred_l2']}")
-                print(f"       真值: {case['true_l1']} / {case['true_l2']}")
+                logger.info(f"    {i+1}. {case['query'][:50]}...")
+                logger.info(f"       预测: {case['pred_l1']} / {case['pred_l2']}")
+                logger.info(f"       真值: {case['true_l1']} / {case['true_l2']}")
 
 
 # ==================== 测试代码 ====================
@@ -168,7 +178,7 @@ if __name__ == "__main__":
     evaluator = IntentEvaluator(classifier)
 
     # 评测
-    print("开始评测意图识别模块...")
+    logger.info("开始评测意图识别模块...")
     results = evaluator.evaluate(eval_dataset)
 
     # 打印报告
@@ -194,4 +204,4 @@ if __name__ == "__main__":
         }
         json.dump(results_serializable, f, ensure_ascii=False, indent=2)
 
-    print(f"\n✅ 评测结果已保存到: {output_file}")
+    logger.info(f"\n✅ 评测结果已保存到: {output_file}")

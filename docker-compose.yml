@@ -66,17 +66,14 @@ services:
       - "6333:6333"
       - "6334:6334"
     volumes:
-      - qdrant_storage:/qdrant/storage
+      # Bind-mount the REAL qdrant_data so existing 7.3GB collections load.
+      # (originally a named volume "qdrant_storage" which would start EMPTY and miss the corpus)
+      - "D:/文档/ai提问相关/哲思灵智/qdrant_data:/qdrant/storage"
     environment:
       - QDRANT__SERVICE__GRPC_PORT=6334
     restart: unless-stopped
     networks:
       - deep-rag-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   # PostgreSQL with pgvector
   postgres:
@@ -124,8 +121,6 @@ services:
       - deep-rag-network
 
 volumes:
-  qdrant_storage:
-    driver: local
   postgres_data:
     driver: local
 

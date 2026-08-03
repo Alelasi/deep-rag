@@ -14,6 +14,14 @@ from typing import Callable, Dict, Any
 from enum import Enum
 from datetime import datetime, timedelta
 
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+logger = get_logger(__name__)
+
 
 class CircuitState(Enum):
     """熔断器状态"""
@@ -90,7 +98,7 @@ class RetryHandler:
 
                 # 成功 - 重置失败计数
                 if retry_count > 0:
-                    print(f"✅ {agent_name} succeeded after {retry_count} retries")
+                    logger.info(f"✅ {agent_name} succeeded after {retry_count} retries")
 
                 self._reset_failure_count(agent_name)
                 return result
@@ -103,13 +111,15 @@ class RetryHandler:
 
                 # 最后一次重试失败
                 if retry_count == self.max_retries:
-                    print(f"❌ {agent_name} failed after {self.max_retries} retries: {e}")
+                    logger.error(f"❌ {agent_name} failed after {self.max_retries} retries: {e}")
                     break
 
                 # 计算等待时间（指数退避）
                 wait_time = self.backoff_factor ** retry_count
-                print(f"⚠️ {agent_name} failed (attempt {retry_count + 1}/{self.max_retries + 1}), "
-                      f"retrying in {wait_time:.1f}s: {e}")
+                logger.warning(
+                    f"⚠️ {agent_name} failed (attempt {retry_count + 1}/{self.max_retries + 1}), "
+                    f"retrying in {wait_time:.1f}s: {e}"
+                )
 
                 time.sleep(wait_time)
 
@@ -137,7 +147,7 @@ class RetryHandler:
             if open_time and datetime.now() - open_time > timedelta(seconds=self.circuit_breaker_timeout):
                 # 进入半开状态
                 self._circuit_states[agent_name] = CircuitState.HALF_OPEN
-                print(f"🔄 Circuit breaker for {agent_name} is now HALF_OPEN (attempting recovery)")
+                logger.info(f"🔄 Circuit breaker for {agent_name} is now HALF_OPEN (attempting recovery)")
                 return False
 
             return True
@@ -165,7 +175,7 @@ class RetryHandler:
         """打开熔断器"""
         self._circuit_states[agent_name] = CircuitState.OPEN
         self._circuit_open_times[agent_name] = datetime.now()
-        print(f"🚨 Circuit breaker OPEN for {agent_name} (failed {self._failure_counts[agent_name]} times)")
+        logger.error(f"🚨 Circuit breaker OPEN for {agent_name} (failed {self._failure_counts[agent_name]} times)")
 
     def _reset_failure_count(self, agent_name: str):
         """重置失败计数"""

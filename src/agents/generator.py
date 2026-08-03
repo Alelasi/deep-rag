@@ -2,6 +2,8 @@
 
 格式：精简答案在前 → 解释在后 → 引用来源最后
 """
+from typing import Any, Generator, Optional
+
 from src.config import get_llm, get_temperature, LLM_MODEL, LLM_BACKEND
 from langchain_core.messages import HumanMessage, SystemMessage
 from src.state import GradedDocument, Citation
@@ -44,6 +46,53 @@ MBTI 功能堆栈规则（必须遵守）：
 
 规则：只基于文档与给定对话上下文回答，不使用外部知识。答案精炼。
 """
+
+try:
+    from src.logging_config import get_logger
+except Exception:
+    import logging
+
+    def get_logger(n):  # type: ignore
+        return logging.getLogger(n)
+
+logger = get_logger(__name__)
+
+# === 代号M改进：鲁棒性辅助（不改动公开 API）===
+
+# 上下文/历史预算（字符级安全上限，避免拼接出超长非法 prompt）
+_MAX_CONTEXT_CHARS = 6000
+_MAX_PRIOR_CHARS = 4000
+
+
+def _safe_truncate(text: str, max_chars: int) -> str:
+    """按字符预算安全截断；超限时补省略提示，避免 prompt 越界。"""
+    if not text:
+        return ""
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars] + "\n...[上下文已截断]"
+
+
+def _safe_json_loads(text: str) -> tuple[bool, Any]:
+    """解析 JSON，捕获 JSONDecodeError，返回 (ok, data)。失败不冒泡。"""
+    import json
+
+    try:
+        return True, json.loads(text)
+    except (json.JSONDecodeError, ValueError, TypeError):
+        return False, None
+
+
+def _safe_doc_get(doc: GradedDocument, key: str, default: Any = "") -> Any:
+    """安全读取文档字段，过滤 None 文档与缺失键，避免拼接 prompt 时崩溃。"""
+    if not doc or not isinstance(doc, dict):
+        return default
+    return doc.get(key, default)
+
+
+def _clean_docs(docs: Optional[list]) -> list:
+    """去除 None/非 dict 的检索结果，避免空值/越界导致 prompt 拼接失败。"""
+    return [d for d in (docs or []) if isinstance(d, dict)]
 
 def _build_system_prompt_with_templates() -> str:
     """使用五要素模板构建SYSTEM_PROMPT（v2.9.2新增）
@@ -89,7 +138,7 @@ def _build_system_prompt_with_templates() -> str:
 
         return builder.render()
     except Exception as e:
-        print(f"[Generator] 五要素模板构建失败: {e}")
+        logger.error(f"[Generator] 五要素模板构建失败: {e}")
         return _FALLBACK_SYSTEM_PROMPT
 
 
@@ -114,15 +163,26 @@ def generate_answer(
     relevant_docs: list[GradedDocument],
     force_regenerate: bool = False,
     prior_context: str = "",
+    expect_json: bool = False,
 ) -> dict:
-    """基于相关文档生成带引用的回答（v2.8：缓存 + 限流重试；v2.9.3：多轮 prior_context）"""
+    """基于相关文档生成带引用的回答（v2.8：缓存 + 限流重试；v2.9.3：多轮 prior_context）
+
+    代号M改进：
+    - 输入空值/越界保护，长上下文安全截断（_safe_truncate / _clean_docs）
+    - LLM 不可用结构化降级（保留已检索证据，附 reason 字段）
+    - expect_json=True 时做 JSON 解析兜底，解析失败返回可读错误而非冒泡
+    """
+    logger.info(f"[Generator] 开始生成回答 (docs={len(relevant_docs or [])}, prior={'Y' if prior_context else 'N'})")
+    relevant_docs = _clean_docs(relevant_docs)
     if not relevant_docs:
+        logger.warning("[Generator] 无可检索文档，返回空答案")
         return {
             "answer": "根据现有知识库资料，未找到与此问题相关的信息。",
             "citations": [],
         }
 
     prior_context = (prior_context or "").strip()
+    prior_context = _safe_truncate(prior_context, _MAX_PRIOR_CHARS)
 
     # v2.7: 检查LLM响应缓存（v2.8: force_regenerate时跳过；有 prior 时纳入 cache key）
     context_preview = "".join(d.get("content", "")[:200] for d in relevant_docs[:3])
@@ -160,19 +220,25 @@ def generate_answer(
     # v2.9.1: 智能压缩文档上下文（替代 content[:400] 截断）
     from src.llm.prompt_compressor import get_compressor
     compressor = get_compressor()
-    context = compressor.compress(question, sorted_docs, max_tokens=400)
+    try:
+        context = compressor.compress(question, sorted_docs, max_tokens=400)
+    except Exception as e:
+        logger.warning(f"[Generator] 上下文压缩失败，降级为原始截断: {e}")
+        context = None
 
     # 构造文档上下文（v2.9.1: compressor已包含来源标记）
     if not context:
         # 降级到原始截断
         context_parts = []
         for i, doc in enumerate(sorted_docs, 1):
-            content = doc.get("content", doc.get("text", ""))[:400]
+            content = _safe_doc_get(doc, "content", _safe_doc_get(doc, "text", ""))[:400]
             context_parts.append(
-                f"[文档{i}] 来源: {doc['source']}, 第{doc['page']}块\n"
+                f"[文档{i}] 来源: {_safe_doc_get(doc, 'source', '未知')}, 第{_safe_doc_get(doc, 'page', '?')}块\n"
                 f"内容:\n{content}\n"
             )
         context = "\n---\n".join(context_parts)
+
+    context = _safe_truncate(context, _MAX_CONTEXT_CHARS)
 
     prior_block = f"{prior_context}\n" if prior_context else ""
     prompt = f"""{prior_block}问题：{question}
@@ -243,36 +309,69 @@ def generate_answer(
                 content = "模型未返回有效内容。"
             return content
 
-    answer = _invoke_llm()
+    try:
+        answer = _invoke_llm()
+    except Exception as e:
+        logger.error(f"[Generator] LLM 调用失败，触发离线降级: {e}")
+        fallback = generate_answer_offline(question, relevant_docs)
+        fallback["reason"] = f"llm_unavailable: {type(e).__name__}: {e}"
+        fallback["error"] = True
+        fallback["degraded"] = True
+        logger.warning("[Generator] 已降级为离线生成，保留已检索证据")
+        return fallback
 
     # v2.7: 缓存LLM响应
     set_cached_llm_response(cache_key, answer)
 
-    # 提取引用
+    # 提取引用（answer 仍为字符串，先做引用匹配）
     citations = []
     for doc in relevant_docs:
-        if doc["source"] in answer or f"第{doc['page']}块" in answer:
+        src = _safe_doc_get(doc, "source", "")
+        page = _safe_doc_get(doc, "page", "")
+        if src and (src in answer or f"第{page}块" in answer):
             citations.append(Citation(
-                text=doc.get("content", doc.get("text", ""))[:200],
-                source=doc["source"],
-                page=doc["page"],
+                text=_safe_doc_get(doc, "content", _safe_doc_get(doc, "text", ""))[:200],
+                source=src,
+                page=page,
             ))
 
+    # 可选：JSON 结构化解析兜底（expect_json=True 时）
+    if expect_json:
+        ok, parsed = _safe_json_loads(answer)
+        if not ok:
+            logger.error("[Generator] expect_json=True 但答案非合法 JSON")
+            return {
+                "answer": answer,
+                "citations": citations,
+                "reason": "json_parse_failed: 模型未返回合法 JSON",
+                "error": True,
+            }
+        answer = parsed
+
+    logger.info(
+        f"[Generator] 生成完成 (len={'json' if isinstance(answer, (dict, list)) else len(answer)}, "
+        f"citations={len(citations)})"
+    )
     return {"answer": answer, "citations": citations}
 
 
 def generate_answer_offline(question: str, relevant_docs: list[GradedDocument]) -> dict:
     """离线版生成（基于关键词的智能摘要，不是简单取前2句）"""
+    logger.info(f"[Generator] 离线生成 (docs={len(relevant_docs or [])})")
+    relevant_docs = _clean_docs(relevant_docs)
     if not relevant_docs:
         return {"answer": "未找到相关信息。", "citations": []}
 
-    import jieba
+    try:
+        import jieba
+    except Exception:
+        jieba = None
 
     # 按相关度排序取top3
-    sorted_docs = sorted(relevant_docs, key=lambda d: -d["relevance_score"])[:3]
+    sorted_docs = sorted(relevant_docs, key=lambda d: -_safe_doc_get(d, "relevance_score", 0.0))[:3]
 
     # 提取问题关键词
-    question_keywords = set(jieba.cut(question))
+    question_keywords = set(jieba.cut(question)) if jieba else set()
     # 过滤停用词
     stopwords = {"的", "是", "了", "在", "我", "有", "和", "就", "不", "人", "都", "一", "一个", "上", "也", "很", "到", "说", "要", "去", "你", "会", "着", "没有", "看", "好", "自己", "这", "那"}
     question_keywords = question_keywords - stopwords
@@ -282,14 +381,14 @@ def generate_answer_offline(question: str, relevant_docs: list[GradedDocument]) 
     citations = []
 
     for i, doc in enumerate(sorted_docs, 1):
-        content = doc.get("content", doc.get("text", ""))
+        content = _safe_doc_get(doc, "content", _safe_doc_get(doc, "text", ""))
         # 分句
         sentences = [s.strip() for s in content.replace('。', '.|').replace('？', '?|').replace('！', '!|').replace('\n', '|').split('|') if len(s.strip()) > 5]
 
         # 找包含问题关键词的句子
         relevant_sentences = []
         for sent in sentences:
-            sent_keywords = set(jieba.cut(sent)) - stopwords
+            sent_keywords = (set(jieba.cut(sent)) - stopwords) if jieba else set()
             overlap = question_keywords & sent_keywords
             if len(overlap) >= 1:
                 relevant_sentences.append((sent, len(overlap)))
@@ -299,7 +398,11 @@ def generate_answer_offline(question: str, relevant_docs: list[GradedDocument]) 
         for sent, _ in relevant_sentences[:2]:
             key_sentences.append(sent)
 
-        citations.append(Citation(text=content[:200], source=doc["source"], page=doc["page"]))
+        citations.append(Citation(
+            text=content[:200],
+            source=_safe_doc_get(doc, "source", "未知"),
+            page=_safe_doc_get(doc, "page", ""),
+        ))
 
     # 构造回答
     if key_sentences:
@@ -309,14 +412,15 @@ def generate_answer_offline(question: str, relevant_docs: list[GradedDocument]) 
             f"\n\n引用来源："
         ]
         for i, cite in enumerate(citations, 1):
-            answer_parts.append(f"\n[{i}] {cite['source']} 第{cite['page']}块")
+            answer_parts.append(f"\n[{i}] {cite.get('source', '未知')} 第{cite.get('page', '?')}块")
     else:
         answer_parts = [
             f"根据知识库资料，关于「{question}」：\n",
-            sorted_docs[0].get("content", sorted_docs[0].get("text", ""))[:300],
-            f"\n\n引用来源：\n[1] {citations[0]['source']} 第{citations[0]['page']}块"
+            _safe_doc_get(sorted_docs[0], "content", _safe_doc_get(sorted_docs[0], "text", ""))[:300],
+            f"\n\n引用来源：\n[1] {_safe_doc_get(sorted_docs[0], 'source', '未知')} 第{_safe_doc_get(sorted_docs[0], 'page', '?')}块"
         ]
 
+    logger.info(f"[Generator] 离线生成完成 (citations={len(citations)})")
     return {"answer": "".join(answer_parts), "citations": citations}
 
 
@@ -324,7 +428,7 @@ def generate_answer_stream(
     question: str,
     relevant_docs: list[GradedDocument],
     prior_context: str = "",
-):
+) -> Generator[str, None, None]:
     """流式生成带引用的回答（generator）；支持多轮 prior_context"""
     if not relevant_docs:
         yield "根据现有知识库资料，未找到与此问题相关的信息。"
@@ -336,15 +440,17 @@ def generate_answer_stream(
         return
 
     prior_context = (prior_context or "").strip()
+    prior_context = _safe_truncate(prior_context, _MAX_PRIOR_CHARS)
+    relevant_docs = _clean_docs(relevant_docs)
     context_parts = []
     for i, doc in enumerate(relevant_docs, 1):
-        content = doc.get("content", doc.get("text", ""))
+        content = _safe_doc_get(doc, "content", _safe_doc_get(doc, "text", ""))
         context_parts.append(
-            f"[文档{i}] 来源: {doc['source']}, 第{doc['page']}块\n"
-            f"相关度: {doc.get('relevance_score', 0):.0%}\n"
+            f"[文档{i}] 来源: {_safe_doc_get(doc, 'source', '未知')}, 第{_safe_doc_get(doc, 'page', '?')}块\n"
+            f"相关度: {_safe_doc_get(doc, 'relevance_score', 0):.0%}\n"
             f"内容:\n{content}\n"
         )
-    context = "\n---\n".join(context_parts)
+    context = _safe_truncate("\n---\n".join(context_parts), _MAX_CONTEXT_CHARS)
 
     prior_block = f"{prior_context}\n" if prior_context else ""
     prompt = f"""{prior_block}问题：{question}
@@ -361,9 +467,13 @@ def generate_answer_stream(
         HumanMessage(content=prompt),
     ]
 
-    for chunk in llm.stream(messages):
-        if chunk.content:
-            yield chunk.content
+    try:
+        for chunk in llm.stream(messages):
+            if chunk.content:
+                yield chunk.content
+    except Exception as e:
+        logger.error(f"[Generator] 流式生成失败: {e}")
+        yield f"（生成中断：{type(e).__name__}）"
 
 
 # === v2.8.3: 直接回答（跳过RAG的闲聊/常识问题）===
@@ -378,32 +488,37 @@ def generate_direct_answer(question: str) -> str:
     Returns:
         str: 回答文本
     """
-    from src.config import LLM_BACKEND, LLM_MODEL
+    logger.info("[Generator] 直接回答（跳过RAG）")
+    try:
+        from src.config import LLM_BACKEND, LLM_MODEL
 
-    if LLM_BACKEND == "ollama":
-        from src.llm.ollama_helper import ollama_chat
-        ollama_messages = [
-            {"role": "system", "content": _DIRECT_PROMPT},
-            {"role": "user", "content": question},
-        ]
-        content, _ = ollama_chat(
-            ollama_messages, LLM_MODEL,
-            temperature=0.5, num_predict=300, think=False,
-        )
-        return content or "抱歉，我没有理解你的问题。"
-    else:
-        llm = get_llm(temperature=0.5)
-        if llm is None:
-            return "抱歉，当前没有可用的LLM。"
-        from langchain_core.messages import HumanMessage, SystemMessage
-        response = llm.invoke([
-            SystemMessage(content=_DIRECT_PROMPT),
-            HumanMessage(content=question),
-        ])
-        return response.content or "抱歉，我没有理解你的问题。"
+        if LLM_BACKEND == "ollama":
+            from src.llm.ollama_helper import ollama_chat
+            ollama_messages = [
+                {"role": "system", "content": _DIRECT_PROMPT},
+                {"role": "user", "content": question},
+            ]
+            content, _ = ollama_chat(
+                ollama_messages, LLM_MODEL,
+                temperature=0.5, num_predict=300, think=False,
+            )
+            return content or "抱歉，我没有理解你的问题。"
+        else:
+            llm = get_llm(temperature=0.5)
+            if llm is None:
+                return "抱歉，当前没有可用的LLM。"
+            from langchain_core.messages import HumanMessage, SystemMessage
+            response = llm.invoke([
+                SystemMessage(content=_DIRECT_PROMPT),
+                HumanMessage(content=question),
+            ])
+            return response.content or "抱歉，我没有理解你的问题。"
+    except Exception as e:
+        logger.error(f"[Generator] 直接回答失败: {e}")
+        return "抱歉，当前回答服务暂时不可用。"
 
 
-def generate_direct_answer_stream(question: str):
+def generate_direct_answer_stream(question: str) -> Generator[str, None, None]:
     """v2.8.3: 直接LLM流式回答（跳过RAG，用于闲聊/常识问题）"""
     llm = get_llm(temperature=0.5)
     if llm is None:
@@ -416,6 +531,10 @@ def generate_direct_answer_stream(question: str):
         HumanMessage(content=question),
     ]
 
-    for chunk in llm.stream(messages):
-        if chunk.content:
-            yield chunk.content
+    try:
+        for chunk in llm.stream(messages):
+            if chunk.content:
+                yield chunk.content
+    except Exception as e:
+        logger.error(f"[Generator] 流式生成失败: {e}")
+        yield f"（生成中断：{type(e).__name__}）"

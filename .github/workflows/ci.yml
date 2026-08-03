@@ -82,13 +82,13 @@ jobs:
     - name: Install linting tools
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 black isort
+        pip install flake8 black isort mypy
 
     - name: Check code formatting with black
-      run: black --check --diff src/ || true
+      run: black --check --diff src/
 
     - name: Check import sorting with isort
-      run: isort --check-only --diff src/ || true
+      run: isort --check-only --diff src/
 
     - name: Lint with flake8
       run: |
@@ -97,6 +97,13 @@ jobs:
         flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
         # 风格问题仅报告，不阻断 CI
         flake8 src/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Type check with mypy
+      continue-on-error: true
+      run: |
+        # 仅检查 src/ 模块，忽略缺失的可选依赖导入以适配当前可插拔架构
+        # 现有代码可能存在大量类型注解缺失，故设为 continue-on-error 避免 CI 直接变红
+        mypy src/ --ignore-missing-imports --no-error-summary
 
   security:
     runs-on: ubuntu-latest
@@ -119,8 +126,8 @@ jobs:
 
     - name: Run Bandit security scan
       run: |
-        bandit -r src/ -ll -f json -o bandit-report.json || true
-        bandit -r src/ -ll || true
+        bandit -r src/ -ll -f json -o bandit-report.json
+        bandit -r src/ -ll
 
     - name: Check for known vulnerabilities
       run: |

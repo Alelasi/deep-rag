@@ -45,12 +45,19 @@ class RateLimiter:
 
 # 模块级单例：全 API 进程共享同一计数器
 _limiter: RateLimiter | None = None
+# 保护懒加载单例的创建，避免多线程并发时重复实例化
+_limiter_lock = threading.Lock()
 
 
 def get_rate_limiter() -> RateLimiter:
-    """懒加载全局限流器；参数来自 RATE_LIMIT_PER_MINUTE。"""
+    """懒加载全局限流器；参数来自 RATE_LIMIT_PER_MINUTE。
+
+    使用双检锁保证线程安全：只有首次创建会进入锁区。
+    """
     global _limiter
     if _limiter is None:
-        max_req = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
-        _limiter = RateLimiter(max_requests=max_req, window_seconds=60.0)
+        with _limiter_lock:
+            if _limiter is None:
+                max_req = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
+                _limiter = RateLimiter(max_requests=max_req, window_seconds=60.0)
     return _limiter

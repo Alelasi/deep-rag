@@ -7,6 +7,12 @@
 3. 性能分析：识别瓶颈
 4. 错误追踪：堆栈信息
 
+设计要点（生产化）：
+- 默认结构化 console 输出（JSON 行），便于日志采集（Loki/ES 等）。
+- langfuse 懒导入守卫：所有 `import langfuse` 均放在函数/方法内部，
+  且仅当 LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY 存在时才导入与初始化；
+  缺失或不可用时静默降级为本地 console，绝不因缺少 langfuse 依赖而崩溃。
+
 使用方式：
 ```python
 from src.observability.tracer import trace_node
@@ -21,21 +27,68 @@ import logging
 import time
 import functools
 import os
+import json
 from typing import Any, Callable, Dict, Optional
 from contextlib import contextmanager
 
-# 可选依赖：LangFuse
-try:
-    from langfuse import Langfuse
-    from langfuse.decorators import observe, langfuse_context
-    LANGFUSE_AVAILABLE = True
-except ImportError:
-    LANGFUSE_AVAILABLE = False
-    Langfuse = None
-    observe = None
-    langfuse_context = None
-
 log = logging.getLogger(__name__)
+
+
+# ========== 结构化日志辅助 ==========
+
+def _emit(level: int, event: str, **fields: Any) -> None:
+    """以 JSON 行输出结构化日志，便于集中采集。
+
+    所有字段（含 event）序列化为单行 JSON；日志级别仍由标准 logging 控制。
+    """
+    payload: Dict[str, Any] = {"event": event}
+    payload.update(fields)
+    log.log(level, json.dumps(payload, ensure_ascii=False, default=str))
+
+
+# ========== langfuse 懒导入守卫 ==========
+
+# 模块级缓存（非导入）；None 表示未配置/不可用。
+_LANGFUSE_MODULES: Optional[Dict[str, Any]] = None
+
+
+def _load_langfuse() -> Optional[Dict[str, Any]]:
+    """懒导入 langfuse，且仅在配置了密钥时执行。
+
+    返回 {"Langfuse":..., "observe":..., "langfuse_context":...} 或 None。
+    缺少依赖或缺少配置时返回 None（静默降级），绝不抛出异常。
+    """
+    global _LANGFUSE_MODULES
+    if _load_langfuse._resolved:  # type: ignore[attr-defined]
+        # 已解析过（成功或失败都缓存），直接返回缓存值
+        return _LANGFUSE_MODULES
+
+    public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
+    secret_key = os.getenv("LANGFUSE_SECRET_KEY")
+    if not public_key or not secret_key:
+        log.debug("LANGFUSE_PUBLIC_KEY/SECRET 未配置，跳过 langfuse（降级为 console）")
+        _LANGFUSE_MODULES = None
+        _load_langfuse._resolved = True  # type: ignore[attr-defined]
+        return None
+
+    try:
+        from langfuse import Langfuse
+        from langfuse.decorators import observe, langfuse_context
+        _LANGFUSE_MODULES = {
+            "Langfuse": Langfuse,
+            "observe": observe,
+            "langfuse_context": langfuse_context,
+        }
+    except ImportError:
+        log.debug("langfuse 未安装，跳过（降级为 console）")
+        _LANGFUSE_MODULES = None
+
+    _load_langfuse._resolved = True  # type: ignore[attr-defined]
+    return _LANGFUSE_MODULES
+
+
+# 标注解析状态（避免每次都重跑判断）
+_load_langfuse._resolved = False  # type: ignore[attr-defined]
 
 
 # ========== 1. Tracer基类 ==========
@@ -46,58 +99,62 @@ class Tracer:
     def __init__(self, backend: str = "console"):
         """
         Args:
-            backend: console / langfuse / langsmith
+            backend: console / langfuse
         """
-        self.backend = backend
-        self.enabled = True
+        self.backend: str = backend
+        self.enabled: bool = True
+        self._langfuse_client: Optional[Any] = None
 
-        if backend == "langfuse" and LANGFUSE_AVAILABLE:
-            self._init_langfuse()
-        elif backend == "langfuse":
-            log.warning("LangFuse not available, falling back to console")
-            self.backend = "console"
+        if backend == "langfuse":
+            if self._init_langfuse() is None:
+                log.info("LangFuse 未配置/不可用，降级为 console")
+                self.backend = "console"
 
-    def _init_langfuse(self):
-        """初始化LangFuse"""
+    def _init_langfuse(self) -> Optional[Any]:
+        """初始化 LangFuse（懒导入，密钥缺失或不可用时返回 None）。"""
+        lf = _load_langfuse()
+        if lf is None:
+            return None
+
         public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
         secret_key = os.getenv("LANGFUSE_SECRET_KEY")
         host = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
 
         if not public_key or not secret_key:
-            log.warning("LangFuse keys not set, falling back to console")
-            self.backend = "console"
-            return
+            log.info("LangFuse 密钥未设置，降级为 console")
+            return None
 
         try:
-            self.client = Langfuse(
+            self._langfuse_client = lf["Langfuse"](
                 public_key=public_key,
                 secret_key=secret_key,
-                host=host
+                host=host,
             )
-            log.info("LangFuse initialized successfully")
+            log.info("LangFuse 初始化成功")
+            return self._langfuse_client
         except Exception as e:
-            log.error(f"Failed to initialize LangFuse: {e}")
-            self.backend = "console"
+            log.error(f"LangFuse 初始化失败，降级为 console: {e}")
+            self._langfuse_client = None
+            return None
 
-    def trace_node(self, name: str):
+    def trace_node(self, name: str) -> Callable:
         """装饰器：追踪节点执行"""
         def decorator(func: Callable) -> Callable:
             @functools.wraps(func)
-            def wrapper(*args, **kwargs):
+            def wrapper(*args: Any, **kwargs: Any) -> Any:
                 if not self.enabled:
                     return func(*args, **kwargs)
 
                 start_time = time.time()
-                error = None
-                result = None
+                error: Optional[Exception] = None
+                result: Any = None
 
                 try:
-                    if self.backend == "langfuse" and LANGFUSE_AVAILABLE:
-                        # 使用LangFuse的observe装饰器
-                        observed_func = observe(name=name)(func)
+                    lf = _load_langfuse() if self.backend == "langfuse" else None
+                    if self.backend == "langfuse" and lf is not None and self._langfuse_client is not None:
+                        observed_func = lf["observe"](name=name)(func)
                         result = observed_func(*args, **kwargs)
                     else:
-                        # Console模式
                         result = func(*args, **kwargs)
                 except Exception as e:
                     error = e
@@ -111,23 +168,36 @@ class Tracer:
             return wrapper
         return decorator
 
-    def _log_trace(self, name: str, elapsed: float, error: Optional[Exception]):
-        """记录追踪日志"""
+    def _log_trace(self, name: str, elapsed: float, error: Optional[Exception]) -> None:
+        """记录追踪日志（结构化 JSON 行）"""
         status = "ERROR" if error else "OK"
-        log.info(f"[TRACE] {name}: {elapsed*1000:.1f}ms ({status})")
+        _emit(
+            logging.INFO,
+            "trace",
+            node=name,
+            latency_ms=round(elapsed * 1000, 3),
+            status=status,
+        )
 
         if error:
-            log.error(f"[TRACE] {name} failed: {error}")
+            _emit(
+                logging.ERROR,
+                "trace_error",
+                node=name,
+                error_type=type(error).__name__,
+                error=str(error),
+            )
 
     @contextmanager
-    def span(self, name: str, metadata: Dict = None):
+    def span(self, name: str, metadata: Optional[Dict[str, Any]] = None):
         """上下文管理器：追踪代码块"""
         start_time = time.time()
-        error = None
+        error: Optional[Exception] = None
 
+        lf = _load_langfuse() if self.backend == "langfuse" else None
         try:
-            if self.backend == "langfuse" and LANGFUSE_AVAILABLE:
-                with langfuse_context.observe(name=name) as span:
+            if self.backend == "langfuse" and lf is not None and self._langfuse_client is not None:
+                with lf["langfuse_context"].observe(name=name) as span:
                     if metadata:
                         span.update(metadata=metadata)
                     yield span
@@ -153,7 +223,7 @@ tracer.enabled = OBSERVABILITY_ENABLED
 
 # ========== 3. 便捷装饰器 ==========
 
-def trace_node(name: str = None):
+def trace_node(name: Optional[str] = None) -> Callable:
     """
     便捷装饰器：追踪节点执行
 
@@ -171,7 +241,7 @@ def trace_node(name: str = None):
     return decorator
 
 
-def trace_llm_call(model: str = "unknown"):
+def trace_llm_call(model: str = "unknown") -> Callable:
     """
     装饰器：追踪LLM调用
 
@@ -184,7 +254,7 @@ def trace_llm_call(model: str = "unknown"):
     """
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             with tracer.span(f"llm_call_{model}") as span:
                 start_time = time.time()
 
@@ -193,7 +263,7 @@ def trace_llm_call(model: str = "unknown"):
                     elapsed = time.time() - start_time
 
                     # 尝试提取tokens信息
-                    tokens = None
+                    tokens: Optional[Dict[str, Any]] = None
                     if hasattr(result, 'response_metadata'):
                         tokens = result.response_metadata.get('token_usage', {})
 
@@ -207,12 +277,24 @@ def trace_llm_call(model: str = "unknown"):
                             'total_tokens': tokens.get('total_tokens', 0)
                         })
 
-                    log.info(f"[LLM] {model}: {elapsed*1000:.1f}ms, tokens={tokens}")
+                    _emit(
+                        logging.INFO,
+                        "llm_call",
+                        model=model,
+                        latency_ms=round(elapsed * 1000, 3),
+                        tokens=tokens,
+                    )
 
                     return result
 
                 except Exception as e:
-                    log.error(f"[LLM] {model} failed: {e}")
+                    _emit(
+                        logging.ERROR,
+                        "llm_call_error",
+                        model=model,
+                        error_type=type(e).__name__,
+                        error=str(e),
+                    )
                     raise
 
         return wrapper
@@ -225,9 +307,9 @@ class PerformanceMonitor:
     """性能监控器"""
 
     def __init__(self):
-        self.metrics = {}
+        self.metrics: Dict[str, Dict[str, Any]] = {}
 
-    def record(self, name: str, value: float, unit: str = "ms"):
+    def record(self, name: str, value: float, unit: str = "ms") -> None:
         """记录指标"""
         if name not in self.metrics:
             self.metrics[name] = {
@@ -246,7 +328,7 @@ class PerformanceMonitor:
         metric['min'] = min(metric['min'], value)
         metric['max'] = max(metric['max'], value)
 
-    def get_stats(self, name: str) -> Dict:
+    def get_stats(self, name: str) -> Dict[str, Any]:
         """获取统计信息"""
         if name not in self.metrics:
             return {}
