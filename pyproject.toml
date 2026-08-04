@@ -72,6 +72,13 @@ observability = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+markers = [
+    "unit: 单元测试",
+    "L1: 单元测试（无外部依赖）",
+    "L2: 集成测试（需要外部服务）",
+    "L3: 端到端测试（完整RAG管道）",
+    "L4: 性能基准",
+]
 
 [tool.black]
 line-length = 88

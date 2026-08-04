@@ -31,12 +31,33 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "L4: 性能基准（响应时间/吞吐量/召回率）")
 
 
-def pytest_collection_modifyitems(config, items):
-    """CI 中自动跳过需要外部服务的测试模块"""
-    if not IN_CI:
-        return
+def chroma_reachable() -> bool:
+    """探测 Chroma 服务是否可达（一次性 socket 连接后立即关闭，不影响服务）。
 
-    skip_external = pytest.mark.skip(reason="CI 环境无外部服务，跳过")
+    用于本地判定：未启动 Chroma 时，Chroma 依赖测试应 skip 而非 fail。
+    """
+    import socket
+
+    host = os.getenv("CHROMA_SERVER_HOST", "localhost")
+    port = int(os.getenv("CHROMA_SERVER_PORT", "8000"))
+    try:
+        with socket.create_connection((host, port), timeout=1):
+            return True
+    except OSError:
+        return False
+
+
+# 依赖 Chroma HttpClient 的测试（本地无 Chroma 服务时应 skip，而非 fail）
+CHROMA_DEPENDENT = {
+    "test_agentic_rag_agent",
+    "test_ragas",
+}
+
+
+def pytest_collection_modifyitems(config, items):
+    """CI 自动跳过需要外部服务的测试模块；
+    Chroma 依赖模块在本地无 Chroma 服务时也自动跳过（避免无谓失败）。"""
+    skip_external = pytest.mark.skip(reason="无外部服务（Chroma/CI），跳过")
 
     # 这些测试文件需要真实 ChromaDB/Qdrant/Ollama/LM Studio/数据文件
     external_markers = [
@@ -61,7 +82,13 @@ def pytest_collection_modifyitems(config, items):
         "test_ragas",
     ]
 
+    chroma_up = chroma_reachable()
     for item in items:
         module_name = item.module.__name__.split(".")[-1]
         if module_name in external_markers:
-            item.add_marker(skip_external)
+            if module_name in CHROMA_DEPENDENT:
+                # Chroma 依赖：CI 或 本地无 Chroma 服务时跳过
+                if IN_CI or not chroma_up:
+                    item.add_marker(skip_external)
+            elif IN_CI:
+                item.add_marker(skip_external)

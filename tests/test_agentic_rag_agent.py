@@ -7,7 +7,8 @@
 4. Agent决策能力展示
 """
 import sys
-sys.path.append("D:/文档/ai提问相关/工作/deep-rag")
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.agents.agentic_rag_agent import AgenticRAGAgent, AgentStatus
 from src.retrieval.agentic_tools import AgenticRAGToolbox, VectorSearchTool

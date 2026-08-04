@@ -11,6 +11,7 @@
 import json
 import sys
 import os
+import pytest
 from time import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
@@ -20,8 +21,14 @@ from src.intent.intent_classifier_v2 import IntentClassifier
 
 
 def load_dataset():
-    """加载评估数据集"""
+    """加载评估数据集
+
+    评测数据集（data/evaluation/evaluation_dataset_150_v5_corrected.json）
+    为本地准备的外部资源，未纳入 git 跟踪；缺失时跳过而非失败。
+    """
     dataset_path = "data/evaluation/evaluation_dataset_150_v5_corrected.json"
+    if not os.path.exists(dataset_path):
+        pytest.skip(f"评测数据集缺失（需本地准备，未入库）: {dataset_path}")
     with open(dataset_path, 'r', encoding='utf-8') as f:
         dataset = json.load(f)
     return dataset
