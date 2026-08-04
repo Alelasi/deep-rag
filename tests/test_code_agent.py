@@ -17,6 +17,7 @@ from src.agents.code_agent import (
 class TestDockerExecutor:
     """测试Docker执行器"""
 
+    @patch('src.agents.code_agent.DOCKER_AVAILABLE', True)
     @patch('src.agents.code_agent.docker')
     def test_execute_python_success(self, mock_docker):
         """测试Python代码执行成功"""
@@ -43,6 +44,7 @@ class TestDockerExecutor:
         assert "Hello, World!" in result.stdout
         assert result.stderr == ""
 
+    @patch('src.agents.code_agent.DOCKER_AVAILABLE', True)
     @patch('src.agents.code_agent.docker')
     def test_execute_python_error(self, mock_docker):
         """测试Python代码执行失败"""
@@ -67,7 +69,8 @@ class TestDockerExecutor:
 
     def test_execute_unsupported_language(self):
         """测试不支持的语言"""
-        with patch('src.agents.code_agent.docker.from_env'):
+        with patch('src.agents.code_agent.DOCKER_AVAILABLE', True), \
+             patch('src.agents.code_agent.docker', MagicMock()):
             executor = DockerExecutor()
             result = executor.execute('code', "ruby")
 
@@ -76,7 +79,10 @@ class TestDockerExecutor:
 
     def test_docker_not_available(self):
         """测试Docker不可用"""
-        with patch('src.agents.code_agent.docker.from_env', side_effect=Exception("Docker not found")):
+        with patch('src.agents.code_agent.DOCKER_AVAILABLE', True), \
+             patch('src.agents.code_agent.docker', MagicMock()) as mock_docker:
+            # from_env 抛异常 → DockerExecutor 优雅降级
+            mock_docker.from_env.side_effect = Exception("Docker not found")
             executor = DockerExecutor()
             result = executor.execute('print("test")', "python")
 
@@ -87,8 +93,10 @@ class TestDockerExecutor:
 class TestCodeGenerator:
     """测试代码生成器"""
 
-    def test_generate_without_llm(self):
-        """测试没有LLM时的行为"""
+    def test_generate_without_llm(self, monkeypatch):
+        """测试没有LLM时的降级行为"""
+        # 强制 _get_default_llm 返回 None，模拟 LLM 不可用环境（避免依赖 failover 链真实可用性）
+        monkeypatch.setattr(CodeGenerator, "_get_default_llm", staticmethod(lambda: None))
         generator = CodeGenerator(llm=None)
         request = CodeRequest(
             description="测试",

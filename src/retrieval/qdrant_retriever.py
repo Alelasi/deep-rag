@@ -19,15 +19,23 @@ log = logging.getLogger(__name__)
 # 与 bge-base-zh-v1.5 一致
 VECTOR_SIZE = 768
 
+# qdrant-client 是否可用（测试与降级逻辑用）
+try:
+    import qdrant_client  # noqa: F401
+
+    QDRANT_AVAILABLE = True
+except Exception:  # pragma: no cover - 环境缺依赖
+    QDRANT_AVAILABLE = False
+
 
 class QdrantRetriever:
     """单 collection 检索器；客户端由工厂共享。"""
 
-    def __init__(self, collection_name: str = DEFAULT_COLLECTION):
+    def __init__(self, collection_name: str = DEFAULT_COLLECTION, client=None):
         # 支持 work / proj_work / default 等别名
         self.collection_name = resolve_collection(collection_name)
         self.name = self.collection_name  # 兼容旧 Chroma 接口字段
-        self.client = get_qdrant_client()
+        self.client = client or get_qdrant_client()
         self._ensure_collection()
 
     def _ensure_collection(self) -> None:

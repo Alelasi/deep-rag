@@ -145,18 +145,31 @@ def test_tool_web_search():
     # DuckDuckGo可能因网络问题返回空，不强制assert
     print(f"  Web search: {len(results)} results (may be 0 if network blocked)")
 
-def test_toolbox_4_tools():
-    """create_toolbox 注册全部4个工具"""
+def test_toolbox_5_tools():
+    """create_toolbox 注册全部5个工具"""
     from src.retrieval.agentic_tools import create_toolbox
     class MockRetriever:
         def retrieve(self, q, top_k=5): return []
     toolbox = create_toolbox(MockRetriever())
     tools = toolbox.list_tools()
     names = [t["name"] for t in tools]
-    assert len(tools) == 4, f"Expected 4 tools, got {len(tools)}: {names}"
-    for expected in ["vector_search", "exact_match", "graph_search", "web_search"]:
+    assert len(tools) == 5, f"Expected 5 tools, got {len(tools)}: {names}"
+    for expected in ["vector_search", "exact_match", "graph_search", "web_search", "kb_stats"]:
         assert expected in names, f"Missing tool: {expected}"
     print(f"  Toolbox: {names}")
+
+
+# ===== T3.6 知识库统计 =====
+
+def test_tool_kb_stats():
+    """知识库统计工具：返回系统元数据摘要"""
+    from src.retrieval.agentic_tools import KBStatsTool
+
+    tool = KBStatsTool()
+    results = tool.search("test")
+    assert len(results) == 1
+    assert results[0]["metadata"].get("is_stats") is True
+    print(f"  KB stats: {results[0]['page_content'][:60]}...")
 
 # ===== T4: ReAct Agent 组件 =====
 
@@ -210,18 +223,26 @@ def test_react_agent_decision_mock():
         src.config.get_llm_with_fallback = original
 
 def test_react_agent_no_llm():
-    """Agent决策节点：无LLM时降级"""
-    from src.graph import node_agent_decision
+    """Agent决策节点：无LLM时降级（v2.6语义：0文档强制先检索，有文档才generate）"""
+    from src.rag.react import node_agent_decision
     import src.config
     original = src.config.get_llm_with_fallback
     src.config.get_llm_with_fallback = lambda t=None: None
 
     try:
+        # 0文档首轮 → 强制先检索（不经过LLM）
         state = {"question": "test", "retrieved_docs": [], "used_tools": [], "retrieval_round": 0, "max_retries": 3}
         result = node_agent_decision(state)
-        assert result["next_action"] == "generate"
-        assert result["agent_reason"] == "no_llm"
-        print(f"  Agent decision (no LLM): generate (no_llm)")
+        assert result["next_action"] == "vector_search"
+        assert result["agent_reason"] == "auto_retrieve_no_docs"
+
+        # 有文档 + 无LLM → 直接生成
+        state2 = {"question": "test", "retrieved_docs": [{"content": "x"}],
+                  "used_tools": ["vector_search"], "retrieval_round": 1, "max_retries": 3}
+        result2 = node_agent_decision(state2)
+        assert result2["next_action"] == "generate"
+        assert result2["agent_reason"] == "no_llm_has_docs"
+        print(f"  Agent decision (no LLM): {result['next_action']} → {result2['next_action']}")
     finally:
         src.config.get_llm_with_fallback = original
 

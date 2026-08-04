@@ -226,23 +226,24 @@ def test_toolbox_execute_unknown_raises():
 # ===== 测试：create_toolbox工厂 =====
 
 def test_create_toolbox_factory():
-    """create_toolbox: 工厂函数注册全部4个工具"""
+    """create_toolbox: 工厂函数注册全部5个工具"""
     print("=== 测试12: create_toolbox工厂 ===")
     retriever = MockRetriever()
     toolbox = create_toolbox(retriever)
 
-    # v2.4: 应注册全部4个工具
+    # v2.6: 应注册全部5个工具（含 kb_stats）
     tools = toolbox.list_tools()
     tool_names = [t["name"] for t in tools]
-    assert len(tools) == 4, f"Expected 4 tools, got {len(tools)}: {tool_names}"
+    assert len(tools) == 5, f"Expected 5 tools, got {len(tools)}: {tool_names}"
     assert "vector_search" in tool_names
     assert "exact_match" in tool_names
     assert "graph_search" in tool_names
     assert "web_search" in tool_names
+    assert "kb_stats" in tool_names
 
     vector_tool = toolbox.get_tool("vector_search")
     assert isinstance(vector_tool, VectorSearchTool)
-    print(f"  Factory registered 4 tools: {tool_names}")
+    print(f"  Factory registered 5 tools: {tool_names}")
     print("  PASS\n")
 
 

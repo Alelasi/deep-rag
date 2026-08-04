@@ -383,6 +383,49 @@ def _resolve_backend(backend: str) -> str:
         return "none"
 
 
+def _build_runtime_failover(temp: float, primary_llm: Any) -> Any:
+    """为 cerebras 主后端构建「运行时故障转移」门面。
+
+    链：Cerebras（已构建实例）→ SiliconFlow → Groq → Zhipu。
+    仅在 invoke/stream 抛错（1009 country_banned / 403 / 代理 / 超时等）时切换，
+    切换后保持新后端，避免反复超时。详见 src/llm/failover.py。
+    """
+    from .llm.failover import RuntimeFailoverLLM
+
+    chain: list = [("cerebras", lambda: primary_llm)]
+    if SILICONFLOW_API_KEY:
+        chain.append(
+            (
+                "siliconcloud",
+                lambda: _build_openai_compatible(
+                    "siliconcloud", temp, "THUDM/GLM-Z1-9B-0414",
+                    SILICONFLOW_API_KEY, "https://api.siliconflow.cn/v1",
+                ),
+            )
+        )
+    if GROQ_API_KEY:
+        chain.append(
+            (
+                "groq",
+                lambda: _build_openai_compatible(
+                    "groq", temp, "llama-3.1-8b-instant",
+                    GROQ_API_KEY, "https://api.groq.com/openai/v1",
+                ),
+            )
+        )
+    if ZHIPU_API_KEY:
+        chain.append(
+            (
+                "zhipu",
+                lambda: _build_openai_compatible(
+                    "zhipu", temp, "glm-4-flash",
+                    ZHIPU_API_KEY, "https://open.bigmodel.cn/api/paas/v4",
+                ),
+            )
+        )
+    return RuntimeFailoverLLM(chain)
+
+
 def get_llm(temperature: float = None) -> Optional[Any]:
     """
     统一LLM工厂 — 支持多后端切换（注册表分发，v2.7：实例缓存 + 限流重试）
@@ -395,6 +438,8 @@ def get_llm(temperature: float = None) -> Optional[Any]:
     - LLM 实例缓存：相同参数不重复创建
     - 限流器：控制请求频率避免 429
     - 重试装饰器：429 时自动退避重试
+    - v2.9.x 新增：主后端为 cerebras 时返回运行时故障转移门面
+      （1009/403/代理失败自动降级 SiliconFlow → Groq → Zhipu）
     """
     temp = temperature if temperature is not None else LLM_TEMPERATURE
 
@@ -411,19 +456,25 @@ def get_llm(temperature: float = None) -> Optional[Any]:
             f"Unknown LLM_BACKEND: {backend}. "
             f"Use: {', '.join(sorted(LLM_REGISTRY))}"
         )
-    return builder(temp)
+    llm = builder(temp)
+
+    # Cerebras 主后端：包装为运行时故障转移（Cerebras 优先 + 自动降级）
+    if backend == "cerebras" and llm is not None:
+        return _build_runtime_failover(temp, llm)
+    return llm
 
 
 def get_llm_with_fallback(temperature: float = None):
-    """多LLM降级（2026-07-18 免费模型实测）
+    """多LLM降级（2026-07-18 免费模型实测，v2.9.x 升级为运行时故障转移）
 
     链：主后端 → Cerebras gpt-oss-120b → Groq llama-3.1-8b
         → Silicon GLM-Z1-9B → Zhipu glm-4-flash → Ollama → 规则
 
     用于 Agent / 评测联网回退，避免单家 429 全挂。
+    主后端为 cerebras 时，get_llm() 已返回运行时降级门面，直接复用；
+    否则静态构建主后端，失败走固定降级链（构建期，仅处理缺 Key 场景）。
     """
     temp = temperature if temperature is not None else LLM_TEMPERATURE
-    primary = (LLM_BACKEND or "auto").lower()
 
     try:
         llm = get_llm(temp)
@@ -431,6 +482,8 @@ def get_llm_with_fallback(temperature: float = None):
             return llm
     except Exception as e:
         print(f"[LLM] Primary failed: {e}, trying fallback chain...")
+
+    primary = _resolve_backend(LLM_BACKEND.lower())
 
     from langchain_openai import ChatOpenAI
 

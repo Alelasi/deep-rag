@@ -4,7 +4,8 @@
 
 from .tool_registry import ToolRegistry, Tool, ToolCategory, ToolRisk, get_registry
 from .builtin_tools import search_database, register_builtin_tools
-from .agent_executor import AgentExecutor
+# 旧名 agent_executor.py 已升级为 agent_executor_v2.py，保留旧导出名兼容调用方
+from .agent_executor_v2 import AgentExecutorV2 as AgentExecutor
 from .skill_system import skill, SkillRegistry, get_skill_registry, register_builtin_skills
 from .mcp_server import MCPServer, run_stdio
 

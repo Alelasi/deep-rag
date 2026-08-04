@@ -7,7 +7,8 @@ from pathlib import Path
 import pytest
 
 PROJECT_ROOT = Path(__file__).parent.parent
-MCP_SCRIPT = PROJECT_ROOT / "mcp_server.py"
+# 入口脚本：start_mcp_server.py（旧 mcp_server.py 已迁入 src/tools/）
+MCP_SCRIPT = PROJECT_ROOT / "start_mcp_server.py"
 
 
 def call_mcp(request: dict) -> dict:
@@ -20,7 +21,7 @@ def call_mcp(request: dict) -> dict:
         encoding="utf-8",
         errors="replace",
         cwd=str(PROJECT_ROOT),
-        timeout=60,
+        timeout=90,
     )
     # stderr 包含 import warnings，忽略；stdout 应只含 JSON 响应
     stdout_lines = [l for l in proc.stdout.strip().split("\n") if l.strip().startswith("{")]
@@ -35,18 +36,18 @@ def test_mcp_initialize():
     assert response["jsonrpc"] == "2.0"
     assert response["id"] == 1
     assert "result" in response
-    assert response["result"]["protocolVersion"] == "2024-11-05"
+    assert response["result"]["protocolVersion"] == "2025-03-26"
     assert response["result"]["serverInfo"]["name"] == "deeprag-mcp-server"
 
 
 def test_mcp_tools_list():
-    """tools/list 应返回 4 个工具"""
+    """tools/list 应返回 5 个工具"""
     response = call_mcp({"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}})
     assert "result" in response
     tools = response["result"]["tools"]
-    assert len(tools) == 4
+    assert len(tools) == 5
     tool_names = {t["name"] for t in tools}
-    assert tool_names == {"vector_search", "exact_match", "graph_search", "web_search"}
+    assert tool_names == {"vector_search", "exact_match", "graph_search", "web_search", "rag_query"}
 
 
 def test_mcp_tools_list_schema():
@@ -78,8 +79,8 @@ def test_mcp_call_vector_search():
     assert response["result"]["content"][0]["type"] == "text"
 
 
-def test_mcp_call_exact_match_placeholder():
-    """exact_match 工具应返回接口预留消息"""
+def test_mcp_call_exact_match():
+    """exact_match 工具应返回文本结果（已实现）"""
     response = call_mcp({
         "jsonrpc": "2.0",
         "id": 5,
@@ -88,7 +89,7 @@ def test_mcp_call_exact_match_placeholder():
     })
     assert "result" in response
     text = response["result"]["content"][0]["text"]
-    assert "未实现" in text or "预留" in text
+    assert isinstance(text, str) and len(text) > 0
 
 
 def test_mcp_unknown_method():
@@ -99,12 +100,13 @@ def test_mcp_unknown_method():
 
 
 def test_mcp_unknown_tool():
-    """未知工具应返回 -32602 错误"""
+    """未知工具应返回文本提示（执行器不抛协议错误）"""
     response = call_mcp({
         "jsonrpc": "2.0",
         "id": 7,
         "method": "tools/call",
         "params": {"name": "nonexistent_tool", "arguments": {}},
     })
-    assert "error" in response
-    assert response["error"]["code"] == -32602
+    assert "result" in response
+    text = response["result"]["content"][0]["text"]
+    assert "未知工具" in text

@@ -12,6 +12,13 @@
 import os
 import pytest
 
+# pyarrow 预热：规避 sklearn→pandas→pyarrow 在特定加载顺序下的 Windows access violation。
+# 在 pytest 启动早期加载可让其 C 扩展在干净环境下初始化，避免后续崩溃。
+try:
+    import pyarrow  # noqa: F401
+except Exception:
+    pass
+
 # CI 环境标记
 IN_CI = os.getenv("GITHUB_ACTIONS") == "true" or os.getenv("CI") == "true"
 
@@ -36,14 +43,11 @@ def pytest_collection_modifyitems(config, items):
         "test_e2e",
         "test_qdrant_real_integration",
         "test_qdrant_e2e_real",
-        "test_qdrant_retriever",
         "test_lm_studio_models",
         "test_realtime_query",
-        "test_agent_vs_real_db",
         "test_full_agent",
         "test_agentic_integration",
         "test_model_router_integration",
-        "test_pgvector_retriever",
         "test_web_fallback",
         "test_web_fallback_free",
         "test_qdrant_stability",
@@ -52,6 +56,9 @@ def pytest_collection_modifyitems(config, items):
         "test_multi_agent_optimization",
         "test_v2_4_react",
         "test_integration_v2_2",
+        # 依赖 Chroma HttpClient 服务（本地/CI 无服务时连接拒绝）
+        "test_agentic_rag_agent",
+        "test_ragas",
     ]
 
     for item in items:

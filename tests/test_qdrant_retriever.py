@@ -1,15 +1,20 @@
-"""Qdrant检索器单元测试
-通过注入mock client避免依赖真实Qdrant服务
+"""QdrantRetriever 单元测试（对齐当前 API，注入 mock client 避免依赖真实 Qdrant 服务）
+
+当前实现（qdrant_retriever.py）：
+- __init__ 自动确保 collection（768 维 cosine）
+- add_documents(documents, embeddings, metadatas, ids)
+- search(query_embedding, top_k)
+- count / is_ready / clear
 """
 import sys
 import pytest
 from pathlib import Path
+
 PROJECT_ROOT = str(Path(__file__).parent.parent)
 sys.path.insert(0, PROJECT_ROOT)
 
 from types import SimpleNamespace
-from src.retrieval.qdrant_retriever import QdrantRetriever, QDRANT_AVAILABLE
-from src.state import Document
+from src.retrieval.qdrant_retriever import QdrantRetriever, QDRANT_AVAILABLE, VECTOR_SIZE
 
 # 模块级标记：L2 集成测试
 pytestmark = pytest.mark.L2
@@ -28,7 +33,7 @@ class MockQdrantClient:
     def __init__(self):
         self.collections_data = {}      # name -> config
         self.points_data = {}           # name -> list[point]
-        self.search_responses = []       # 预设的search返回
+        self.search_responses = []       # 预设的 query_points 返回
         self.calls = []                 # 调用记录
 
     def get_collections(self):
@@ -47,18 +52,18 @@ class MockQdrantClient:
         self.calls.append(("upsert", collection_name, len(points)))
         self.points_data.setdefault(collection_name, []).extend(points)
 
-    def search(self, collection_name, query_vector, query_filter=None,
-               limit=5, **kwargs):
-        self.calls.append(("search", collection_name, query_filter, limit))
-        # 返回预设结果（模拟Qdrant ScoredPoint）
-        return self.search_responses
-
     def query_points(self, collection_name, prefetch=None, query=None,
                      limit=5, **kwargs):
         """模拟 Qdrant Query API（v1.10+）"""
         self.calls.append(("query_points", collection_name, prefetch, limit))
-        # 返回预设结果，封装成 QueryResponse 风格
         return SimpleNamespace(points=self.search_responses)
+
+    def get_collection(self, collection_name):
+        self.calls.append(("get_collection", collection_name))
+        cfg = self.collections_data.get(collection_name, {})
+        return SimpleNamespace(
+            points_count=len(self.points_data.get(collection_name, []))
+        )
 
     def delete_collection(self, collection_name):
         self.calls.append(("delete_collection", collection_name))
@@ -66,8 +71,8 @@ class MockQdrantClient:
         self.points_data.pop(collection_name, None)
 
 
-def make_scored_point(doc_id, content, source, page, score=0.9, metadata=None):
-    """构造Qdrant风格的ScoredPoint mock"""
+def make_scored_point(doc_id, content, source, page, score=0.9):
+    """构造 Qdrant 风格 ScoredPoint mock"""
     return SimpleNamespace(
         id=hash(doc_id) % 10000,
         score=score,
@@ -76,106 +81,67 @@ def make_scored_point(doc_id, content, source, page, score=0.9, metadata=None):
             "content": content,
             "source": source,
             "page": page,
-            "metadata": metadata or {},
-        }
+        },
     )
 
 
 # ===== 测试 =====
 
-def test_create_collection():
-    """create_collection: 集合创建调用"""
-    print("=== 测试1: 创建集合 ===")
+def test_init_creates_collection():
+    """初始化时自动创建 768 维 cosine 集合"""
     mock_client = MockQdrantClient()
-    retriever = QdrantRetriever(client=mock_client, collection_name="test_kb")
-
-    retriever.create_collection(embedding_dim=384)
+    QdrantRetriever(client=mock_client, collection_name="test_kb")
 
     assert "test_kb" in mock_client.collections_data
+    cfg = mock_client.collections_data["test_kb"]
+    assert cfg["vectors_config"].size == VECTOR_SIZE
+    assert cfg["vectors_config"].distance == "Cosine"
     assert ("create_collection", "test_kb") in mock_client.calls
-    assert retriever.embedding_dim == 384
-    print(f"  Collection created: test_kb (dim=384)")
-    print("  PASS\n")
 
 
-def test_create_collection_idempotent():
-    """create_collection: 已存在则跳过创建"""
-    print("=== 测试2: 集合幂等创建 ===")
+def test_init_skips_existing_collection():
+    """集合已存在时不重复创建"""
     mock_client = MockQdrantClient()
-    mock_client.collections_data["existing"] = {}  # 预先存在
+    mock_client.collections_data["existing"] = {}
+    QdrantRetriever(client=mock_client, collection_name="existing")
 
-    retriever = QdrantRetriever(client=mock_client, collection_name="existing")
-    retriever.create_collection(embedding_dim=768)
-
-    # 不应再次调用create_collection
     create_calls = [c for c in mock_client.calls if c[0] == "create_collection"]
-    assert len(create_calls) == 0, f"Should skip creation, got {create_calls}"
-    print(f"  Skipped re-creating existing collection")
-    print("  PASS\n")
+    assert create_calls == []
 
 
-def test_add_documents():
-    """add_documents: 批量插入文档"""
-    print("=== 测试3: 添加文档 ===")
+def test_add_documents_payload():
+    """add_documents 批量 upsert，payload 字段完整"""
     mock_client = MockQdrantClient()
     mock_client.collections_data["test_kb"] = {}
     retriever = QdrantRetriever(client=mock_client, collection_name="test_kb")
 
     docs = [
-        Document(doc_id="d1", content="INTJ的主导功能是Ni",
-                 source="mbti.md", page=1, metadata={"category": "psychology"}),
-        Document(doc_id="d2", content="ENFP的主导功能是Ne",
-                 source="mbti.md", page=2, metadata={}),
+        "INTJ的主导功能是Ni",
+        "ENFP的主导功能是Ne",
     ]
-    embeddings = [
-        [0.1] * 768,
-        [0.2] * 768,
-    ]
+    embeddings = [[0.1] * 768, [0.2] * 768]
+    metadatas = [{"source": "mbti.md", "page": 1, "category": "psychology"}, {"source": "mbti.md", "page": 2}]
+    ids = ["d1", "d2"]
 
-    retriever.add_documents(docs, embeddings)
+    retriever.add_documents(docs, embeddings, metadatas, ids)
 
     upsert_calls = [c for c in mock_client.calls if c[0] == "upsert"]
     assert len(upsert_calls) == 1
-    assert upsert_calls[0][2] == 2  # 2个points
-    assert len(mock_client.points_data["test_kb"]) == 2
+    assert upsert_calls[0][2] == 2
+    points = mock_client.points_data["test_kb"]
+    assert len(points) == 2
 
-    # 验证payload正确
-    inserted = mock_client.points_data["test_kb"]
-    payload_0 = inserted[0]["payload"] if isinstance(inserted[0], dict) else inserted[0].payload
-    assert payload_0["doc_id"] == "d1"
-    assert payload_0["content"] == "INTJ的主导功能是Ni"
-    assert payload_0["source"] == "mbti.md"
-    print(f"  Inserted 2 documents with correct payload")
-    print("  PASS\n")
-
-
-def test_generate_sparse_vector():
-    """_generate_sparse_vector: 生成稀疏向量"""
-    print("=== 测试4: 稀疏向量生成 ===")
-    mock_client = MockQdrantClient()
-    retriever = QdrantRetriever(client=mock_client)
-
-    sparse = retriever._generate_sparse_vector("INTJ的主导功能是Ni Ni")
-
-    # 测试模式下返回dict（QDRANT_AVAILABLE为False时）
-    if isinstance(sparse, dict):
-        indices = sparse["indices"]
-        values = sparse["values"]
-    else:
-        indices = sparse.indices
-        values = sparse.values
-
-    assert len(indices) > 0
-    assert len(indices) == len(values)
-    # "Ni"出现2次，对应的value应该是2
-    assert 2.0 in values, f"Expected 'Ni' count=2, values={values}"
-    print(f"  Generated sparse vector: {len(indices)} non-zero dims")
-    print("  PASS\n")
+    p0 = points[0]
+    payload = p0.payload
+    assert payload["doc_id"] == "d1"
+    assert payload["content"] == "INTJ的主导功能是Ni"
+    assert payload["source"] == "mbti.md"
+    assert payload["page"] == 1
+    assert payload["category"] == "psychology"
 
 
-def test_search_basic():
-    """search: 基础向量检索"""
-    print("=== 测试5: 基础向量检索 ===")
+def test_search_mapping():
+    """search 返回统一文档字典（含分数）"""
     mock_client = MockQdrantClient()
     mock_client.search_responses = [
         make_scored_point("d1", "INTJ介绍", "mbti.md", 1, score=0.95),
@@ -183,136 +149,51 @@ def test_search_basic():
     ]
     retriever = QdrantRetriever(client=mock_client, collection_name="test_kb")
 
-    query_emb = [0.1] * 768
-    results = retriever.search("INTJ", query_emb, top_k=2)
+    results = retriever.search([0.1] * 768, top_k=2)
 
     assert len(results) == 2
     assert results[0]["doc_id"] == "d1"
-    assert results[0]["metadata"]["score"] == 0.95
-    assert results[1]["doc_id"] == "d2"
-    print(f"  Retrieved {len(results)} docs, top score: {results[0]['metadata']['score']}")
-    print("  PASS\n")
-
-
-def test_search_with_filters():
-    """search: 元数据过滤"""
-    print("=== 测试6: 元数据过滤检索 ===")
-    mock_client = MockQdrantClient()
-    mock_client.search_responses = [
-        make_scored_point("d1", "MBTI内容", "mbti.md", 1, score=0.9),
-    ]
-    retriever = QdrantRetriever(client=mock_client, collection_name="test_kb")
-
-    query_emb = [0.1] * 768
-    filters = {"source": "mbti.md", "category": "psychology"}
-    results = retriever.search("test", query_emb, top_k=5, filters=filters)
-
-    # 验证filter被传递（兼容 query_points 和 search）
-    search_calls = [c for c in mock_client.calls if c[0] in ("search", "query_points")]
-    assert len(search_calls) > 0, "Should call search or query_points"
-    # query_points 的 filter 在 kwargs 中，search 的在位置参数中
-    print(f"  Filter passed correctly (via {search_calls[0][0]})")
-    assert len(results) == 1
-    print(f"  Got {len(results)} results")
-    print("  PASS\n")
+    assert results[0]["_score"] == 0.95
+    assert results[0]["_vector_distance"] == pytest.approx(0.05)
+    assert results[0]["metadata"]["content"] == "INTJ介绍"
+    assert ("query_points", "test_kb") in [c[:2] for c in mock_client.calls]
 
 
 def test_search_empty():
-    """search: 空结果处理"""
-    print("=== 测试7: 空检索结果 ===")
+    """search 空结果返回空列表"""
     mock_client = MockQdrantClient()
     mock_client.search_responses = []
     retriever = QdrantRetriever(client=mock_client, collection_name="test_kb")
 
-    results = retriever.search("nothing", [0.0] * 768)
-    assert results == []
-    print(f"  Empty result handled correctly")
-    print("  PASS\n")
+    assert retriever.search([0.0] * 768) == []
 
 
-def test_hybrid_search():
-    """hybrid_search: 混合检索接口"""
-    print("=== 测试8: 混合检索 ===")
+def test_count_and_is_ready():
+    """count / is_ready 反映集合内点数"""
     mock_client = MockQdrantClient()
-    mock_client.search_responses = [
-        make_scored_point("d1", "混合检索内容", "doc.md", 1, score=0.88),
-    ]
+    mock_client.collections_data["test_kb"] = {}
+    mock_client.points_data["test_kb"] = [SimpleNamespace()] * 3
     retriever = QdrantRetriever(client=mock_client, collection_name="test_kb")
 
-    query_emb = [0.1] * 768
-    results = retriever.hybrid_search("query", query_emb, top_k=3)
-
-    assert len(results) == 1
-    assert results[0]["doc_id"] == "d1"
-    print(f"  Hybrid search returned {len(results)} docs")
-    print("  PASS\n")
+    assert retriever.count() == 3
+    assert retriever.is_ready() is True
 
 
-def test_delete_collection():
-    """delete_collection: 删除集合"""
-    print("=== 测试9: 删除集合 ===")
+def test_clear_recreates_collection():
+    """clear 删除并重建空集合"""
     mock_client = MockQdrantClient()
-    mock_client.collections_data["temp"] = {}
-    retriever = QdrantRetriever(client=mock_client, collection_name="temp")
+    mock_client.collections_data["test_kb"] = {}
+    mock_client.points_data["test_kb"] = [SimpleNamespace()] * 2
+    retriever = QdrantRetriever(client=mock_client, collection_name="test_kb")
 
-    retriever.delete_collection()
+    retriever.clear()
 
-    delete_calls = [c for c in mock_client.calls if c[0] == "delete_collection"]
-    assert len(delete_calls) == 1
-    assert "temp" not in mock_client.collections_data
-    print(f"  Collection deleted")
-    print("  PASS\n")
-
-
-def test_qdrant_unavailable_raises():
-    """未安装qdrant-client且未注入client时抛错"""
-    print("=== 测试10: 未安装qdrant-client错误处理 ===")
-    if QDRANT_AVAILABLE:
-        print("  SKIP (qdrant-client is installed)")
-        print()
-        return
-
-    try:
-        QdrantRetriever()  # 不传client
-        assert False, "Should raise ImportError"
-    except ImportError as e:
-        assert "qdrant-client" in str(e)
-        print(f"  Correctly raises ImportError: {str(e)[:60]}")
-    print("  PASS\n")
+    assert ("delete_collection", "test_kb") in mock_client.calls
+    assert "test_kb" in mock_client.collections_data
+    assert retriever.count() == 0
 
 
-# ===== 主测试入口 =====
-
-if __name__ == "__main__":
-    tests = [
-        test_create_collection,
-        test_create_collection_idempotent,
-        test_add_documents,
-        test_generate_sparse_vector,
-        test_search_basic,
-        test_search_with_filters,
-        test_search_empty,
-        test_hybrid_search,
-        test_delete_collection,
-        test_qdrant_unavailable_raises,
-    ]
-
-    print(f"\nRunning {len(tests)} Qdrant retriever tests...")
-    print(f"QDRANT_AVAILABLE: {QDRANT_AVAILABLE}\n")
-    passed = 0
-    failed = 0
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except Exception as e:
-            import traceback
-            print(f"  FAIL: {e}")
-            traceback.print_exc()
-            print()
-            failed += 1
-
-    print(f"\n{'='*50}")
-    print(f"Results: {passed}/{len(tests)} passed, {failed} failed")
-    print(f"{'='*50}")
-    sys.exit(0 if failed == 0 else 1)
+def test_qdrant_available_flag():
+    """QDRANT_AVAILABLE 为布尔值，且当前环境已安装 qdrant-client"""
+    assert isinstance(QDRANT_AVAILABLE, bool)
+    assert QDRANT_AVAILABLE is True
